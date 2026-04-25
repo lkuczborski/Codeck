@@ -7,23 +7,7 @@ struct EditorPaneView: View {
 
   var body: some View {
     VStack(spacing: 0) {
-      HStack(spacing: 10) {
-        Picker("Theme", selection: $theme) {
-          ForEach(PresentationTheme.allCases) { theme in
-            Text(theme.displayName).tag(theme)
-          }
-        }
-        .pickerStyle(.menu)
-        .frame(width: 150)
-
-        Spacer()
-
-        Button(action: onInsertCodexBlock) {
-          Label("Insert Codex Session", systemImage: "terminal")
-        }
-        .help("Insert live Codex session")
-      }
-      .padding(12)
+      toolbar
 
       Divider()
 
@@ -33,5 +17,45 @@ struct EditorPaneView: View {
         .padding(10)
         .background(Color(nsColor: .textBackgroundColor))
     }
+  }
+
+  private var toolbar: some View {
+    ViewThatFits(in: .horizontal) {
+      HStack(spacing: 10) {
+        themePicker(width: 150)
+
+        Spacer(minLength: 10)
+
+        insertCodexButton
+          .labelStyle(.titleAndIcon)
+      }
+
+      HStack(spacing: 8) {
+        themePicker(width: 128)
+
+        Spacer(minLength: 8)
+
+        insertCodexButton
+          .labelStyle(.iconOnly)
+      }
+    }
+    .padding(12)
+  }
+
+  private func themePicker(width: CGFloat) -> some View {
+    Picker("Theme", selection: $theme) {
+      ForEach(PresentationTheme.allCases) { theme in
+        Text(theme.displayName).tag(theme)
+      }
+    }
+    .pickerStyle(.menu)
+    .frame(width: width)
+  }
+
+  private var insertCodexButton: some View {
+    Button(action: onInsertCodexBlock) {
+      Label("Insert Codex Session", systemImage: "terminal")
+    }
+    .help("Insert live Codex session")
   }
 }

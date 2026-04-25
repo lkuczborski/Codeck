@@ -347,7 +347,7 @@ enum MarkdownRenderer {
     .slide {
       width: min(100vw, 1600px);
       min-height: 100vh;
-      padding: clamp(44px, 7vw, 112px);
+      padding: 88px;
       overflow-wrap: anywhere;
     }
     h1, h2, h3, h4, h5, h6 {
@@ -355,9 +355,9 @@ enum MarkdownRenderer {
       margin: 0 0 0.55em;
       font-weight: 780;
     }
-    h1 { font-size: clamp(48px, 7vw, 92px); }
-    h2 { font-size: clamp(38px, 5vw, 72px); }
-    h3 { font-size: clamp(30px, 3.8vw, 52px); }
+    h1 { font-size: 82px; }
+    h2 { font-size: 60px; }
+    h3 { font-size: 44px; }
     p, ul, ol, blockquote, table, pre, .codex-card {
       margin: 0 0 1.05em;
     }
@@ -463,6 +463,24 @@ enum MarkdownRenderer {
     }
     .state-failed .codex-header span:last-child {
       color: #ff6b6b;
+    }
+    @media (max-width: 820px), (max-height: 620px) {
+      html, body {
+        font-size: 19px;
+      }
+      .slide {
+        padding: 32px;
+      }
+      h1 { font-size: 46px; }
+      h2 { font-size: 36px; }
+      h3 { font-size: 28px; }
+      pre {
+        font-size: 0.68em;
+      }
+      .codex-header {
+        flex-direction: column;
+        gap: 0.2em;
+      }
     }
     """
 }

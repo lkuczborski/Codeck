@@ -7,6 +7,7 @@ struct DocumentWindowView: View {
   @StateObject private var sessionStore = CodexSessionStore()
   @SceneStorage("selectedSlideID") private var selectedSlideIDString: String?
   @SceneStorage("isPreviewVisible") private var isPreviewVisible = true
+  @SceneStorage("compactDetailPane") private var compactPaneRawValue = "editor"
   @State private var columnVisibility: NavigationSplitViewVisibility = .all
 
   private var selectedSlideID: Slide.ID? {
@@ -27,11 +28,11 @@ struct DocumentWindowView: View {
           set: { selectedSlideID = $0 }
         )
       )
-      .navigationSplitViewColumnWidth(min: 220, ideal: 260, max: 340)
+      .navigationSplitViewColumnWidth(min: 200, ideal: 240, max: 320)
     } detail: {
       detail
     }
-    .frame(minWidth: 1100, minHeight: 720)
+    .frame(minWidth: 680, minHeight: 500)
     .toolbar {
       ToolbarItem(placement: .primaryAction) {
         Button {
@@ -52,19 +53,49 @@ struct DocumentWindowView: View {
   @ViewBuilder
   private var detail: some View {
     if let slide = selectedSlideBinding {
-      if isPreviewVisible {
-        HSplitView {
-          editorPane(slide)
-            .frame(minWidth: 420, idealWidth: 520)
+      GeometryReader { proxy in
+        let isCompact = proxy.size.width < 780
 
-          previewPane(slide.wrappedValue)
-            .frame(minWidth: 460, idealWidth: 640)
+        if isPreviewVisible, isCompact {
+          compactDetail(slide)
+        } else if isPreviewVisible {
+          HSplitView {
+            editorPane(slide)
+              .frame(minWidth: 320, idealWidth: 520)
+
+            previewPane(slide.wrappedValue)
+              .frame(minWidth: 340, idealWidth: 640)
+          }
+        } else {
+          editorPane(slide)
         }
-      } else {
-        editorPane(slide)
       }
     } else {
       ContentUnavailableView("No Slide", systemImage: "rectangle.stack", description: Text("Create a slide to start editing."))
+    }
+  }
+
+  private func compactDetail(_ slide: Binding<Slide>) -> some View {
+    VStack(spacing: 0) {
+      Picker("Pane", selection: compactPaneBinding) {
+        ForEach(CompactDetailPane.allCases) { pane in
+          Label(pane.title, systemImage: pane.systemImage)
+            .tag(pane)
+        }
+      }
+      .pickerStyle(.segmented)
+      .labelsHidden()
+      .padding(.horizontal, 12)
+      .padding(.vertical, 8)
+
+      Divider()
+
+      switch compactPane {
+      case .editor:
+        editorPane(slide)
+      case .preview:
+        previewPane(slide.wrappedValue)
+      }
     }
   }
 
@@ -116,6 +147,42 @@ struct DocumentWindowView: View {
       selectedSlideID = document.deck.slides.first?.id
     } else if selectedSlideID == nil {
       selectedSlideID = document.deck.slides.first?.id
+    }
+  }
+
+  private var compactPane: CompactDetailPane {
+    CompactDetailPane(rawValue: compactPaneRawValue) ?? .editor
+  }
+
+  private var compactPaneBinding: Binding<CompactDetailPane> {
+    Binding(
+      get: { compactPane },
+      set: { compactPaneRawValue = $0.rawValue }
+    )
+  }
+}
+
+private enum CompactDetailPane: String, CaseIterable, Identifiable {
+  case editor
+  case preview
+
+  var id: String { rawValue }
+
+  var title: String {
+    switch self {
+    case .editor:
+      "Editor"
+    case .preview:
+      "Preview"
+    }
+  }
+
+  var systemImage: String {
+    switch self {
+    case .editor:
+      "pencil"
+    case .preview:
+      "play.rectangle"
     }
   }
 }
