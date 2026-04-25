@@ -4,9 +4,28 @@ struct CodexBlock: Identifiable, Hashable {
   var id: String
   var prompt: String
   var model: String?
+  var reasoning: CodexReasoningEffort?
   var profile: String?
-  var sandbox: String
+  var sandbox: String?
   var title: String
+
+  init(
+    id: String,
+    prompt: String,
+    model: String? = nil,
+    reasoning: CodexReasoningEffort? = nil,
+    profile: String? = nil,
+    sandbox: String? = nil,
+    title: String
+  ) {
+    self.id = id
+    self.prompt = prompt
+    self.model = model
+    self.reasoning = reasoning
+    self.profile = profile
+    self.sandbox = sandbox
+    self.title = title
+  }
 
   static func extract(from markdown: String) -> [CodexBlock] {
     let lines = markdown.components(separatedBy: .newlines)
@@ -59,10 +78,16 @@ struct CodexBlock: Identifiable, Hashable {
       id: id,
       prompt: prompt,
       model: emptyToNil(attributes["model"]),
+      reasoning: reasoning(from: attributes),
       profile: emptyToNil(attributes["profile"]),
-      sandbox: attributes["sandbox"] ?? "read-only",
+      sandbox: emptyToNil(attributes["sandbox"]),
       title: title
     )
+  }
+
+  private static func reasoning(from attributes: [String: String]) -> CodexReasoningEffort? {
+    let value = emptyToNil(attributes["reasoning"] ?? attributes["reasoning_effort"])
+    return value.flatMap(CodexReasoningEffort.init(rawValue:))
   }
 
   private static func parseAttributes(from opening: String) -> [String: String] {

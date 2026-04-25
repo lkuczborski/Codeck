@@ -27,10 +27,10 @@ final class CodexSessionStore: ObservableObject {
     outputs[blockID] ?? CodexSessionOutput(state: .idle, text: "")
   }
 
-  func run(_ block: CodexBlock, workingDirectory: URL?) {
+  func run(_ block: CodexBlock, settings: DeckCodexSettings = .default, workingDirectory: URL?) {
     stop(block.id)
 
-    let process = CodexSessionRunner.makeProcess(for: block, workingDirectory: workingDirectory)
+    let process = CodexSessionRunner.makeProcess(for: block, settings: settings, workingDirectory: workingDirectory)
     let outputPipe = Pipe()
     let errorPipe = Pipe()
     let inputPipe = Pipe()
@@ -84,9 +84,9 @@ final class CodexSessionStore: ObservableObject {
     }
   }
 
-  func runAll(_ blocks: [CodexBlock], workingDirectory: URL?) {
+  func runAll(_ blocks: [CodexBlock], settings: DeckCodexSettings = .default, workingDirectory: URL?) {
     for block in blocks {
-      run(block, workingDirectory: workingDirectory)
+      run(block, settings: settings, workingDirectory: workingDirectory)
     }
   }
 

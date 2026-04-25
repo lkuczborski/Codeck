@@ -4,11 +4,11 @@ import UniformTypeIdentifiers
 
 struct PresentationDocument: FileDocument {
   static var readableContentTypes: [UTType] {
-    [.codeckMarkdown, .plainText]
+    [.codeckDeck, .legacyMarkdown]
   }
 
   static var writableContentTypes: [UTType] {
-    [.codeckMarkdown]
+    [.codeckDeck]
   }
 
   var deck: PresentationDeck
@@ -27,7 +27,7 @@ struct PresentationDocument: FileDocument {
   }
 
   func fileWrapper(configuration: WriteConfiguration) throws -> FileWrapper {
-    guard let data = deck.markdownDocument.data(using: .utf8) else {
+    guard let data = deck.deckDocument.data(using: .utf8) else {
       throw CocoaError(.fileWriteInapplicableStringEncoding)
     }
 

@@ -102,7 +102,7 @@ struct DocumentWindowView: View {
   private func editorPane(_ slide: Binding<Slide>) -> some View {
     EditorPaneView(
       slide: slide,
-      theme: $document.deck.theme,
+      settings: $document.deck.settings,
       onInsertCodexBlock: {
         document.deck.insertCodexBlock(into: selectedSlideID)
       }
@@ -116,10 +116,10 @@ struct DocumentWindowView: View {
       sessions: sessionStore,
       baseURL: fileURL?.deletingLastPathComponent(),
       onRunBlock: { block in
-        sessionStore.run(block, workingDirectory: fileURL?.deletingLastPathComponent())
+        sessionStore.run(block, settings: document.deck.settings.codex, workingDirectory: fileURL?.deletingLastPathComponent())
       },
       onRunAll: { blocks in
-        sessionStore.runAll(blocks, workingDirectory: fileURL?.deletingLastPathComponent())
+        sessionStore.runAll(blocks, settings: document.deck.settings.codex, workingDirectory: fileURL?.deletingLastPathComponent())
       },
       onStopAll: {
         sessionStore.stopAll()

@@ -1,21 +1,31 @@
 import Foundation
 
 struct PresentationDeck: Hashable {
-  var theme: PresentationTheme
+  var settings: PresentationSettings
   var slides: [Slide]
 
   init(theme: PresentationTheme = .studio, slides: [Slide] = []) {
-    self.theme = theme
+    self.settings = PresentationSettings(theme: theme, codex: .default)
+    self.slides = slides.isEmpty ? [Slide(markdown: "# New Slide\n\nStart writing...")] : slides
+  }
+
+  init(settings: PresentationSettings = .default, slides: [Slide] = []) {
+    self.settings = settings
     self.slides = slides.isEmpty ? [Slide(markdown: "# New Slide\n\nStart writing...")] : slides
   }
 
   init(markdownDocument: String) {
     let parsed = Self.parseMetadata(from: markdownDocument)
-    theme = parsed.theme
+    settings = parsed.settings
     slides = Self.parseSlides(from: parsed.markdown)
     if slides.isEmpty {
       slides = [Slide(markdown: "# New Slide\n\nStart writing...")]
     }
+  }
+
+  var theme: PresentationTheme {
+    get { settings.theme }
+    set { settings.theme = newValue }
   }
 
   static var sample: PresentationDeck {
@@ -72,10 +82,41 @@ struct PresentationDeck: Hashable {
   }
 
   var markdownDocument: String {
-    var result = "<!-- codeck-theme: \(theme.rawValue) -->\n\n"
+    deckDocument
+  }
+
+  var deckDocument: String {
+    var result = yamlHeader
     result += slides.map(\.markdown).joined(separator: "\n\n---\n\n")
     result += "\n"
     return result
+  }
+
+  private var yamlHeader: String {
+    var lines = [
+      "---",
+      "format: codeck.mdeck",
+      "version: 1",
+      "theme: \(settings.theme.rawValue)",
+      "codex:",
+      "  sandbox: \(settings.codex.sandbox)"
+    ]
+
+    if let model = settings.codex.model {
+      lines.append("  model: \(Self.yamlValue(model))")
+    }
+
+    if let reasoning = settings.codex.reasoning {
+      lines.append("  reasoning: \(reasoning.rawValue)")
+    }
+
+    if let profile = settings.codex.profile {
+      lines.append("  profile: \(Self.yamlValue(profile))")
+    }
+
+    lines.append("---")
+    lines.append("")
+    return lines.joined(separator: "\n")
   }
 
   mutating func addSlide(after selectedID: Slide.ID?) -> Slide.ID {
@@ -122,15 +163,19 @@ struct PresentationDeck: Hashable {
 
 
       ```codex id=demo-\(blockNumber)
-      sandbox: read-only
+      title: Demo \(blockNumber)
 
       Explain this concept with one concrete example.
       ```
       """
   }
 
-  private static func parseMetadata(from rawMarkdown: String) -> (theme: PresentationTheme, markdown: String) {
-    var theme = PresentationTheme.studio
+  private static func parseMetadata(from rawMarkdown: String) -> (settings: PresentationSettings, markdown: String) {
+    if let parsed = YAMLFrontMatter.parse(from: rawMarkdown) {
+      return (settings(from: parsed.values), parsed.body)
+    }
+
+    var settings = PresentationSettings.default
     var lines = rawMarkdown.components(separatedBy: .newlines)
 
     while let first = lines.first, first.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
@@ -144,12 +189,43 @@ struct PresentationDeck: Hashable {
           .replacingOccurrences(of: "<!-- codeck-theme:", with: "")
           .replacingOccurrences(of: "-->", with: "")
           .trimmingCharacters(in: .whitespacesAndNewlines)
-        theme = PresentationTheme(rawValue: value) ?? .studio
+        settings.theme = PresentationTheme(rawValue: value) ?? .studio
         lines.removeFirst()
       }
     }
 
-    return (theme, lines.joined(separator: "\n"))
+    return (settings, lines.joined(separator: "\n"))
+  }
+
+  private static func settings(from values: [String: String]) -> PresentationSettings {
+    let theme = values["theme"].flatMap(PresentationTheme.init(rawValue:)) ?? .studio
+    let sandbox = nonEmpty(values["codex.sandbox"] ?? values["sandbox"]) ?? "read-only"
+    let model = nonEmpty(values["codex.model"] ?? values["model"])
+    let profile = nonEmpty(values["codex.profile"] ?? values["profile"])
+    let reasoningValue = nonEmpty(values["codex.reasoning"] ?? values["reasoning"] ?? values["codex.reasoning_effort"] ?? values["reasoning_effort"])
+    let reasoning = reasoningValue.flatMap(CodexReasoningEffort.init(rawValue:))
+
+    return PresentationSettings(
+      theme: theme,
+      codex: DeckCodexSettings(
+        model: model,
+        reasoning: reasoning,
+        profile: profile,
+        sandbox: sandbox
+      )
+    )
+  }
+
+  private static func nonEmpty(_ value: String?) -> String? {
+    guard let value = value?.trimmingCharacters(in: .whitespacesAndNewlines), !value.isEmpty else {
+      return nil
+    }
+    return value
+  }
+
+  private static func yamlValue(_ value: String) -> String {
+    let escaped = value.replacingOccurrences(of: "\"", with: "\\\"")
+    return "\"\(escaped)\""
   }
 
   private static func parseSlides(from markdown: String) -> [Slide] {

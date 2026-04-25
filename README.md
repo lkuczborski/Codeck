@@ -4,16 +4,28 @@ Codeck is a native macOS document-based Markdown presentation maker for teaching
 
 ## Document format
 
-Documents are Markdown files. Slides are separated by a line containing only:
+Documents use the `.mdeck` extension so macOS can associate them with Codeck
+instead of the system Markdown editor. The body remains Markdown. Slides are
+separated by a line containing only:
 
 ```markdown
 ---
 ```
 
-The selected presentation theme is saved in a top-level HTML comment:
+Deck-level settings live in YAML front matter:
 
 ```markdown
-<!-- codeck-theme: studio -->
+---
+format: codeck.mdeck
+version: 1
+theme: studio
+codex:
+  sandbox: read-only
+  model: "gpt-5.2"
+  reasoning: high
+---
+
+# First Slide
 ```
 
 ## Live Codex sessions
@@ -22,12 +34,14 @@ Add a fenced `codex` block to a slide:
 
 ````markdown
 ```codex id=refactor-demo
-sandbox: read-only
-model: gpt-5.2
+reasoning: xhigh
 
 Explain how to refactor this SwiftUI view into smaller subviews.
 ```
 ````
+
+Deck defaults for model, reasoning, profile, and sandbox are applied to every
+Codex block. Any block can override those values with its own metadata.
 
 The preview pane can run one or all Codex blocks on the selected slide and streams the command output into the rendered presentation preview.
 

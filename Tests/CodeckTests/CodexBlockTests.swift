@@ -21,6 +21,7 @@ final class CodexBlockTests: XCTestCase {
     XCTAssertEqual(blocks[0].id, "demo-one")
     XCTAssertEqual(blocks[0].sandbox, "read-only")
     XCTAssertEqual(blocks[0].model, "gpt-5.2")
+    XCTAssertNil(blocks[0].reasoning)
     XCTAssertEqual(blocks[0].prompt, "Explain this code.")
   }
 

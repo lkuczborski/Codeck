@@ -1,9 +1,14 @@
 import Foundation
 
 enum CodexSessionRunner {
-  static func makeProcess(for block: CodexBlock, workingDirectory: URL?) -> Process {
+  static func makeProcess(
+    for block: CodexBlock,
+    settings: DeckCodexSettings = .default,
+    workingDirectory: URL?
+  ) -> Process {
     let process = Process()
     process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
+    let resolvedSandbox = block.sandbox ?? settings.sandbox
 
     var arguments = [
       "codex",
@@ -14,15 +19,19 @@ enum CodexSessionRunner {
       "never",
       "--skip-git-repo-check",
       "--sandbox",
-      block.sandbox,
+      resolvedSandbox,
       "--ephemeral"
     ]
 
-    if let model = block.model {
+    if let model = block.model ?? settings.model {
       arguments += ["--model", model]
     }
 
-    if let profile = block.profile {
+    if let reasoning = block.reasoning ?? settings.reasoning {
+      arguments += ["-c", "model_reasoning_effort=\"\(reasoning.rawValue)\""]
+    }
+
+    if let profile = block.profile ?? settings.profile {
       arguments += ["--profile", profile]
     }
 
