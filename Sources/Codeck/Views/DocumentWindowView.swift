@@ -6,6 +6,7 @@ struct DocumentWindowView: View {
 
   @StateObject private var sessionStore = CodexSessionStore()
   @SceneStorage("selectedSlideID") private var selectedSlideIDString: String?
+  @SceneStorage("isPreviewVisible") private var isPreviewVisible = true
   @State private var columnVisibility: NavigationSplitViewVisibility = .all
 
   private var selectedSlideID: Slide.ID? {
@@ -31,6 +32,17 @@ struct DocumentWindowView: View {
       detail
     }
     .frame(minWidth: 1100, minHeight: 720)
+    .toolbar {
+      ToolbarItem(placement: .primaryAction) {
+        Button {
+          isPreviewVisible.toggle()
+        } label: {
+          Label(isPreviewVisible ? "Hide Preview" : "Show Preview", systemImage: "sidebar.right")
+        }
+        .help(isPreviewVisible ? "Hide preview" : "Show preview")
+      }
+    }
+    .focusedValue(\.previewVisibility, $isPreviewVisible)
     .onAppear(perform: ensureSelection)
     .onChange(of: document.deck.slides) { _, _ in
       ensureSelection()
@@ -40,36 +52,48 @@ struct DocumentWindowView: View {
   @ViewBuilder
   private var detail: some View {
     if let slide = selectedSlideBinding {
-      HSplitView {
-        EditorPaneView(
-          slide: slide,
-          theme: $document.deck.theme,
-          onInsertCodexBlock: {
-            document.deck.insertCodexBlock(into: selectedSlideID)
-          }
-        )
-        .frame(minWidth: 420, idealWidth: 520)
+      if isPreviewVisible {
+        HSplitView {
+          editorPane(slide)
+            .frame(minWidth: 420, idealWidth: 520)
 
-        PreviewPaneView(
-          slide: slide.wrappedValue,
-          theme: document.deck.theme,
-          sessions: sessionStore,
-          baseURL: fileURL?.deletingLastPathComponent(),
-          onRunBlock: { block in
-            sessionStore.run(block, workingDirectory: fileURL?.deletingLastPathComponent())
-          },
-          onRunAll: { blocks in
-            sessionStore.runAll(blocks, workingDirectory: fileURL?.deletingLastPathComponent())
-          },
-          onStopAll: {
-            sessionStore.stopAll()
-          }
-        )
-        .frame(minWidth: 460, idealWidth: 640)
+          previewPane(slide.wrappedValue)
+            .frame(minWidth: 460, idealWidth: 640)
+        }
+      } else {
+        editorPane(slide)
       }
     } else {
       ContentUnavailableView("No Slide", systemImage: "rectangle.stack", description: Text("Create a slide to start editing."))
     }
+  }
+
+  private func editorPane(_ slide: Binding<Slide>) -> some View {
+    EditorPaneView(
+      slide: slide,
+      theme: $document.deck.theme,
+      onInsertCodexBlock: {
+        document.deck.insertCodexBlock(into: selectedSlideID)
+      }
+    )
+  }
+
+  private func previewPane(_ slide: Slide) -> some View {
+    PreviewPaneView(
+      slide: slide,
+      theme: document.deck.theme,
+      sessions: sessionStore,
+      baseURL: fileURL?.deletingLastPathComponent(),
+      onRunBlock: { block in
+        sessionStore.run(block, workingDirectory: fileURL?.deletingLastPathComponent())
+      },
+      onRunAll: { blocks in
+        sessionStore.runAll(blocks, workingDirectory: fileURL?.deletingLastPathComponent())
+      },
+      onStopAll: {
+        sessionStore.stopAll()
+      }
+    )
   }
 
   private var selectedSlideBinding: Binding<Slide>? {

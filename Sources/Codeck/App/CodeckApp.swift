@@ -16,5 +16,8 @@ struct CodeckApp: App {
     DocumentGroup(newDocument: PresentationDocument()) { file in
       DocumentWindowView(document: file.$document, fileURL: file.fileURL)
     }
+    .commands {
+      PreviewVisibilityCommands()
+    }
   }
 }
