@@ -7,14 +7,14 @@ enum CodexSessionRunner {
 
     var arguments = [
       "codex",
+      "--ask-for-approval",
+      "never",
       "exec",
       "--color",
       "never",
       "--skip-git-repo-check",
       "--sandbox",
       block.sandbox,
-      "--ask-for-approval",
-      "never",
       "--ephemeral"
     ]
 
