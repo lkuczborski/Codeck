@@ -578,6 +578,7 @@ enum MarkdownRenderer {
       color: var(--accent-strong);
     }
     .play-icon {
+      display: block;
       width: 0;
       height: 0;
       margin-left: 0.08em;
@@ -586,21 +587,26 @@ enum MarkdownRenderer {
       border-left: 0.36em solid currentColor;
     }
     .stop-icon {
+      display: block;
       width: 0.38em;
       height: 0.38em;
       background: currentColor;
       border-radius: 0.08em;
     }
     .run-all-icon {
+      display: block;
       position: relative;
       width: 0.68em;
       height: 0.52em;
+      line-height: 0;
+      transform: translateX(0.08em);
     }
     .run-all-icon::before,
     .run-all-icon::after {
       content: "";
       position: absolute;
-      top: 0.02em;
+      top: 50%;
+      transform: translateY(-50%);
       width: 0;
       height: 0;
       border-top: 0.24em solid transparent;

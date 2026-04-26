@@ -345,5 +345,8 @@ final class CodexBlockTests: XCTestCase {
     XCTAssertTrue(html.contains("Codeck.runAllCodex()"))
     XCTAssertTrue(html.contains("aria-label=\"Run all Codex sessions\""))
     XCTAssertTrue(html.contains("class=\"run-all-icon\""))
+    XCTAssertTrue(html.contains("line-height: 0;"))
+    XCTAssertTrue(html.contains("transform: translateX(0.08em);"))
+    XCTAssertTrue(html.contains("transform: translateY(-50%);"))
   }
 }
