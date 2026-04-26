@@ -163,7 +163,7 @@ struct PresentationDeck: Hashable {
 
 
       ```codex id=demo-\(blockNumber)
-      title: Demo \(blockNumber)
+      title: Describe the goal for this prompt
 
       Explain this concept with one concrete example.
       ```

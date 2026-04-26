@@ -72,4 +72,14 @@ final class PresentationDeckTests: XCTestCase {
     XCTAssertEqual(deck.theme, .solar)
     XCTAssertEqual(deck.slides.first?.title, "Legacy")
   }
+
+  func testInsertedCodexBlockIncludesDefaultTitle() {
+    var deck = PresentationDeck(theme: .studio, slides: [Slide(markdown: "# Demo")])
+    let slideID = deck.slides[0].id
+
+    deck.insertCodexBlock(into: slideID)
+
+    XCTAssertTrue(deck.slides[0].markdown.contains("```codex id=demo-1"))
+    XCTAssertTrue(deck.slides[0].markdown.contains("title: Describe the goal for this prompt"))
+  }
 }
