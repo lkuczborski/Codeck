@@ -5,43 +5,61 @@ struct SidebarView: View {
   @Binding var selection: Slide.ID?
 
   var body: some View {
-    VStack(spacing: 0) {
-      List(selection: $selection) {
-        ForEach(Array(deck.slides.enumerated()), id: \.element.id) { index, slide in
-          SidebarSlideRow(index: index + 1, slide: slide)
-            .tag(slide.id)
-        }
-        .onMove(perform: moveSlides)
+    List(selection: $selection) {
+      ForEach(Array(deck.slides.enumerated()), id: \.element.id) { index, slide in
+        SidebarSlideRow(index: index + 1, slide: slide)
+          .tag(slide.id)
       }
-      .listStyle(.sidebar)
-
-      Divider()
-
-      HStack(spacing: 8) {
-        Button(action: addSlide) {
-          Label("Add Slide", systemImage: "plus")
-        }
-        .help("Add slide")
-
-        Button(action: duplicateSlide) {
-          Label("Duplicate Slide", systemImage: "doc.on.doc")
-        }
-        .help("Duplicate slide")
-        .disabled(selection == nil)
-
-        Spacer()
-
-        Button(role: .destructive, action: deleteSlide) {
-          Label("Delete Slide", systemImage: "trash")
-        }
-        .help("Delete slide")
-        .disabled(deck.slides.count <= 1)
-      }
-      .labelStyle(.iconOnly)
-      .buttonStyle(.borderless)
-      .padding(10)
+      .onMove(perform: moveSlides)
+    }
+    .listStyle(.sidebar)
+    .scrollContentBackground(.hidden)
+    .safeAreaInset(edge: .bottom, spacing: 0) {
+      sidebarFooter
     }
     .navigationTitle("Slides")
+  }
+
+  @ViewBuilder
+  private var sidebarFooter: some View {
+    if #available(macOS 26.0, *) {
+      GlassEffectContainer {
+        slideActionButtons
+          .buttonStyle(.glass)
+      }
+    } else {
+      slideActionButtons
+        .buttonStyle(.borderless)
+        .codeckGlassSurface(cornerRadius: 22)
+    }
+  }
+
+  private var slideActionButtons: some View {
+    HStack(spacing: 8) {
+      Button(action: addSlide) {
+        Label("Add Slide", systemImage: "plus")
+      }
+      .help("Add slide")
+
+      Button(action: duplicateSlide) {
+        Label("Duplicate Slide", systemImage: "doc.on.doc")
+      }
+      .help("Duplicate slide")
+      .disabled(selection == nil)
+
+      Spacer(minLength: 10)
+
+      Button(role: .destructive, action: deleteSlide) {
+        Label("Delete Slide", systemImage: "trash")
+      }
+      .help("Delete slide")
+      .disabled(deck.slides.count <= 1)
+    }
+    .labelStyle(.iconOnly)
+    .buttonBorderShape(.circle)
+    .controlSize(.small)
+    .padding(.horizontal, 12)
+    .padding(.vertical, 10)
   }
 
   private func addSlide() {

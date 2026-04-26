@@ -35,7 +35,7 @@ struct DocumentWindowView: View {
     }
     .frame(minWidth: 680, minHeight: 500)
     .toolbar {
-      ToolbarItemGroup(placement: .primaryAction) {
+      ToolbarItem(placement: .primaryAction) {
         Button {
           presentationPresenter.present(
             deck: document.deck,
@@ -47,13 +47,17 @@ struct DocumentWindowView: View {
           Label("Play", systemImage: "play.fill")
         }
         .help("Start presentation")
+        .codeckToolbarIconButtonStyle(prominent: true)
+      }
 
+      ToolbarItem(placement: .primaryAction) {
         Button {
           isPreviewVisible.toggle()
         } label: {
           Label(isPreviewVisible ? "Hide Preview" : "Show Preview", systemImage: "sidebar.right")
         }
         .help(isPreviewVisible ? "Hide preview" : "Show preview")
+        .codeckToolbarIconButtonStyle()
       }
     }
     .focusedValue(\.previewVisibility, $isPreviewVisible)
@@ -98,10 +102,10 @@ struct DocumentWindowView: View {
       }
       .pickerStyle(.segmented)
       .labelsHidden()
-      .padding(.horizontal, 12)
+      .padding(8)
+      .codeckGlassSurface(cornerRadius: 14, interactive: true)
+      .padding(.horizontal, 10)
       .padding(.vertical, 8)
-
-      Divider()
 
       switch compactPane {
       case .editor:

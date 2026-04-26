@@ -10,13 +10,11 @@ struct EditorPaneView: View {
     VStack(spacing: 0) {
       toolbar
 
-      Divider()
-
       TextEditor(text: $slide.markdown)
         .font(.system(size: 15, design: .monospaced))
         .scrollContentBackground(.hidden)
         .padding(10)
-        .background(Color(nsColor: .textBackgroundColor))
+        .background(.ultraThinMaterial)
     }
   }
 
@@ -46,7 +44,10 @@ struct EditorPaneView: View {
           .labelStyle(.iconOnly)
       }
     }
-    .padding(12)
+    .padding(10)
+    .codeckGlassSurface(cornerRadius: 16, interactive: true)
+    .padding(.horizontal, 10)
+    .padding(.vertical, 8)
   }
 
   private func themePicker(width: CGFloat) -> some View {
@@ -65,6 +66,7 @@ struct EditorPaneView: View {
     } label: {
       Label("Deck Settings", systemImage: "slider.horizontal.3")
     }
+    .codeckGlassButtonStyle()
     .help("Edit deck-level Codex settings")
     .popover(isPresented: $showsDeckSettings, arrowEdge: .bottom) {
       DeckSettingsPopover(settings: $settings)
@@ -75,6 +77,7 @@ struct EditorPaneView: View {
     Button(action: onInsertCodexBlock) {
       Label("Insert Codex Session", systemImage: "terminal")
     }
+    .codeckGlassButtonStyle(prominent: true)
     .help("Insert live Codex session")
   }
 }
@@ -112,6 +115,7 @@ private struct DeckSettingsPopover: View {
     .formStyle(.grouped)
     .padding(16)
     .frame(width: 340)
+    .background(.thinMaterial)
   }
 
   private var reasoningBinding: Binding<String> {

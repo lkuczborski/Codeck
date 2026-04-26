@@ -21,28 +21,8 @@ struct PreviewPaneView: View {
   }
 
   var body: some View {
-    VStack(spacing: 0) {
-      toolbar
-
-      Divider()
-
-      MarkdownWebView(html: html, baseURL: baseURL, onAction: handleWebAction)
-    }
-    .background(Color(nsColor: .windowBackgroundColor))
-  }
-
-  private var toolbar: some View {
-    HStack {
-      title
-      Spacer()
-    }
-    .padding(12)
-  }
-
-  private var title: some View {
-    Text("Preview")
-      .font(.headline)
-      .lineLimit(1)
+    MarkdownWebView(html: html, baseURL: baseURL, onAction: handleWebAction)
+    .background(.ultraThinMaterial)
   }
 
   private func handleWebAction(_ action: MarkdownWebAction) {
