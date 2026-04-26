@@ -45,6 +45,11 @@ Codex block. Any block can override those values with its own metadata.
 
 The preview pane can run one or all Codex blocks on the selected slide and streams the command output into the rendered presentation preview.
 
+## Presenting
+
+Press the toolbar play button to start a full-screen presentation from the
+selected slide. Use the left and right arrow keys to navigate and Escape to exit.
+
 ## Local run loop
 
 Use the project run script:

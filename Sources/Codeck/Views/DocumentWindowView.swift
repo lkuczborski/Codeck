@@ -5,6 +5,7 @@ struct DocumentWindowView: View {
   let fileURL: URL?
 
   @StateObject private var sessionStore = CodexSessionStore()
+  @StateObject private var presentationPresenter = PresentationPresenter()
   @SceneStorage("selectedSlideID") private var selectedSlideIDString: String?
   @SceneStorage("isPreviewVisible") private var isPreviewVisible = true
   @SceneStorage("compactDetailPane") private var compactPaneRawValue = "editor"
@@ -34,7 +35,19 @@ struct DocumentWindowView: View {
     }
     .frame(minWidth: 680, minHeight: 500)
     .toolbar {
-      ToolbarItem(placement: .primaryAction) {
+      ToolbarItemGroup(placement: .primaryAction) {
+        Button {
+          presentationPresenter.present(
+            deck: document.deck,
+            selectedSlideID: selectedSlideID,
+            baseURL: fileURL?.deletingLastPathComponent(),
+            sessions: sessionStore
+          )
+        } label: {
+          Label("Play", systemImage: "play.fill")
+        }
+        .help("Start presentation")
+
         Button {
           isPreviewVisible.toggle()
         } label: {
