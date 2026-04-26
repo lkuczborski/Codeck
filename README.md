@@ -34,6 +34,7 @@ Add a fenced `codex` block to a slide:
 
 ````markdown
 ```codex id=refactor-demo
+title: Explain the refactor goal
 reasoning: xhigh
 
 Explain how to refactor this SwiftUI view into smaller subviews.
@@ -43,7 +44,9 @@ Explain how to refactor this SwiftUI view into smaller subviews.
 Deck defaults for model, reasoning, profile, and sandbox are applied to every
 Codex block. Any block can override those values with its own metadata.
 
-The preview pane can run one or all Codex blocks on the selected slide and streams the command output into the rendered presentation preview.
+Each live Codex card has its own run button on the slide. When a slide contains
+multiple Codex sessions, a slide-level run-all button appears in the top-right
+corner.
 
 ## Presenting
 

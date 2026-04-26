@@ -133,9 +133,6 @@ struct DocumentWindowView: View {
       },
       onRunAll: { blocks in
         sessionStore.runAll(blocks, settings: document.deck.settings.codex, workingDirectory: fileURL?.deletingLastPathComponent())
-      },
-      onStopAll: {
-        sessionStore.stopAll()
       }
     )
   }

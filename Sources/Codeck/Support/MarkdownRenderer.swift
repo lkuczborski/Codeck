@@ -6,6 +6,7 @@ enum MarkdownRenderer {
     theme: PresentationTheme,
     codexOutputs: [String: CodexSessionOutput]
   ) -> String {
+    let codexBlocks = slide.codexBlocks
     let body = renderBlocks(from: slide.markdown, codexOutputs: codexOutputs)
     return
       """
@@ -18,9 +19,23 @@ enum MarkdownRenderer {
       \(theme.css)
       \(baseCSS)
       </style>
+      <script>
+      window.Codeck = {
+        runCodex: function(id) {
+          window.webkit?.messageHandlers?.codeck?.postMessage({ action: "runCodex", id: id });
+        },
+        stopCodex: function(id) {
+          window.webkit?.messageHandlers?.codeck?.postMessage({ action: "stopCodex", id: id });
+        },
+        runAllCodex: function() {
+          window.webkit?.messageHandlers?.codeck?.postMessage({ action: "runAllCodex" });
+        }
+      };
+      </script>
       </head>
       <body>
         <main class="slide">
+          \(renderSlideActions(for: codexBlocks))
           \(body)
         </main>
       </body>
@@ -110,6 +125,16 @@ enum MarkdownRenderer {
     }
 
     return html.joined(separator: "\n")
+  }
+
+  private static func renderSlideActions(for blocks: [CodexBlock]) -> String {
+    guard blocks.count > 1 else { return "" }
+    return
+      """
+      <div class="slide-actions">
+        <button type="button" class="slide-action-button" onclick="Codeck.runAllCodex()">Run all</button>
+      </div>
+      """
   }
 
   private static func headingHTML(for line: String) -> String? {
@@ -257,17 +282,28 @@ enum MarkdownRenderer {
     let state = output?.state ?? .idle
     let body = output?.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false
       ? output?.text ?? ""
-      : "Ready to run from the preview toolbar."
+      : "Ready to run."
+    let isRunning = state == .running
+    let action = isRunning ? "stopCodex" : "runCodex"
+    let actionTitle = isRunning ? "Stop" : "Run"
+    let actionClass = isRunning ? "codex-action stop" : "codex-action"
 
     return
       """
       <section class="codex-card state-\(state.rawValue)">
-        <div class="codex-header">
-          <span>Codex Session</span>
-          <span>\(escapeHTML(state.rawValue.uppercased()))</span>
+        <div class="codex-card-heading">
+          <div class="codex-card-title-group">
+            <div class="codex-kicker">
+              <span>Codex Session</span>
+              <span>\(escapeHTML(state.rawValue.uppercased()))</span>
+            </div>
+            <div class="codex-title">\(renderInline(block.title))</div>
+          </div>
+          <button type="button" class="\(actionClass)" onclick="Codeck.\(action)('\(escapeJavaScript(block.id))')">\(actionTitle)</button>
         </div>
-        <div class="codex-title">\(renderInline(block.title))</div>
+        <div class="codex-label">Prompt</div>
         <pre class="codex-prompt"><code>\(escapeHTML(block.prompt))</code></pre>
+        <div class="codex-label">Output</div>
         <pre class="codex-output"><code>\(escapeHTML(body))</code></pre>
       </section>
       """
@@ -330,6 +366,14 @@ enum MarkdownRenderer {
     escapeHTML(value).replacingOccurrences(of: "'", with: "&#39;")
   }
 
+  private static func escapeJavaScript(_ value: String) -> String {
+    value
+      .replacingOccurrences(of: "\\", with: "\\\\")
+      .replacingOccurrences(of: "'", with: "\\'")
+      .replacingOccurrences(of: "\n", with: "\\n")
+      .replacingOccurrences(of: "\r", with: "\\r")
+  }
+
   private static let baseCSS =
     """
     * { box-sizing: border-box; }
@@ -345,6 +389,7 @@ enum MarkdownRenderer {
       justify-content: center;
     }
     .slide {
+      position: relative;
       width: min(100vw, 1600px);
       min-height: 100vh;
       padding: 88px;
@@ -420,6 +465,37 @@ enum MarkdownRenderer {
       background: var(--border);
       margin: 1.4em 0;
     }
+    button {
+      font: inherit;
+    }
+    .slide-actions {
+      position: fixed;
+      top: 22px;
+      right: 26px;
+      z-index: 10;
+    }
+    .slide-action-button,
+    .codex-action {
+      appearance: none;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: var(--accent);
+      color: var(--bg);
+      cursor: pointer;
+      font-size: 0.58em;
+      font-weight: 760;
+      line-height: 1;
+      padding: 0.62em 0.92em;
+      white-space: nowrap;
+    }
+    .slide-action-button:hover,
+    .codex-action:hover {
+      filter: brightness(1.08);
+    }
+    .codex-action.stop {
+      background: transparent;
+      color: var(--accent-strong);
+    }
     .codex-card {
       overflow: hidden;
       border: 1px solid var(--border);
@@ -427,23 +503,41 @@ enum MarkdownRenderer {
       background: var(--panel);
       box-shadow: 0 18px 60px rgba(0, 0, 0, 0.18);
     }
-    .codex-header {
+    .codex-card-heading {
       display: flex;
+      align-items: flex-start;
       justify-content: space-between;
       gap: 1em;
-      padding: 0.7em 0.85em;
+      padding: 0.8em 0.9em;
       color: var(--accent-strong);
       background: var(--panel-strong);
       border-bottom: 1px solid var(--border);
+    }
+    .codex-card-title-group {
+      min-width: 0;
+    }
+    .codex-kicker {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.65em;
+      margin-bottom: 0.35em;
       font-size: 0.62em;
       font-weight: 760;
       letter-spacing: 0.08em;
       text-transform: uppercase;
     }
     .codex-title {
-      padding: 0.8em 0.9em 0;
       color: var(--fg);
       font-weight: 700;
+      line-height: 1.18;
+    }
+    .codex-label {
+      margin: 0.85em 0.95em -0.25em;
+      color: var(--muted);
+      font-size: 0.58em;
+      font-weight: 760;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
     }
     .codex-prompt,
     .codex-output {
@@ -477,9 +571,12 @@ enum MarkdownRenderer {
       pre {
         font-size: 0.68em;
       }
-      .codex-header {
+      .codex-card-heading {
         flex-direction: column;
-        gap: 0.2em;
+      }
+      .slide-actions {
+        top: 12px;
+        right: 12px;
       }
     }
     """

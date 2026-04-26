@@ -54,7 +54,7 @@ struct PresentationDeck: Hashable {
             Add a fenced `codex` block to run a prompt during the presentation.
 
             ```codex id=first-demo
-            sandbox: read-only
+            title: Show prompt-quality tactics
 
             Explain three practical ways to make a prompt more testable when asking Codex to change code.
             ```

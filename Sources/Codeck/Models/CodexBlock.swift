@@ -72,7 +72,7 @@ struct CodexBlock: Identifiable, Hashable {
     guard !prompt.isEmpty else { return nil }
 
     let id = attributes["id"] ?? stableID(for: prompt + (attributes["model"] ?? ""))
-    let title = attributes["title"] ?? prompt.components(separatedBy: .newlines).first ?? "Codex Session"
+    let title = attributes["title"] ?? "Codex Session"
 
     return CodexBlock(
       id: id,

@@ -26,7 +26,7 @@ struct PresentationModeView: View {
       Color.black
         .ignoresSafeArea()
 
-      MarkdownWebView(html: html, baseURL: baseURL)
+      MarkdownWebView(html: html, baseURL: baseURL, onAction: handleWebAction)
         .ignoresSafeArea()
 
       Text("\(playbackState.currentSlideNumber) / \(playbackState.slideCount)")
@@ -36,6 +36,21 @@ struct PresentationModeView: View {
         .padding(.vertical, 6)
         .background(.black.opacity(0.42), in: Capsule())
         .padding(18)
+    }
+  }
+
+  private func handleWebAction(_ action: MarkdownWebAction) {
+    let blocks = playbackState.currentSlide?.codexBlocks ?? []
+
+    switch action {
+    case .runCodex(let id):
+      if let block = blocks.first(where: { $0.id == id }) {
+        sessions.run(block, settings: playbackState.deck.settings.codex, workingDirectory: baseURL)
+      }
+    case .stopCodex(let id):
+      sessions.stop(id)
+    case .runAllCodex:
+      sessions.runAll(blocks, settings: playbackState.deck.settings.codex, workingDirectory: baseURL)
     }
   }
 }
