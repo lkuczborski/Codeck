@@ -132,7 +132,10 @@ enum MarkdownRenderer {
     return
       """
       <div class="slide-actions">
-        <button type="button" class="slide-action-button" onclick="Codeck.runAllCodex()">Run all</button>
+        <button type="button" class="icon-button slide-action-button run-all" aria-label="Run all Codex sessions" title="Run all Codex sessions" onclick="Codeck.runAllCodex()">
+          <span class="run-all-icon" aria-hidden="true"></span>
+          <span class="visually-hidden">Run all</span>
+        </button>
       </div>
       """
   }
@@ -286,20 +289,21 @@ enum MarkdownRenderer {
     let isRunning = state == .running
     let action = isRunning ? "stopCodex" : "runCodex"
     let actionTitle = isRunning ? "Stop" : "Run"
-    let actionClass = isRunning ? "codex-action stop" : "codex-action"
+    let actionClass = isRunning ? "icon-button codex-action stop" : "icon-button codex-action run"
+    let iconClass = isRunning ? "stop-icon" : "play-icon"
 
     return
       """
       <section class="codex-card state-\(state.rawValue)">
         <div class="codex-card-heading">
           <div class="codex-card-title-group">
-            <div class="codex-kicker">
-              <span>Codex Session</span>
-              <span>\(escapeHTML(state.rawValue.uppercased()))</span>
-            </div>
             <div class="codex-title">\(renderInline(block.title))</div>
+            <div class="codex-status">\(escapeHTML(state.rawValue))</div>
           </div>
-          <button type="button" class="\(actionClass)" onclick="Codeck.\(action)('\(escapeJavaScript(block.id))')">\(actionTitle)</button>
+          <button type="button" class="\(actionClass)" aria-label="\(actionTitle) Codex session" title="\(actionTitle) Codex session" onclick="Codeck.\(action)('\(escapeJavaScript(block.id))')">
+            <span class="\(iconClass)" aria-hidden="true"></span>
+            <span class="visually-hidden">\(actionTitle)</span>
+          </button>
         </div>
         <div class="codex-label">Prompt</div>
         <pre class="codex-prompt"><code>\(escapeHTML(block.prompt))</code></pre>
@@ -468,33 +472,79 @@ enum MarkdownRenderer {
     button {
       font: inherit;
     }
+    .visually-hidden {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
     .slide-actions {
       position: fixed;
       top: 22px;
       right: 26px;
       z-index: 10;
     }
-    .slide-action-button,
-    .codex-action {
+    .icon-button {
       appearance: none;
       border: 1px solid var(--border);
-      border-radius: 999px;
       background: var(--accent);
       color: var(--bg);
       cursor: pointer;
-      font-size: 0.58em;
-      font-weight: 760;
-      line-height: 1;
-      padding: 0.62em 0.92em;
-      white-space: nowrap;
+      display: inline-grid;
+      place-items: center;
+      flex: 0 0 auto;
+      height: 1.42em;
+      width: 1.42em;
+      border-radius: 999px;
+      padding: 0;
     }
-    .slide-action-button:hover,
-    .codex-action:hover {
+    .icon-button:hover {
       filter: brightness(1.08);
     }
     .codex-action.stop {
       background: transparent;
       color: var(--accent-strong);
+    }
+    .play-icon {
+      width: 0;
+      height: 0;
+      margin-left: 0.08em;
+      border-top: 0.24em solid transparent;
+      border-bottom: 0.24em solid transparent;
+      border-left: 0.36em solid currentColor;
+    }
+    .stop-icon {
+      width: 0.38em;
+      height: 0.38em;
+      background: currentColor;
+      border-radius: 0.08em;
+    }
+    .run-all-icon {
+      position: relative;
+      width: 0.68em;
+      height: 0.52em;
+    }
+    .run-all-icon::before,
+    .run-all-icon::after {
+      content: "";
+      position: absolute;
+      top: 0.02em;
+      width: 0;
+      height: 0;
+      border-top: 0.24em solid transparent;
+      border-bottom: 0.24em solid transparent;
+      border-left: 0.3em solid currentColor;
+    }
+    .run-all-icon::before {
+      left: 0.05em;
+    }
+    .run-all-icon::after {
+      left: 0.31em;
     }
     .codex-card {
       overflow: hidden;
@@ -505,31 +555,38 @@ enum MarkdownRenderer {
     }
     .codex-card-heading {
       display: flex;
-      align-items: flex-start;
+      align-items: center;
       justify-content: space-between;
-      gap: 1em;
-      padding: 0.8em 0.9em;
+      gap: 0.7em;
+      padding: 0.46em 0.56em 0.46em 0.72em;
       color: var(--accent-strong);
       background: var(--panel-strong);
       border-bottom: 1px solid var(--border);
     }
     .codex-card-title-group {
-      min-width: 0;
-    }
-    .codex-kicker {
+      align-items: baseline;
       display: flex;
-      flex-wrap: wrap;
-      gap: 0.65em;
-      margin-bottom: 0.35em;
-      font-size: 0.62em;
-      font-weight: 760;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
+      gap: 0.55em;
+      min-width: 0;
     }
     .codex-title {
       color: var(--fg);
+      font-size: 0.72em;
       font-weight: 700;
       line-height: 1.18;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .codex-status {
+      color: var(--muted);
+      flex: 0 0 auto;
+      font-size: 0.42em;
+      font-weight: 720;
+      letter-spacing: 0.05em;
+      line-height: 1.1;
+      text-transform: uppercase;
     }
     .codex-label {
       margin: 0.85em 0.95em -0.25em;
@@ -552,10 +609,10 @@ enum MarkdownRenderer {
     .codex-output {
       min-height: 9em;
     }
-    .state-running .codex-header span:last-child {
+    .state-running .codex-status {
       color: var(--accent);
     }
-    .state-failed .codex-header span:last-child {
+    .state-failed .codex-status {
       color: #ff6b6b;
     }
     @media (max-width: 820px), (max-height: 620px) {
@@ -572,7 +629,7 @@ enum MarkdownRenderer {
         font-size: 0.68em;
       }
       .codex-card-heading {
-        flex-direction: column;
+        gap: 0.5em;
       }
       .slide-actions {
         top: 12px;

@@ -91,6 +91,12 @@ final class CodexBlockTests: XCTestCase {
     XCTAssertTrue(html.contains("Explain the refactor goal"))
     XCTAssertEqual(html.components(separatedBy: prompt).count - 1, 1)
     XCTAssertTrue(html.contains("Codeck.runCodex('session')"))
+    XCTAssertTrue(html.contains("aria-label=\"Run Codex session\""))
+    XCTAssertTrue(html.contains("class=\"play-icon\""))
+    XCTAssertTrue(html.contains("display: flex;"))
+    XCTAssertTrue(html.contains("align-items: center;"))
+    XCTAssertTrue(html.contains("height: 1.42em;"))
+    XCTAssertFalse(html.contains(">Codex Session</span>"))
     XCTAssertFalse(html.contains("Codeck.runAllCodex()"))
   }
 
@@ -115,5 +121,7 @@ final class CodexBlockTests: XCTestCase {
     let html = MarkdownRenderer.htmlDocument(for: slide, theme: .studio, codexOutputs: [:])
 
     XCTAssertTrue(html.contains("Codeck.runAllCodex()"))
+    XCTAssertTrue(html.contains("aria-label=\"Run all Codex sessions\""))
+    XCTAssertTrue(html.contains("class=\"run-all-icon\""))
   }
 }
