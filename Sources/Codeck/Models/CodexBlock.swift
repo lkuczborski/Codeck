@@ -8,6 +8,7 @@ struct CodexBlock: Identifiable, Hashable {
   var profile: String?
   var sandbox: String?
   var title: String
+  var verbose: Bool
 
   init(
     id: String,
@@ -16,7 +17,8 @@ struct CodexBlock: Identifiable, Hashable {
     reasoning: CodexReasoningEffort? = nil,
     profile: String? = nil,
     sandbox: String? = nil,
-    title: String
+    title: String,
+    verbose: Bool = false
   ) {
     self.id = id
     self.prompt = prompt
@@ -25,6 +27,7 @@ struct CodexBlock: Identifiable, Hashable {
     self.profile = profile
     self.sandbox = sandbox
     self.title = title
+    self.verbose = verbose
   }
 
   static func extract(from markdown: String) -> [CodexBlock] {
@@ -81,7 +84,8 @@ struct CodexBlock: Identifiable, Hashable {
       reasoning: reasoning(from: attributes),
       profile: emptyToNil(attributes["profile"]),
       sandbox: emptyToNil(attributes["sandbox"]),
-      title: title
+      title: title,
+      verbose: boolValue(from: attributes["verbose"])
     )
   }
 
@@ -138,6 +142,15 @@ struct CodexBlock: Identifiable, Hashable {
       return nil
     }
     return value
+  }
+
+  private static func boolValue(from value: String?) -> Bool {
+    guard let value else { return false }
+    let normalized = value
+      .trimmingCharacters(in: .whitespacesAndNewlines)
+      .trimmingCharacters(in: CharacterSet(charactersIn: "\"'"))
+      .lowercased()
+    return ["true", "yes", "1", "on"].contains(normalized)
   }
 
   private static func stableID(for seed: String) -> String {

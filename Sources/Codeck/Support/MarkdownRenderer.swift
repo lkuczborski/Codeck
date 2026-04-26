@@ -1,6 +1,17 @@
 import Foundation
 
 enum MarkdownRenderer {
+  private enum ListKind {
+    case ordered
+    case unordered
+  }
+
+  private struct ListMarker {
+    var kind: ListKind
+    var start: Int?
+    var text: String
+  }
+
   static func htmlDocument(
     for slide: Slide,
     theme: PresentationTheme,
@@ -45,7 +56,8 @@ enum MarkdownRenderer {
 
   private static func renderBlocks(
     from markdown: String,
-    codexOutputs: [String: CodexSessionOutput]
+    codexOutputs: [String: CodexSessionOutput],
+    renderCodexFences: Bool = true
   ) -> String {
     let lines = markdown.components(separatedBy: .newlines)
     var html: [String] = []
@@ -76,7 +88,9 @@ enum MarkdownRenderer {
         }
 
         let code = codeLines.joined(separator: "\n")
-        if info.hasPrefix("codex"), let block = CodexBlock.extract(from: "\(fence)\(info)\n\(code)\n\(fence)").first {
+        if renderCodexFences,
+           info.hasPrefix("codex"),
+           let block = CodexBlock.extract(from: "\(fence)\(info)\n\(code)\n\(fence)").first {
           html.append(renderCodexBlock(block, output: codexOutputs[block.id]))
         } else {
           html.append(renderCodeBlock(code, language: info))
@@ -105,8 +119,13 @@ enum MarkdownRenderer {
         continue
       }
 
-      if isUnorderedListLine(trimmed) || isOrderedListLine(trimmed) {
-        let rendered = renderList(lines, startingAt: index)
+      if listMarker(for: trimmed) != nil {
+        let rendered = renderList(
+          lines,
+          startingAt: index,
+          codexOutputs: codexOutputs,
+          renderCodexFences: renderCodexFences
+        )
         html.append(rendered.html)
         index = rendered.nextIndex
         continue
@@ -205,43 +224,90 @@ enum MarkdownRenderer {
     return trimmed.components(separatedBy: "|")
   }
 
-  private static func renderList(_ lines: [String], startingAt index: Int) -> (html: String, nextIndex: Int) {
-    let ordered = isOrderedListLine(lines[index].trimmingCharacters(in: .whitespaces))
+  private static func renderList(
+    _ lines: [String],
+    startingAt index: Int,
+    codexOutputs: [String: CodexSessionOutput],
+    renderCodexFences: Bool
+  ) -> (html: String, nextIndex: Int) {
+    guard let firstMarker = listMarker(for: lines[index].trimmingCharacters(in: .whitespaces)) else {
+      return ("", index + 1)
+    }
+
+    let ordered = firstMarker.kind == .ordered
     var rowIndex = index
     var items: [String] = []
 
     while rowIndex < lines.count {
       let trimmed = lines[rowIndex].trimmingCharacters(in: .whitespaces)
-      guard ordered ? isOrderedListLine(trimmed) : isUnorderedListLine(trimmed) else {
+      guard let marker = listMarker(for: trimmed), marker.kind == firstMarker.kind else {
         break
       }
-      items.append(listItemText(trimmed))
+
+      var itemLines = [marker.text]
       rowIndex += 1
+
+      while rowIndex < lines.count {
+        let continuation = lines[rowIndex].trimmingCharacters(in: .whitespaces)
+        if let nextMarker = listMarker(for: continuation), nextMarker.kind == firstMarker.kind {
+          break
+        }
+        if isStrongListBoundary(continuation) {
+          break
+        }
+        itemLines.append(lines[rowIndex])
+        rowIndex += 1
+      }
+
+      items.append(renderListItem(itemLines, codexOutputs: codexOutputs, renderCodexFences: renderCodexFences))
     }
 
     let tag = ordered ? "ol" : "ul"
-    let body = items.map { "<li>\(renderInline($0))</li>" }.joined(separator: "\n")
-    return ("<\(tag)>\n\(body)\n</\(tag)>", rowIndex)
+    let startAttribute = firstMarker.start.map { ordered && $0 != 1 ? " start=\"\($0)\"" : "" } ?? ""
+    let body = items.map { "<li>\($0)</li>" }.joined(separator: "\n")
+    return ("<\(tag)\(startAttribute)>\n\(body)\n</\(tag)>", rowIndex)
   }
 
   private static func isUnorderedListLine(_ line: String) -> Bool {
-    line.hasPrefix("- ") || line.hasPrefix("* ") || line.hasPrefix("+ ")
+    listMarker(for: line)?.kind == .unordered
   }
 
   private static func isOrderedListLine(_ line: String) -> Bool {
-    guard let dot = line.firstIndex(of: ".") else { return false }
-    let prefix = line[..<dot]
-    let suffix = line[line.index(after: dot)...]
-    return !prefix.isEmpty && prefix.allSatisfy(\.isNumber) && suffix.hasPrefix(" ")
+    listMarker(for: line)?.kind == .ordered
   }
 
-  private static func listItemText(_ line: String) -> String {
-    if isUnorderedListLine(line) {
-      return String(line.dropFirst(2))
+  private static func renderListItem(
+    _ lines: [String],
+    codexOutputs: [String: CodexSessionOutput],
+    renderCodexFences: Bool
+  ) -> String {
+    let markdown = lines.joined(separator: "\n").trimmingCharacters(in: .whitespacesAndNewlines)
+    guard !markdown.isEmpty else { return "" }
+    return renderBlocks(from: markdown, codexOutputs: codexOutputs, renderCodexFences: renderCodexFences)
+  }
+
+  private static func isStrongListBoundary(_ trimmedLine: String) -> Bool {
+    headingHTML(for: trimmedLine) != nil || isHorizontalRule(trimmedLine)
+  }
+
+  private static func listMarker(for line: String) -> ListMarker? {
+    if line.hasPrefix("- ") || line.hasPrefix("* ") || line.hasPrefix("+ ") {
+      return ListMarker(kind: .unordered, start: nil, text: String(line.dropFirst(2)))
     }
 
-    guard let dot = line.firstIndex(of: ".") else { return line }
-    return String(line[line.index(dot, offsetBy: 2)...])
+    guard let dot = line.firstIndex(of: ".") else { return nil }
+    let prefix = line[..<dot]
+    let suffixStart = line.index(after: dot)
+    guard !prefix.isEmpty, prefix.allSatisfy(\.isNumber), line[suffixStart...].hasPrefix(" ") else {
+      return nil
+    }
+
+    let textStart = line.index(after: suffixStart)
+    return ListMarker(
+      kind: .ordered,
+      start: Int(prefix),
+      text: String(line[textStart...])
+    )
   }
 
   private static func renderBlockquote(_ lines: [String], startingAt index: Int) -> (html: String, nextIndex: Int) {
@@ -283,9 +349,8 @@ enum MarkdownRenderer {
 
   private static func renderCodexBlock(_ block: CodexBlock, output: CodexSessionOutput?) -> String {
     let state = output?.state ?? .idle
-    let body = output?.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false
-      ? output?.text ?? ""
-      : "Ready to run."
+    let body = CodexSessionOutputFormatter.markdown(from: output, verbose: block.verbose)
+    let bodyHTML = renderBlocks(from: body, codexOutputs: [:], renderCodexFences: false)
     let isRunning = state == .running
     let action = isRunning ? "stopCodex" : "runCodex"
     let actionTitle = isRunning ? "Stop" : "Run"
@@ -308,7 +373,9 @@ enum MarkdownRenderer {
         <div class="codex-label">Prompt</div>
         <pre class="codex-prompt"><code>\(escapeHTML(block.prompt))</code></pre>
         <div class="codex-label">Output</div>
-        <pre class="codex-output"><code>\(escapeHTML(body))</code></pre>
+        <div class="codex-output">
+          \(bodyHTML)
+        </div>
       </section>
       """
   }
@@ -596,8 +663,7 @@ enum MarkdownRenderer {
       letter-spacing: 0.08em;
       text-transform: uppercase;
     }
-    .codex-prompt,
-    .codex-output {
+    .codex-prompt {
       margin: 0.75em;
       box-shadow: none;
     }
@@ -607,7 +673,50 @@ enum MarkdownRenderer {
       color: var(--fg);
     }
     .codex-output {
+      margin: 0.75em;
       min-height: 9em;
+      padding: 1em;
+      overflow: auto;
+      background: var(--code-bg);
+      color: var(--code-fg);
+      border-radius: 8px;
+      font-size: 0.72em;
+    }
+    .codex-output > :last-child {
+      margin-bottom: 0;
+    }
+    .codex-output h1,
+    .codex-output h2,
+    .codex-output h3,
+    .codex-output h4,
+    .codex-output h5,
+    .codex-output h6 {
+      margin-bottom: 0.55em;
+    }
+    .codex-output h1 { font-size: 1.65em; }
+    .codex-output h2 { font-size: 1.38em; }
+    .codex-output h3 { font-size: 1.15em; }
+    .codex-output h4,
+    .codex-output h5,
+    .codex-output h6 { font-size: 1em; }
+    .codex-output p,
+    .codex-output ul,
+    .codex-output ol,
+    .codex-output blockquote,
+    .codex-output table,
+    .codex-output pre {
+      margin: 0 0 0.85em;
+    }
+    .codex-output p,
+    .codex-output li,
+    .codex-output td,
+    .codex-output th,
+    .codex-output blockquote {
+      max-width: none;
+    }
+    .codex-output pre {
+      background: rgba(0, 0, 0, 0.18);
+      font-size: 0.9em;
     }
     .state-running .codex-status {
       color: var(--accent);

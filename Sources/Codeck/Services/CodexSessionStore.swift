@@ -12,6 +12,20 @@ enum CodexSessionState: String, Hashable {
 struct CodexSessionOutput: Hashable {
   var state: CodexSessionState
   var text: String
+  var standardOutput: String
+  var standardError: String
+
+  init(
+    state: CodexSessionState,
+    text: String,
+    standardOutput: String = "",
+    standardError: String = ""
+  ) {
+    self.state = state
+    self.text = text
+    self.standardOutput = standardOutput
+    self.standardError = standardError
+  }
 }
 
 @MainActor
@@ -50,7 +64,7 @@ final class CodexSessionStore: ObservableObject {
       guard !data.isEmpty else { return }
       let text = String(decoding: data, as: UTF8.self)
       Task { @MainActor in
-        self?.append(text, to: block.id)
+        self?.append(text, to: block.id, stream: .standardOutput)
       }
     }
 
@@ -59,7 +73,7 @@ final class CodexSessionStore: ObservableObject {
       guard !data.isEmpty else { return }
       let text = String(decoding: data, as: UTF8.self)
       Task { @MainActor in
-        self?.append(text, to: block.id)
+        self?.append(text, to: block.id, stream: .standardError)
       }
     }
 
@@ -78,7 +92,8 @@ final class CodexSessionStore: ObservableObject {
     } catch {
       outputs[block.id] = CodexSessionOutput(
         state: .failed,
-        text: "Could not start Codex: \(error.localizedDescription)"
+        text: "Could not start Codex: \(error.localizedDescription)",
+        standardError: "Could not start Codex: \(error.localizedDescription)"
       )
       cleanup(blockID: block.id)
     }
@@ -93,10 +108,10 @@ final class CodexSessionStore: ObservableObject {
   func stop(_ blockID: String) {
     guard let process = processes[blockID] else { return }
     process.terminate()
-    outputs[blockID] = CodexSessionOutput(
-      state: .stopped,
-      text: output(for: blockID).text + "\nStopped."
-    )
+    var output = output(for: blockID)
+    output.state = .stopped
+    output.text += "\nStopped."
+    outputs[blockID] = output
     cleanup(blockID: blockID)
   }
 
@@ -112,9 +127,20 @@ final class CodexSessionStore: ObservableObject {
     }
   }
 
-  private func append(_ text: String, to blockID: String) {
+  private enum SessionStream {
+    case standardOutput
+    case standardError
+  }
+
+  private func append(_ text: String, to blockID: String, stream: SessionStream) {
     var output = output(for: blockID)
     output.text += text
+    switch stream {
+    case .standardOutput:
+      output.standardOutput += text
+    case .standardError:
+      output.standardError += text
+    }
     outputs[blockID] = output
   }
 
@@ -123,6 +149,11 @@ final class CodexSessionStore: ObservableObject {
     output.state = status == 0 ? .completed : .failed
     if output.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
       output.text = status == 0 ? "Codex completed without output." : "Codex exited with status \(status)."
+      if status == 0 {
+        output.standardOutput = output.text
+      } else {
+        output.standardError = output.text
+      }
     }
     outputs[blockID] = output
     cleanup(blockID: blockID)

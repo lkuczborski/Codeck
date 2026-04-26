@@ -23,6 +23,7 @@ final class CodexBlockTests: XCTestCase {
     XCTAssertEqual(blocks[0].model, "gpt-5.2")
     XCTAssertNil(blocks[0].reasoning)
     XCTAssertEqual(blocks[0].title, "Codex Session")
+    XCTAssertFalse(blocks[0].verbose)
     XCTAssertEqual(blocks[0].prompt, "Explain this code.")
   }
 
@@ -40,6 +41,22 @@ final class CodexBlockTests: XCTestCase {
 
     XCTAssertEqual(blocks.first?.title, "Explain the refactor goal")
     XCTAssertEqual(blocks.first?.prompt, "Rewrite this view into smaller SwiftUI subviews.")
+  }
+
+  func testCodexBlockParsesVerboseFlag() {
+    let blocks = CodexBlock.extract(
+      from:
+        """
+        ```codex id=session
+        verbose: true
+
+        Show the raw session transcript.
+        ```
+        """
+    )
+
+    XCTAssertEqual(blocks.first?.verbose, true)
+    XCTAssertEqual(blocks.first?.prompt, "Show the raw session transcript.")
   }
 
   func testRendererIncludesTablesImagesAndCodexOutput() {
@@ -71,6 +88,211 @@ final class CodexBlockTests: XCTestCase {
     XCTAssertTrue(html.contains("<table>"))
     XCTAssertTrue(html.contains("<img src=\"Images/example.gif\" alt=\"Alt\">"))
     XCTAssertTrue(html.contains("Done"))
+  }
+
+  func testRendererShowsOnlyCodexResponseByDefaultAndRendersMarkdown() {
+    let slide = Slide(
+      markdown:
+        """
+        ```codex id=session
+        title: Explain output
+
+        Prompt
+        ```
+        """
+    )
+    let output =
+      """
+      OpenAI Codex
+      user
+      Prompt
+      codex
+      # Result
+
+      - **One**
+      - `Two`
+      """
+
+    let html = MarkdownRenderer.htmlDocument(
+      for: slide,
+      theme: .studio,
+      codexOutputs: [
+        "session": CodexSessionOutput(state: .completed, text: output)
+      ]
+    )
+
+    XCTAssertFalse(html.contains("OpenAI Codex"))
+    XCTAssertFalse(html.contains("<pre class=\"codex-output\">"))
+    XCTAssertTrue(html.contains("<h1>Result</h1>"))
+    XCTAssertTrue(html.contains("<strong>One</strong>"))
+    XCTAssertTrue(html.contains("<code>Two</code>"))
+  }
+
+  func testVerboseCodexOutputKeepsFullSessionTranscript() {
+    let slide = Slide(
+      markdown:
+        """
+        ```codex id=session
+        title: Explain output
+        verbose: true
+
+        Prompt
+        ```
+        """
+    )
+    let output =
+      """
+      OpenAI Codex
+      user
+      Prompt
+      codex
+      # Result
+      """
+
+    let html = MarkdownRenderer.htmlDocument(
+      for: slide,
+      theme: .studio,
+      codexOutputs: [
+        "session": CodexSessionOutput(state: .completed, text: output)
+      ]
+    )
+
+    XCTAssertTrue(html.contains("OpenAI Codex"))
+    XCTAssertTrue(html.contains("user Prompt codex"))
+    XCTAssertTrue(html.contains("<h1>Result</h1>"))
+  }
+
+  func testCodexMarkdownOutputKeepsLooseOrderedListTogether() {
+    let slide = Slide(
+      markdown:
+        """
+        ```codex id=session
+        title: Prompt tactics
+
+        Prompt
+        ```
+        """
+    )
+    let output =
+      """
+      codex
+      1. **Define observable behavior**
+
+      Say what should change.
+
+      > Improve validation.
+
+      1. **Name the tests Codex should run**
+
+      Give a concrete verification target.
+
+      > npm test
+
+      1. **Constrain scope**
+
+      State what counts as done.
+      """
+
+    let html = MarkdownRenderer.htmlDocument(
+      for: slide,
+      theme: .studio,
+      codexOutputs: [
+        "session": CodexSessionOutput(state: .completed, text: output)
+      ]
+    )
+
+    XCTAssertEqual(html.components(separatedBy: "<ol>").count - 1, 1)
+    XCTAssertEqual(html.components(separatedBy: "<li>").count - 1, 3)
+    XCTAssertTrue(html.contains("<strong>Name the tests Codex should run</strong>"))
+    XCTAssertTrue(html.contains("<blockquote>npm test</blockquote>"))
+  }
+
+  func testRendererPrefersCleanFinalCodexOutputOverTranscriptCopy() {
+    let slide = Slide(
+      markdown:
+        """
+        ```codex id=session
+        title: Prompt tactics
+
+        Prompt
+        ```
+        """
+    )
+    let response =
+      """
+      Three practical ways:
+
+      1. **Define observable behavior**
+
+      Say what should change.
+
+      1. **Name the expected tests or checks**
+
+      Tell Codex what should pass.
+      """
+    let transcript =
+      """
+      user
+      Prompt
+      codex
+      \(response)
+      tokens used 10,784
+      """
+
+    let html = MarkdownRenderer.htmlDocument(
+      for: slide,
+      theme: .studio,
+      codexOutputs: [
+        "session": CodexSessionOutput(
+          state: .completed,
+          text: transcript + response,
+          standardOutput: response,
+          standardError: transcript
+        )
+      ]
+    )
+
+    XCTAssertFalse(html.contains("tokens used"))
+    XCTAssertEqual(html.components(separatedBy: "Define observable behavior").count - 1, 1)
+    XCTAssertEqual(html.components(separatedBy: "Name the expected tests or checks").count - 1, 1)
+  }
+
+  func testRendererTrimsCodexUsageFooterWhenOnlyTranscriptIsAvailable() {
+    let slide = Slide(
+      markdown:
+        """
+        ```codex id=session
+        title: Prompt tactics
+
+        Prompt
+        ```
+        """
+    )
+    let output =
+      """
+      codex
+      Three practical ways:
+
+      1. **Define observable behavior**
+
+      Say what should change.
+      tokens used 10,784 Three practical ways:
+
+      1. **Define observable behavior**
+
+      Say what should change.
+      """
+
+    let html = MarkdownRenderer.htmlDocument(
+      for: slide,
+      theme: .studio,
+      codexOutputs: [
+        "session": CodexSessionOutput(state: .completed, text: output)
+      ]
+    )
+
+    XCTAssertFalse(html.contains("tokens used"))
+    XCTAssertEqual(html.components(separatedBy: "Define observable behavior").count - 1, 1)
   }
 
   func testRendererShowsPromptOnceAndAddsCodexBlockButton() {

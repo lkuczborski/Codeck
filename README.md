@@ -39,6 +39,7 @@ model: gpt-5.2
 reasoning: xhigh
 profile: teaching
 sandbox: read-only
+verbose: false
 
 Explain how to refactor this SwiftUI view into smaller subviews.
 ```
@@ -59,6 +60,9 @@ Supported block metadata:
 - `profile`: per-block Codex CLI profile override.
 - `sandbox`: per-block sandbox override. Common values are `read-only`,
   `workspace-write`, and `danger-full-access`.
+- `verbose`: when `true`, shows the full Codex session transcript. The default
+  is `false`, which shows only the Markdown response after Codex begins
+  answering.
 
 The prompt starts after the first blank line following the metadata.
 
