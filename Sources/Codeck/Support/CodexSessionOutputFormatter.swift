@@ -4,40 +4,72 @@ enum CodexSessionOutputFormatter {
   static func markdown(from output: CodexSessionOutput?, verbose: Bool) -> String {
     guard let output else { return "Ready to run." }
 
+    let cleanOutput = normalizedText(output.standardOutput)
     let rawText = output.text.trimmingCharacters(in: .whitespacesAndNewlines)
-    guard !rawText.isEmpty else {
-      return output.state == .running ? "Waiting for Codex response..." : "Ready to run."
-    }
 
     if verbose {
-      return rawText
+      if !rawText.isEmpty {
+        return rawText
+      }
+
+      if !cleanOutput.isEmpty {
+        return cleanOutput
+      }
+
+      return output.state == .running ? "Thinking..." : "Ready to run."
     }
 
-    let finalResponse = normalizedText(output.standardOutput)
-    if !finalResponse.isEmpty {
-      return finalResponse
+    if !cleanOutput.isEmpty {
+      return cleanOutput
+    }
+
+    guard !rawText.isEmpty else {
+      return output.state == .running ? "Thinking..." : "Ready to run."
+    }
+
+    if output.state == .running,
+       let response = responseText(from: output.standardError) ?? responseText(from: rawText) {
+      return response
     }
 
     if let response = responseText(from: output.standardError) ?? responseText(from: rawText) {
       return response
     }
 
-    return output.state == .running ? "Waiting for Codex response..." : rawText
+    return output.state == .running ? "Thinking..." : rawText
   }
 
   static func responseText(from text: String) -> String? {
     let normalized = normalizedText(text)
     let lines = normalized.components(separatedBy: "\n")
 
-    guard let markerIndex = lines.lastIndex(where: { $0.trimmingCharacters(in: .whitespacesAndNewlines) == "codex" }) else {
+    guard let marker = responseMarker(in: lines) else {
       return nil
     }
 
-    let response = removeUsageFooter(from: lines.dropFirst(markerIndex + 1)
-      .joined(separator: "\n")
-      .trimmingCharacters(in: .whitespacesAndNewlines))
+    var responseLines = Array(lines.dropFirst(marker.index + 1))
+    if !marker.inlineText.isEmpty {
+      responseLines.insert(marker.inlineText, at: 0)
+    }
+
+    let response = removeUsageFooter(from: responseLines.joined(separator: "\n").trimmingCharacters(in: .whitespacesAndNewlines))
 
     return response.isEmpty ? nil : response
+  }
+
+  private static func responseMarker(in lines: [String]) -> (index: Int, inlineText: String)? {
+    for index in lines.indices.reversed() {
+      let trimmed = lines[index].trimmingCharacters(in: .whitespacesAndNewlines)
+      if trimmed == "codex" {
+        return (index, "")
+      }
+
+      guard trimmed.hasPrefix("codex ") else { continue }
+      let inlineText = String(trimmed.dropFirst("codex ".count)).trimmingCharacters(in: .whitespacesAndNewlines)
+      return (index, inlineText)
+    }
+
+    return nil
   }
 
   private static func normalizedText(_ text: String) -> String {

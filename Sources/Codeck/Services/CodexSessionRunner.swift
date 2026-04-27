@@ -8,34 +8,17 @@ enum CodexSessionRunner {
   ) -> Process {
     let process = Process()
     process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
-    let resolvedSandbox = block.sandbox ?? settings.sandbox
-
-    var arguments = [
-      "codex",
-      "--ask-for-approval",
-      "never",
-      "exec",
-      "--color",
-      "never",
-      "--skip-git-repo-check",
-      "--sandbox",
-      resolvedSandbox,
-      "--ephemeral"
-    ]
-
-    if let model = block.model ?? settings.model {
-      arguments += ["--model", model]
-    }
-
-    if let reasoning = block.reasoning ?? settings.reasoning {
-      arguments += ["-c", "model_reasoning_effort=\"\(reasoning.rawValue)\""]
-    }
+    var arguments = ["codex"]
 
     if let profile = block.profile ?? settings.profile {
       arguments += ["--profile", profile]
     }
 
-    arguments.append("-")
+    arguments += [
+      "app-server",
+      "--listen",
+      "stdio://"
+    ]
 
     process.arguments = arguments
     if let workingDirectory {

@@ -128,6 +128,92 @@ final class CodexBlockTests: XCTestCase {
     XCTAssertTrue(html.contains("<code>Two</code>"))
   }
 
+  func testRendererStreamsRunningCodexTranscriptResponse() {
+    let slide = Slide(
+      markdown:
+        """
+        ```codex id=session
+        title: Explain output
+
+        Prompt
+        ```
+        """
+    )
+    let output =
+      """
+      user
+      Prompt
+      codex Streaming **partial**
+      """
+
+    let html = MarkdownRenderer.htmlDocument(
+      for: slide,
+      theme: .studio,
+      codexOutputs: [
+        "session": CodexSessionOutput(
+          state: .running,
+          text: output,
+          standardError: output
+        )
+      ]
+    )
+
+    XCTAssertFalse(html.contains("Thinking..."))
+    XCTAssertTrue(html.contains("Streaming <strong>partial</strong>"))
+  }
+
+  func testRendererStreamsRunningCodexStandardOutput() {
+    let slide = Slide(
+      markdown:
+        """
+        ```codex id=session
+        title: Explain output
+
+        Prompt
+        ```
+        """
+    )
+
+    let html = MarkdownRenderer.htmlDocument(
+      for: slide,
+      theme: .studio,
+      codexOutputs: [
+        "session": CodexSessionOutput(
+          state: .running,
+          text: "",
+          standardOutput: "Streaming **partial**"
+        )
+      ]
+    )
+
+    XCTAssertFalse(html.contains("Thinking..."))
+    XCTAssertTrue(html.contains("Streaming <strong>partial</strong>"))
+  }
+
+  func testRendererShowsThinkingPlaceholderForEmptyRunningCodexOutput() {
+    let slide = Slide(
+      markdown:
+        """
+        ```codex id=session
+        title: Explain output
+
+        Prompt
+        ```
+        """
+    )
+
+    let html = MarkdownRenderer.htmlDocument(
+      for: slide,
+      theme: .studio,
+      codexOutputs: [
+        "session": CodexSessionOutput(state: .running, text: "")
+      ]
+    )
+
+    XCTAssertTrue(html.contains("Thinking..."))
+    XCTAssertFalse(html.contains("Waiting for Codex response"))
+  }
+
   func testVerboseCodexOutputKeepsFullSessionTranscript() {
     let slide = Slide(
       markdown:
