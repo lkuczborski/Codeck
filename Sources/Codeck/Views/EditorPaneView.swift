@@ -21,7 +21,7 @@ struct EditorPaneView: View {
   private var toolbar: some View {
     ViewThatFits(in: .horizontal) {
       HStack(spacing: 10) {
-        themePicker(width: 150)
+        themePicker(width: 232)
 
         Spacer(minLength: 10)
 
@@ -33,7 +33,7 @@ struct EditorPaneView: View {
       }
 
       HStack(spacing: 8) {
-        themePicker(width: 128)
+        themePicker(width: 216)
 
         Spacer(minLength: 8)
 
@@ -57,7 +57,9 @@ struct EditorPaneView: View {
       }
     }
     .pickerStyle(.menu)
-    .frame(width: width)
+    .fixedSize(horizontal: true, vertical: false)
+    .frame(width: width, alignment: .leading)
+    .layoutPriority(1)
   }
 
   private var deckSettingsButton: some View {
