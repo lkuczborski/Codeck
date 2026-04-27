@@ -1,23 +1,11 @@
 import Foundation
 
 enum CodexSessionOutputFormatter {
-  static func markdown(from output: CodexSessionOutput?, verbose: Bool) -> String {
+  static func markdown(from output: CodexSessionOutput?) -> String {
     guard let output else { return "Ready to run." }
 
     let cleanOutput = normalizedText(output.standardOutput)
     let rawText = output.text.trimmingCharacters(in: .whitespacesAndNewlines)
-
-    if verbose {
-      if !rawText.isEmpty {
-        return rawText
-      }
-
-      if !cleanOutput.isEmpty {
-        return cleanOutput
-      }
-
-      return output.state == .running ? "Thinking..." : "Ready to run."
-    }
 
     if !cleanOutput.isEmpty {
       return cleanOutput

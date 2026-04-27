@@ -28,6 +28,19 @@ codex:
 # First Slide
 ```
 
+Supported deck metadata:
+
+- `format`: should be `codeck.mdeck`.
+- `version`: current document version is `1`.
+- `theme`: presentation theme. Supported values are `studio`, `midnight`,
+  `chalk`, `solar`, and `atelier`.
+- `codex.sandbox`: default sandbox for live Codex sessions. Defaults to
+  `read-only`.
+- `codex.model`: optional default model for live Codex sessions.
+- `codex.reasoning` or `codex.reasoning_effort`: optional default reasoning
+  effort. Supported values are `low`, `medium`, `high`, and `xhigh`.
+- `codex.profile`: optional Codex CLI profile for live Codex sessions.
+
 ## Live Codex sessions
 
 Add a fenced `codex` block to a slide:
@@ -39,7 +52,6 @@ model: gpt-5.2
 reasoning: xhigh
 profile: teaching
 sandbox: read-only
-verbose: false
 
 Explain how to refactor this SwiftUI view into smaller subviews.
 ```
@@ -47,6 +59,8 @@ Explain how to refactor this SwiftUI view into smaller subviews.
 
 Deck defaults for model, reasoning, profile, and sandbox are applied to every
 Codex block. Any block can override those values with its own metadata.
+Live sessions run through `codex app-server --listen stdio://`, so Codeck needs
+the Codex CLI available on `PATH` and an active Codex login.
 
 Supported block metadata:
 
@@ -60,15 +74,17 @@ Supported block metadata:
 - `profile`: per-block Codex CLI profile override.
 - `sandbox`: per-block sandbox override. Common values are `read-only`,
   `workspace-write`, and `danger-full-access`.
-- `verbose`: when `true`, shows the full Codex session transcript. The default
-  is `false`, which shows only the Markdown response after Codex begins
-  answering.
+
+Codeck always shows the Markdown response from Codex. While a session is running
+and before the first response token arrives, the output area shows `Thinking...`.
 
 The prompt starts after the first blank line following the metadata.
 
 Each live Codex card has its own run button on the slide. When a slide contains
 multiple Codex sessions, a slide-level run-all button appears in the top-right
-corner.
+corner. Codex responses stream into the slide live and are rendered as Markdown,
+so lists, headings, tables, code, links, and images in the response use the same
+renderer as the rest of the deck.
 
 ## Presenting
 

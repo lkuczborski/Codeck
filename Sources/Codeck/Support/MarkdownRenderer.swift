@@ -349,7 +349,7 @@ enum MarkdownRenderer {
 
   private static func renderCodexBlock(_ block: CodexBlock, output: CodexSessionOutput?) -> String {
     let state = output?.state ?? .idle
-    let body = CodexSessionOutputFormatter.markdown(from: output, verbose: block.verbose)
+    let body = CodexSessionOutputFormatter.markdown(from: output)
     let bodyHTML = renderBlocks(from: body, codexOutputs: [:], renderCodexFences: false)
     let isRunning = state == .running
     let action = isRunning ? "stopCodex" : "runCodex"

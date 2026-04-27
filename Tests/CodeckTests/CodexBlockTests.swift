@@ -23,7 +23,6 @@ final class CodexBlockTests: XCTestCase {
     XCTAssertEqual(blocks[0].model, "gpt-5.2")
     XCTAssertNil(blocks[0].reasoning)
     XCTAssertEqual(blocks[0].title, "Codex Session")
-    XCTAssertFalse(blocks[0].verbose)
     XCTAssertEqual(blocks[0].prompt, "Explain this code.")
   }
 
@@ -43,7 +42,7 @@ final class CodexBlockTests: XCTestCase {
     XCTAssertEqual(blocks.first?.prompt, "Rewrite this view into smaller SwiftUI subviews.")
   }
 
-  func testCodexBlockParsesVerboseFlag() {
+  func testCodexBlockIgnoresLegacyVerboseFlag() {
     let blocks = CodexBlock.extract(
       from:
         """
@@ -55,7 +54,6 @@ final class CodexBlockTests: XCTestCase {
         """
     )
 
-    XCTAssertEqual(blocks.first?.verbose, true)
     XCTAssertEqual(blocks.first?.prompt, "Show the raw session transcript.")
   }
 
@@ -212,40 +210,6 @@ final class CodexBlockTests: XCTestCase {
 
     XCTAssertTrue(html.contains("Thinking..."))
     XCTAssertFalse(html.contains("Waiting for Codex response"))
-  }
-
-  func testVerboseCodexOutputKeepsFullSessionTranscript() {
-    let slide = Slide(
-      markdown:
-        """
-        ```codex id=session
-        title: Explain output
-        verbose: true
-
-        Prompt
-        ```
-        """
-    )
-    let output =
-      """
-      OpenAI Codex
-      user
-      Prompt
-      codex
-      # Result
-      """
-
-    let html = MarkdownRenderer.htmlDocument(
-      for: slide,
-      theme: .studio,
-      codexOutputs: [
-        "session": CodexSessionOutput(state: .completed, text: output)
-      ]
-    )
-
-    XCTAssertTrue(html.contains("OpenAI Codex"))
-    XCTAssertTrue(html.contains("user Prompt codex"))
-    XCTAssertTrue(html.contains("<h1>Result</h1>"))
   }
 
   func testCodexMarkdownOutputKeepsLooseOrderedListTogether() {
