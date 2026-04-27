@@ -99,20 +99,10 @@ struct PresentationDeck: Hashable {
       "version: 1",
       "theme: \(settings.theme.rawValue)",
       "codex:",
-      "  sandbox: \(settings.codex.sandbox)"
+      "  sandbox: \(settings.codex.sandbox)",
+      "  model: \(Self.yamlValue(settings.codex.model))",
+      "  reasoning: \(settings.codex.reasoning.rawValue)"
     ]
-
-    if let model = settings.codex.model {
-      lines.append("  model: \(Self.yamlValue(model))")
-    }
-
-    if let reasoning = settings.codex.reasoning {
-      lines.append("  reasoning: \(reasoning.rawValue)")
-    }
-
-    if let profile = settings.codex.profile {
-      lines.append("  profile: \(Self.yamlValue(profile))")
-    }
 
     lines.append("---")
     lines.append("")
@@ -200,17 +190,18 @@ struct PresentationDeck: Hashable {
   private static func settings(from values: [String: String]) -> PresentationSettings {
     let theme = values["theme"].flatMap(PresentationTheme.init(rawValue:)) ?? .studio
     let sandbox = nonEmpty(values["codex.sandbox"] ?? values["sandbox"]) ?? "read-only"
-    let model = nonEmpty(values["codex.model"] ?? values["model"])
-    let profile = nonEmpty(values["codex.profile"] ?? values["profile"])
+    let model = CodexModelOption.normalizedModelID(nonEmpty(values["codex.model"] ?? values["model"]))
     let reasoningValue = nonEmpty(values["codex.reasoning"] ?? values["reasoning"] ?? values["codex.reasoning_effort"] ?? values["reasoning_effort"])
-    let reasoning = reasoningValue.flatMap(CodexReasoningEffort.init(rawValue:))
+    let reasoning = CodexModelOption.normalizedReasoning(
+      reasoningValue.map(CodexReasoningEffort.init(rawValue:)),
+      for: model
+    )
 
     return PresentationSettings(
       theme: theme,
       codex: DeckCodexSettings(
         model: model,
         reasoning: reasoning,
-        profile: profile,
         sandbox: sandbox
       )
     )

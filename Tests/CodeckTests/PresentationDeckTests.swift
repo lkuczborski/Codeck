@@ -44,7 +44,6 @@ final class PresentationDeckTests: XCTestCase {
         codex: DeckCodexSettings(
           model: "gpt-5.2",
           reasoning: .medium,
-          profile: "teaching",
           sandbox: "read-only"
         )
       ),
@@ -55,8 +54,41 @@ final class PresentationDeckTests: XCTestCase {
     XCTAssertTrue(deck.deckDocument.contains("theme: atelier"))
     XCTAssertTrue(deck.deckDocument.contains("  model: \"gpt-5.2\""))
     XCTAssertTrue(deck.deckDocument.contains("  reasoning: medium"))
-    XCTAssertTrue(deck.deckDocument.contains("  profile: \"teaching\""))
     XCTAssertTrue(deck.deckDocument.contains("# Lesson"))
+  }
+
+  func testUsesExplicitDefaultCodexSettingsWhenMetadataIsMissing() {
+    let deck = PresentationDeck(
+      markdownDocument:
+        """
+        # Defaults
+        """
+    )
+
+    XCTAssertEqual(deck.settings.codex.model, "gpt-5.5")
+    XCTAssertEqual(deck.settings.codex.reasoning, .medium)
+    XCTAssertEqual(deck.settings.codex.sandbox, "read-only")
+  }
+
+  func testPreservesFutureModelAndReasoningMetadata() {
+    let deck = PresentationDeck(
+      markdownDocument:
+        """
+        ---
+        format: codeck.mdeck
+        version: 1
+        theme: studio
+        codex:
+          model: old-model
+          reasoning: unexpected
+        ---
+
+        # Defaults
+        """
+    )
+
+    XCTAssertEqual(deck.settings.codex.model, "old-model")
+    XCTAssertEqual(deck.settings.codex.reasoning.rawValue, "unexpected")
   }
 
   func testReadsLegacyMarkdownThemeComment() {

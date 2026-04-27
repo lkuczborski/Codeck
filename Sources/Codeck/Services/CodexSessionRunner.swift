@@ -10,7 +10,7 @@ enum CodexSessionRunner {
     process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
     var arguments = ["codex"]
 
-    if let profile = block.profile ?? settings.profile {
+    if let profile = block.profile {
       arguments += ["--profile", profile]
     }
 

@@ -21,8 +21,8 @@ version: 1
 theme: studio
 codex:
   sandbox: read-only
-  model: "gpt-5.2"
-  reasoning: high
+  model: "gpt-5.5"
+  reasoning: medium
 ---
 
 # First Slide
@@ -36,10 +36,12 @@ Supported deck metadata:
   `chalk`, `solar`, and `atelier`.
 - `codex.sandbox`: default sandbox for live Codex sessions. Defaults to
   `read-only`.
-- `codex.model`: optional default model for live Codex sessions.
-- `codex.reasoning` or `codex.reasoning_effort`: optional default reasoning
-  effort. Supported values are `low`, `medium`, `high`, and `xhigh`.
-- `codex.profile`: optional Codex CLI profile for live Codex sessions.
+- `codex.model`: default model for live Codex sessions. Codeck fetches the
+  available model list from `codex app-server` and falls back to `gpt-5.5` if
+  Codex is unavailable.
+- `codex.reasoning` or `codex.reasoning_effort`: default reasoning effort.
+  Codeck fetches the supported values for the selected model from Codex and
+  falls back to `low`, `medium`, `high`, and `xhigh`. Defaults to `medium`.
 
 ## Live Codex sessions
 
@@ -48,17 +50,16 @@ Add a fenced `codex` block to a slide:
 ````markdown
 ```codex id=refactor-demo
 title: Explain the refactor goal
-model: gpt-5.2
+model: gpt-5.5
 reasoning: xhigh
-profile: teaching
 sandbox: read-only
 
 Explain how to refactor this SwiftUI view into smaller subviews.
 ```
 ````
 
-Deck defaults for model, reasoning, profile, and sandbox are applied to every
-Codex block. Any block can override those values with its own metadata.
+Deck defaults for model, reasoning, and sandbox are applied to every Codex
+block. Any block can override those values with its own metadata.
 Live sessions run through `codex app-server --listen stdio://`, so Codeck needs
 the Codex CLI available on `PATH` and an active Codex login.
 
@@ -70,8 +71,7 @@ Supported block metadata:
   prompt is meant to demonstrate.
 - `model`: per-block model override.
 - `reasoning` or `reasoning_effort`: per-block reasoning override. Supported
-  values are `low`, `medium`, `high`, and `xhigh`.
-- `profile`: per-block Codex CLI profile override.
+  values come from the selected Codex model.
 - `sandbox`: per-block sandbox override. Common values are `read-only`,
   `workspace-write`, and `danger-full-access`.
 

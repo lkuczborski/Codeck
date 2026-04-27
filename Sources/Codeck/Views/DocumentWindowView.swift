@@ -5,6 +5,7 @@ struct DocumentWindowView: View {
   let fileURL: URL?
 
   @StateObject private var sessionStore = CodexSessionStore()
+  @StateObject private var modelCatalog = CodexModelCatalogStore()
   @StateObject private var presentationPresenter = PresentationPresenter()
   @SceneStorage("selectedSlideID") private var selectedSlideIDString: String?
   @SceneStorage("isPreviewVisible") private var isPreviewVisible = true
@@ -65,6 +66,13 @@ struct DocumentWindowView: View {
     .onChange(of: document.deck.slides) { _, _ in
       ensureSelection()
     }
+    .task {
+      await modelCatalog.refresh()
+      applyLiveModelDefaultsIfNeeded()
+    }
+    .onChange(of: modelCatalog.models) { _, _ in
+      applyLiveModelDefaultsIfNeeded()
+    }
   }
 
   @ViewBuilder
@@ -120,6 +128,7 @@ struct DocumentWindowView: View {
     EditorPaneView(
       slide: slide,
       settings: $document.deck.settings,
+      modelCatalog: modelCatalog,
       onInsertCodexBlock: {
         document.deck.insertCodexBlock(into: selectedSlideID)
       }
@@ -162,6 +171,23 @@ struct DocumentWindowView: View {
     } else if selectedSlideID == nil {
       selectedSlideID = document.deck.slides.first?.id
     }
+  }
+
+  private func applyLiveModelDefaultsIfNeeded() {
+    let liveDefaultModelID = modelCatalog.defaultModelID()
+    if document.deck.settings.codex.model == CodexModelOption.defaultModelID,
+       liveDefaultModelID != document.deck.settings.codex.model {
+      document.deck.settings.codex.model = liveDefaultModelID
+    }
+
+    document.deck.settings.codex.reasoning = CodexModelOption.normalizedReasoning(
+      document.deck.settings.codex.reasoning,
+      for: document.deck.settings.codex.model,
+      in: modelCatalog.modelOptions(
+        including: document.deck.settings.codex.model,
+        selectedReasoning: document.deck.settings.codex.reasoning
+      )
+    )
   }
 
   private var compactPane: CompactDetailPane {

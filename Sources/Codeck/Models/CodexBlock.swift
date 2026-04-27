@@ -87,7 +87,7 @@ struct CodexBlock: Identifiable, Hashable {
 
   private static func reasoning(from attributes: [String: String]) -> CodexReasoningEffort? {
     let value = emptyToNil(attributes["reasoning"] ?? attributes["reasoning_effort"])
-    return value.flatMap(CodexReasoningEffort.init(rawValue:))
+    return value.map(CodexReasoningEffort.init(rawValue:))
   }
 
   private static func parseAttributes(from opening: String) -> [String: String] {

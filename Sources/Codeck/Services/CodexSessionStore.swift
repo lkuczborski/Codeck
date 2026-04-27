@@ -349,9 +349,7 @@ final class CodexSessionStore: ObservableObject {
       params["cwd"] = workingDirectory.path
     }
 
-    if let model = context.block.model ?? context.settings.model {
-      params["model"] = model
-    }
+    params["model"] = context.block.model ?? context.settings.model
 
     sendRequest(id: context.threadStartRequestID, method: "thread/start", params: params, to: blockID)
   }
@@ -374,13 +372,9 @@ final class CodexSessionStore: ObservableObject {
       params["cwd"] = workingDirectory.path
     }
 
-    if let model = context.block.model ?? context.settings.model {
-      params["model"] = model
-    }
+    params["model"] = context.block.model ?? context.settings.model
 
-    if let reasoning = context.block.reasoning ?? context.settings.reasoning {
-      params["effort"] = reasoning.rawValue
-    }
+    params["effort"] = (context.block.reasoning ?? context.settings.reasoning).rawValue
 
     sendRequest(id: context.turnStartRequestID, method: "turn/start", params: params, to: blockID)
   }
