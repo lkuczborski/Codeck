@@ -1,5 +1,7 @@
 # Codeck
 
+![Codeck screenshot](screenshot.png)
+
 Codeck is a native macOS document-based Markdown presentation maker for teaching Codex prompting workflows.
 
 ## Document format
