@@ -1,8 +1,12 @@
 import SwiftUI
 
 struct SidebarView: View {
-  @Binding var deck: PresentationDeck
+  let deck: PresentationDeck
   @Binding var selection: Slide.ID?
+  let onAddSlide: () -> Void
+  let onDuplicateSlide: () -> Void
+  let onDeleteSlide: () -> Void
+  let onMoveSlides: (IndexSet, Int) -> Void
 
   var body: some View {
     List(selection: $selection) {
@@ -63,21 +67,19 @@ struct SidebarView: View {
   }
 
   private func addSlide() {
-    selection = deck.addSlide(after: selection)
+    onAddSlide()
   }
 
   private func duplicateSlide() {
-    if let newID = deck.duplicateSlide(selection) {
-      selection = newID
-    }
+    onDuplicateSlide()
   }
 
   private func deleteSlide() {
-    selection = deck.deleteSlide(selection)
+    onDeleteSlide()
   }
 
   private func moveSlides(from source: IndexSet, to destination: Int) {
-    deck.slides.move(fromOffsets: source, toOffset: destination)
+    onMoveSlides(source, destination)
   }
 }
 

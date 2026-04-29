@@ -72,15 +72,13 @@ enum MarkdownRenderer {
         continue
       }
 
-      if trimmed.hasPrefix("```") || trimmed.hasPrefix("~~~") {
-        let fence = String(trimmed.prefix(3))
-        let info = String(trimmed.dropFirst(3)).trimmingCharacters(in: .whitespaces)
+      if let fence = MarkdownFence.openingMarker(in: trimmed) {
+        let info = MarkdownFence.infoString(in: trimmed, marker: fence)
         var codeLines: [String] = []
         index += 1
 
         while index < lines.count {
-          let candidate = lines[index].trimmingCharacters(in: .whitespaces)
-          if candidate.hasPrefix(fence) {
+          if MarkdownFence.isClosingLine(lines[index], marker: fence) {
             break
           }
           codeLines.append(lines[index])

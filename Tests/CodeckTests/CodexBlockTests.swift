@@ -57,6 +57,30 @@ final class CodexBlockTests: XCTestCase {
     XCTAssertEqual(blocks.first?.prompt, "Show the raw session transcript.")
   }
 
+  func testCodexFenceRequiresPlainClosingFence() {
+    let blocks = CodexBlock.extract(
+      from:
+        """
+        ```codex id=first
+        title: First
+
+        First prompt
+        ``d`
+
+        ```codex id=second
+        title: This is code content
+
+        Second prompt text
+        ```
+        """
+    )
+
+    XCTAssertEqual(blocks.count, 1)
+    XCTAssertEqual(blocks[0].id, "first")
+    XCTAssertTrue(blocks[0].prompt.contains("```codex id=second"))
+    XCTAssertTrue(blocks[0].prompt.contains("Second prompt text"))
+  }
+
   func testRendererIncludesTablesImagesAndCodexOutput() {
     let slide = Slide(
       markdown:
@@ -125,6 +149,26 @@ final class CodexBlockTests: XCTestCase {
     XCTAssertFalse(html.contains("language-swift title"))
     XCTAssertTrue(html.contains("<span class=\"syntax-keyword\">let</span>"))
     XCTAssertTrue(html.contains("<span class=\"syntax-number\">3</span>"))
+  }
+
+  func testRendererRequiresPlainClosingFence() {
+    let slide = Slide(
+      markdown:
+        #"""
+        ```swift
+        let first = true
+        ```javascript
+        const second = true
+        ```
+        """#
+    )
+
+    let html = MarkdownRenderer.htmlDocument(for: slide, theme: .studio, codexOutputs: [:])
+
+    XCTAssertEqual(html.components(separatedBy: "<pre><code").count - 1, 1)
+    XCTAssertFalse(html.contains("language-javascript"))
+    XCTAssertTrue(html.contains("javascript"))
+    XCTAssertTrue(html.contains("second"))
   }
 
   func testRendererHighlightsDifferentFenceLanguagesAndEscapesCode() {

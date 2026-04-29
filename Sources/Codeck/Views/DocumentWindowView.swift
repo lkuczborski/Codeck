@@ -24,11 +24,15 @@ struct DocumentWindowView: View {
   var body: some View {
     NavigationSplitView(columnVisibility: $columnVisibility) {
       SidebarView(
-        deck: $document.deck,
+        deck: document.deck,
         selection: Binding(
           get: { selectedSlideID },
           set: { selectedSlideID = $0 }
-        )
+        ),
+        onAddSlide: addSlide,
+        onDuplicateSlide: duplicateSlide,
+        onDeleteSlide: deleteSlide,
+        onMoveSlides: moveSlides
       )
       .navigationSplitViewColumnWidth(min: 200, ideal: 240, max: 320)
     } detail: {
@@ -149,9 +153,15 @@ struct DocumentWindowView: View {
 
   private var selectedSlideBinding: Binding<Slide>? {
     guard let index = selectedSlideIndex else { return nil }
+    let slideID = document.deck.slides[index].id
     return Binding(
-      get: { document.deck.slides[index] },
-      set: { document.deck.slides[index] = $0 }
+      get: {
+        if let currentIndex = document.deck.slides.firstIndex(where: { $0.id == slideID }) {
+          return document.deck.slides[currentIndex]
+        }
+        return document.deck.slides[selectedSlideIndex ?? document.deck.slides.startIndex]
+      },
+      set: { replaceMarkdown(for: slideID, with: $0.markdown) }
     )
   }
 
@@ -167,6 +177,45 @@ struct DocumentWindowView: View {
       selectedSlideID = document.deck.slides.first?.id
     } else if selectedSlideID == nil {
       selectedSlideID = document.deck.slides.first?.id
+    }
+  }
+
+  private func addSlide() {
+    var deck = document.deck
+    let newID = deck.addSlide(after: selectedSlideID)
+    document.deck = deck
+    selectedSlideID = newID
+  }
+
+  private func duplicateSlide() {
+    var deck = document.deck
+    if let newID = deck.duplicateSlide(selectedSlideID) {
+      document.deck = deck
+      selectedSlideID = newID
+    }
+  }
+
+  private func deleteSlide() {
+    var deck = document.deck
+    selectedSlideID = deck.deleteSlide(selectedSlideID)
+    document.deck = deck
+  }
+
+  private func moveSlides(from source: IndexSet, to destination: Int) {
+    var deck = document.deck
+    deck.slides.move(fromOffsets: source, toOffset: destination)
+    document.deck = deck
+  }
+
+  private func replaceMarkdown(for slideID: Slide.ID, with markdown: String) {
+    var deck = document.deck
+    guard let result = deck.replaceSlideMarkdown(for: slideID, with: markdown) else {
+      return
+    }
+
+    document.deck = deck
+    if result.didSplit {
+      selectedSlideID = result.selectedSlideID
     }
   }
 

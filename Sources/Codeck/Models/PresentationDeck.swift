@@ -1,17 +1,19 @@
 import Foundation
 
 struct PresentationDeck: Hashable {
+  static let defaultSlideMarkdown = "# New Slide\n\nStart writing..."
+
   var settings: PresentationSettings
   var slides: [Slide]
 
   init(theme: PresentationTheme = .studio, slides: [Slide] = []) {
     self.settings = PresentationSettings(theme: theme, codex: .default)
-    self.slides = slides.isEmpty ? [Slide(markdown: "# New Slide\n\nStart writing...")] : slides
+    self.slides = slides.isEmpty ? [Slide(markdown: Self.defaultSlideMarkdown)] : slides
   }
 
   init(settings: PresentationSettings = .default, slides: [Slide] = []) {
     self.settings = settings
-    self.slides = slides.isEmpty ? [Slide(markdown: "# New Slide\n\nStart writing...")] : slides
+    self.slides = slides.isEmpty ? [Slide(markdown: Self.defaultSlideMarkdown)] : slides
   }
 
   init(markdownDocument: String) {
@@ -19,7 +21,7 @@ struct PresentationDeck: Hashable {
     settings = parsed.settings
     slides = Self.parseSlides(from: parsed.markdown)
     if slides.isEmpty {
-      slides = [Slide(markdown: "# New Slide\n\nStart writing...")]
+      slides = [Slide(markdown: Self.defaultSlideMarkdown)]
     }
   }
 
@@ -110,7 +112,7 @@ struct PresentationDeck: Hashable {
   }
 
   mutating func addSlide(after selectedID: Slide.ID?) -> Slide.ID {
-    let slide = Slide(markdown: "# New Slide\n\nStart writing...")
+    let slide = Slide(markdown: Self.defaultSlideMarkdown)
     if let selectedID, let index = slides.firstIndex(where: { $0.id == selectedID }) {
       slides.insert(slide, at: min(index + 1, slides.count))
     } else {
@@ -140,6 +142,31 @@ struct PresentationDeck: Hashable {
 
     slides.remove(at: index)
     return slides[min(index, slides.count - 1)].id
+  }
+
+  @discardableResult
+  mutating func replaceSlideMarkdown(for slideID: Slide.ID, with markdown: String) -> SlideMarkdownReplacement? {
+    guard let index = slides.firstIndex(where: { $0.id == slideID }) else {
+      return nil
+    }
+
+    let split = Self.slideMarkdownFragments(from: markdown, preservingEmptyFragments: true)
+    guard split.containsSeparator else {
+      slides[index].markdown = markdown
+      return SlideMarkdownReplacement(selectedSlideID: slideID, didSplit: false)
+    }
+
+    let replacementSlides = split.fragments.enumerated().map { offset, fragment in
+      let slideMarkdown = fragment.isEmpty ? Self.defaultSlideMarkdown : fragment
+      if offset == 0 {
+        return Slide(id: slides[index].id, markdown: slideMarkdown)
+      }
+      return Slide(markdown: slideMarkdown)
+    }
+
+    slides.replaceSubrange(index...index, with: replacementSlides)
+    let selectedSlideID = replacementSlides.dropFirst().first?.id ?? replacementSlides[0].id
+    return SlideMarkdownReplacement(selectedSlideID: selectedSlideID, didSplit: true)
   }
 
   mutating func insertCodexBlock(into slideID: Slide.ID?) {
@@ -220,40 +247,55 @@ struct PresentationDeck: Hashable {
   }
 
   private static func parseSlides(from markdown: String) -> [Slide] {
-    var slides: [Slide] = []
+    slideMarkdownFragments(from: markdown, preservingEmptyFragments: false)
+      .fragments
+      .map { Slide(markdown: $0) }
+  }
+
+  private static func slideMarkdownFragments(
+    from markdown: String,
+    preservingEmptyFragments: Bool
+  ) -> (fragments: [String], containsSeparator: Bool) {
+    var fragments: [String] = []
     var current: [String] = []
     var insideFence = false
     var fenceMarker = ""
+    var containsSeparator = false
+
+    func appendCurrentFragment() {
+      let markdown = current.joined(separator: "\n").trimmingCharacters(in: .whitespacesAndNewlines)
+      if preservingEmptyFragments || !markdown.isEmpty {
+        fragments.append(markdown)
+      }
+      current.removeAll()
+    }
 
     for line in markdown.components(separatedBy: .newlines) {
       let trimmed = line.trimmingCharacters(in: .whitespaces)
-      if trimmed.hasPrefix("```") || trimmed.hasPrefix("~~~") {
-        let marker = String(trimmed.prefix(3))
-        if insideFence, marker == fenceMarker {
+      if insideFence {
+        if MarkdownFence.isClosingLine(trimmed, marker: fenceMarker) {
           insideFence = false
           fenceMarker = ""
-        } else if !insideFence {
-          insideFence = true
-          fenceMarker = marker
         }
+      } else if let marker = MarkdownFence.openingMarker(in: trimmed) {
+        insideFence = true
+        fenceMarker = marker
       }
 
       if !insideFence && trimmed == "---" {
-        let markdown = current.joined(separator: "\n").trimmingCharacters(in: .whitespacesAndNewlines)
-        if !markdown.isEmpty {
-          slides.append(Slide(markdown: markdown))
-        }
-        current.removeAll()
+        containsSeparator = true
+        appendCurrentFragment()
       } else {
         current.append(line)
       }
     }
 
-    let markdown = current.joined(separator: "\n").trimmingCharacters(in: .whitespacesAndNewlines)
-    if !markdown.isEmpty {
-      slides.append(Slide(markdown: markdown))
-    }
-
-    return slides
+    appendCurrentFragment()
+    return (fragments, containsSeparator)
   }
+}
+
+struct SlideMarkdownReplacement: Hashable {
+  let selectedSlideID: Slide.ID
+  let didSplit: Bool
 }

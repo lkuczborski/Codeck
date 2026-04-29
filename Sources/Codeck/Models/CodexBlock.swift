@@ -34,19 +34,22 @@ struct CodexBlock: Identifiable, Hashable {
 
     while index < lines.count {
       let trimmed = lines[index].trimmingCharacters(in: .whitespaces)
-      guard trimmed.hasPrefix("```codex") || trimmed.hasPrefix("~~~codex") else {
+      guard let fence = MarkdownFence.openingMarker(in: trimmed) else {
         index += 1
         continue
       }
 
-      let fence = String(trimmed.prefix(3))
-      let opening = String(trimmed.dropFirst(3))
+      let opening = MarkdownFence.infoString(in: trimmed, marker: fence)
+      guard opening.hasPrefix("codex") else {
+        index += 1
+        continue
+      }
+
       var body: [String] = []
       index += 1
 
       while index < lines.count {
-        let candidate = lines[index].trimmingCharacters(in: .whitespaces)
-        if candidate.hasPrefix(fence) {
+        if MarkdownFence.isClosingLine(lines[index], marker: fence) {
           break
         }
         body.append(lines[index])
