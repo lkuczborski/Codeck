@@ -4,17 +4,24 @@ struct EditorPaneView: View {
   @Binding var slide: Slide
   @Binding var settings: PresentationSettings
   @ObservedObject var modelCatalog: CodexModelCatalogStore
+  let appearanceRefreshID: UUID
   @StateObject private var editorController = MarkdownEditorController()
   @State private var showsDeckSettings = false
+  @Environment(\.colorScheme) private var colorScheme
 
   var body: some View {
     VStack(spacing: 0) {
       toolbar
 
       MarkdownTextEditorView(text: $slide.markdown, controller: editorController)
-        .id(slide.id)
+        .id(editorIdentity)
         .background(.ultraThinMaterial)
     }
+  }
+
+  private var editorIdentity: String {
+    let scheme = colorScheme == .dark ? "dark" : "light"
+    return "\(slide.id.uuidString)-\(appearanceRefreshID.uuidString)-\(scheme)"
   }
 
   private var toolbar: some View {

@@ -10,7 +10,9 @@ struct DocumentWindowView: View {
   @SceneStorage("selectedSlideID") private var selectedSlideIDString: String?
   @SceneStorage("isPreviewVisible") private var isPreviewVisible = true
   @SceneStorage("compactDetailPane") private var compactPaneRawValue = "editor"
+  @AppStorage(AppAppearanceMode.storageKey) private var appAppearanceModeRawValue = AppAppearanceMode.automatic.rawValue
   @State private var columnVisibility: NavigationSplitViewVisibility = .all
+  @State private var appearanceRefreshID = UUID()
 
   private var selectedSlideID: Slide.ID? {
     get {
@@ -18,6 +20,15 @@ struct DocumentWindowView: View {
     }
     nonmutating set {
       selectedSlideIDString = newValue?.uuidString
+    }
+  }
+
+  private var appAppearanceMode: AppAppearanceMode {
+    get {
+      AppAppearanceMode(rawValue: appAppearanceModeRawValue) ?? .automatic
+    }
+    nonmutating set {
+      appAppearanceModeRawValue = newValue.rawValue
     }
   }
 
@@ -40,7 +51,17 @@ struct DocumentWindowView: View {
     }
     .frame(minWidth: 680, minHeight: 500)
     .toolbar {
-      ToolbarItem(placement: .primaryAction) {
+      ToolbarItem(placement: .automatic) {
+        AppAppearanceSelector(
+          selection: Binding(
+            get: { appAppearanceMode },
+            set: { mode in setAppAppearanceMode(mode) }
+          )
+        )
+        .help("Choose app appearance")
+      }
+
+      ToolbarItem(placement: .automatic) {
         Button {
           presentationPresenter.present(
             deck: document.deck,
@@ -55,7 +76,7 @@ struct DocumentWindowView: View {
         .codeckToolbarIconButtonStyle(prominent: true)
       }
 
-      ToolbarItem(placement: .primaryAction) {
+      ToolbarItem(placement: .automatic) {
         Button {
           isPreviewVisible.toggle()
         } label: {
@@ -67,6 +88,10 @@ struct DocumentWindowView: View {
     }
     .focusedValue(\.previewVisibility, $isPreviewVisible)
     .onAppear(perform: ensureSelection)
+    .onAppear(perform: applyStoredAppAppearance)
+    .onChange(of: appAppearanceModeRawValue) { _, rawValue in
+      applyAppAppearance(rawValue: rawValue)
+    }
     .onChange(of: document.deck.slides) { _, _ in
       ensureSelection()
     }
@@ -132,7 +157,8 @@ struct DocumentWindowView: View {
     EditorPaneView(
       slide: slide,
       settings: $document.deck.settings,
-      modelCatalog: modelCatalog
+      modelCatalog: modelCatalog,
+      appearanceRefreshID: appearanceRefreshID
     )
   }
 
@@ -217,6 +243,25 @@ struct DocumentWindowView: View {
     if result.didSplit {
       selectedSlideID = result.selectedSlideID
     }
+  }
+
+  private func setAppAppearanceMode(_ mode: AppAppearanceMode) {
+    applyAppAppearance(mode)
+    appAppearanceModeRawValue = mode.rawValue
+  }
+
+  private func applyStoredAppAppearance() {
+    applyAppAppearance(rawValue: appAppearanceModeRawValue)
+  }
+
+  private func applyAppAppearance(_ mode: AppAppearanceMode) {
+    AppAppearanceController.apply(mode)
+    appearanceRefreshID = UUID()
+  }
+
+  private func applyAppAppearance(rawValue: String) {
+    AppAppearanceController.apply(rawValue: rawValue)
+    appearanceRefreshID = UUID()
   }
 
   private func applyLiveModelDefaultsIfNeeded() {

@@ -27,6 +27,7 @@ fileprivate enum MarkdownEditorCommand {
 struct MarkdownTextEditorView: NSViewRepresentable {
   @Binding var text: String
   @ObservedObject var controller: MarkdownEditorController
+  @Environment(\.colorScheme) private var colorScheme
 
   func makeNSView(context: Context) -> NSScrollView {
     let scrollView = NSScrollView()
@@ -62,6 +63,7 @@ struct MarkdownTextEditorView: NSViewRepresentable {
 
     scrollView.documentView = textView
     context.coordinator.textView = textView
+    applyAppearance(to: scrollView, textView: textView)
     context.coordinator.publishState(for: textView)
     return scrollView
   }
@@ -70,6 +72,7 @@ struct MarkdownTextEditorView: NSViewRepresentable {
     context.coordinator.text = $text
 
     guard let textView = context.coordinator.textView else { return }
+    applyAppearance(to: scrollView, textView: textView)
 
     if textView.string != text, !context.coordinator.isApplyingCommand {
       let selection = textView.selectedRange()
@@ -93,6 +96,25 @@ struct MarkdownTextEditorView: NSViewRepresentable {
     let location = min(max(range.location, 0), length)
     let upperBound = min(max(range.location + range.length, location), length)
     return NSRange(location: location, length: upperBound - location)
+  }
+
+  private func applyAppearance(to scrollView: NSScrollView, textView: NSTextView) {
+    _ = colorScheme
+    scrollView.appearance = nil
+    scrollView.contentView.appearance = nil
+    textView.appearance = nil
+    textView.textColor = .labelColor
+    textView.insertionPointColor = .controlAccentColor
+    textView.backgroundColor = .clear
+    textView.typingAttributes[.foregroundColor] = NSColor.labelColor
+    textView.typingAttributes[.font] = textView.font
+    let textRange = NSRange(location: 0, length: (textView.string as NSString).length)
+    if textRange.length > 0 {
+      textView.textStorage?.addAttribute(.foregroundColor, value: NSColor.labelColor, range: textRange)
+    }
+    textView.needsDisplay = true
+    textView.layoutManager?.invalidateDisplay(forCharacterRange: textRange)
+    scrollView.needsDisplay = true
   }
 
   @MainActor

@@ -4,6 +4,7 @@ import SwiftUI
 final class AppDelegate: NSObject, NSApplicationDelegate {
   func applicationDidFinishLaunching(_ notification: Notification) {
     NSApp.setActivationPolicy(.regular)
+    AppAppearanceController.apply(rawValue: UserDefaults.standard.string(forKey: AppAppearanceMode.storageKey))
     NSApp.activate(ignoringOtherApps: true)
   }
 }
