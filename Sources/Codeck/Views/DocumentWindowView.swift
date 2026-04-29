@@ -51,39 +51,37 @@ struct DocumentWindowView: View {
     }
     .frame(minWidth: 680, minHeight: 500)
     .toolbar {
-      ToolbarItem(placement: .automatic) {
-        AppAppearanceSelector(
-          selection: Binding(
-            get: { appAppearanceMode },
-            set: { mode in setAppAppearanceMode(mode) }
-          )
-        )
-        .help("Choose app appearance")
-      }
-
-      ToolbarItem(placement: .automatic) {
-        Button {
-          presentationPresenter.present(
-            deck: document.deck,
-            selectedSlideID: selectedSlideID,
-            baseURL: fileURL?.deletingLastPathComponent(),
-            sessions: sessionStore
-          )
-        } label: {
-          Label("Play", systemImage: "play.fill")
+      if #available(macOS 26.0, *) {
+        ToolbarItem(placement: .automatic) {
+          appearanceToolbarControl
         }
-        .help("Start presentation")
-        .codeckToolbarIconButtonStyle(prominent: true)
-      }
+        .sharedBackgroundVisibility(.hidden)
 
-      ToolbarItem(placement: .automatic) {
-        Button {
-          isPreviewVisible.toggle()
-        } label: {
-          Label(isPreviewVisible ? "Hide Preview" : "Show Preview", systemImage: "sidebar.right")
+        ToolbarSpacer(.fixed)
+
+        ToolbarItem(placement: .automatic) {
+          playToolbarButton
         }
-        .help(isPreviewVisible ? "Hide preview" : "Show preview")
-        .codeckToolbarIconButtonStyle()
+        .sharedBackgroundVisibility(.hidden)
+
+        ToolbarSpacer(.fixed)
+
+        ToolbarItem(placement: .automatic) {
+          previewVisibilityToolbarButton
+        }
+        .sharedBackgroundVisibility(.hidden)
+      } else {
+        ToolbarItem(placement: .automatic) {
+          appearanceToolbarControl
+        }
+
+        ToolbarItem(placement: .automatic) {
+          playToolbarButton
+        }
+
+        ToolbarItem(placement: .automatic) {
+          previewVisibilityToolbarButton
+        }
       }
     }
     .focusedValue(\.previewVisibility, $isPreviewVisible)
@@ -102,6 +100,41 @@ struct DocumentWindowView: View {
     .onChange(of: modelCatalog.models) { _, _ in
       applyLiveModelDefaultsIfNeeded()
     }
+  }
+
+  private var appearanceToolbarControl: some View {
+    AppAppearanceSelector(
+      selection: Binding(
+        get: { appAppearanceMode },
+        set: { mode in setAppAppearanceMode(mode) }
+      )
+    )
+    .help("Choose app appearance")
+  }
+
+  private var playToolbarButton: some View {
+    Button {
+      presentationPresenter.present(
+        deck: document.deck,
+        selectedSlideID: selectedSlideID,
+        baseURL: fileURL?.deletingLastPathComponent(),
+        sessions: sessionStore
+      )
+    } label: {
+      Label("Play", systemImage: "play.fill")
+    }
+    .help("Start presentation")
+    .codeckToolbarIconButtonStyle(prominent: true)
+  }
+
+  private var previewVisibilityToolbarButton: some View {
+    Button {
+      isPreviewVisible.toggle()
+    } label: {
+      Label(isPreviewVisible ? "Hide Preview" : "Show Preview", systemImage: "sidebar.right")
+    }
+    .help(isPreviewVisible ? "Hide preview" : "Show preview")
+    .codeckToolbarIconButtonStyle()
   }
 
   @ViewBuilder

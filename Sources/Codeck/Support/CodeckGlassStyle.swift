@@ -38,11 +38,22 @@ extension View {
       .controlSize(.large)
       .buttonBorderShape(.capsule)
 
-    if prominent {
-      button
-        .tint(.accentColor)
+    if #available(macOS 26.0, *) {
+      if prominent {
+        button
+          .buttonStyle(.glassProminent)
+      } else {
+        button
+          .buttonStyle(.glass)
+      }
     } else {
-      button
+      if prominent {
+        button
+          .buttonStyle(.borderedProminent)
+      } else {
+        button
+          .buttonStyle(.bordered)
+      }
     }
   }
 }
