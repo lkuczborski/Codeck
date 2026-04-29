@@ -12,6 +12,7 @@ struct EditorPaneView: View {
       toolbar
 
       MarkdownTextEditorView(text: $slide.markdown, controller: editorController)
+        .id(slide.id)
         .background(.ultraThinMaterial)
     }
   }

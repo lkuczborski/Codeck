@@ -67,6 +67,8 @@ struct MarkdownTextEditorView: NSViewRepresentable {
   }
 
   func updateNSView(_ scrollView: NSScrollView, context: Context) {
+    context.coordinator.text = $text
+
     guard let textView = context.coordinator.textView else { return }
 
     if textView.string != text, !context.coordinator.isApplyingCommand {
@@ -95,20 +97,20 @@ struct MarkdownTextEditorView: NSViewRepresentable {
 
   @MainActor
   final class Coordinator: NSObject, NSTextViewDelegate {
-    @Binding private var text: String
+    var text: Binding<String>
     private let controller: MarkdownEditorController
     weak var textView: NSTextView?
     var handledCommandVersion = 0
     var isApplyingCommand = false
 
     init(text: Binding<String>, controller: MarkdownEditorController) {
-      _text = text
+      self.text = text
       self.controller = controller
     }
 
     func textDidChange(_ notification: Notification) {
       guard let textView = notification.object as? NSTextView else { return }
-      text = textView.string
+      text.wrappedValue = textView.string
       publishState(for: textView)
     }
 
@@ -140,7 +142,7 @@ struct MarkdownTextEditorView: NSViewRepresentable {
 
       textView.string = result.text
       textView.setSelectedRange(result.selection)
-      text = result.text
+      text.wrappedValue = result.text
       publishState(for: textView)
       textView.window?.makeFirstResponder(textView)
       textView.scrollRangeToVisible(result.selection)
