@@ -1,0 +1,377 @@
+---
+format: codeck.mdeck
+version: 1
+theme: midnight
+codex:
+  sandbox: read-only
+  model: "gpt-5.5"
+  reasoning: medium
+---
+# Syntax Highlighting Gallery
+
+Use fenced code blocks with a language after the opening fence.
+
+Examples in this deck use language labels like `swift`, `json`, `html`, `diff`, and `plaintext`.
+
+---
+
+# Swift
+
+```swift
+import SwiftUI
+
+@MainActor
+struct LessonCard: View {
+  let title: String
+  let progress: Double = 0.75
+
+  var body: some View {
+    VStack(alignment: .leading) {
+      Text(title)
+      ProgressView(value: progress)
+    }
+  }
+}
+```
+
+---
+
+# JavaScript
+
+```javascript
+const decks = ["intro", "syntax", "wrap-up"];
+
+export async function loadDeck(id) {
+  if (!decks.includes(id)) {
+    throw new Error(`Unknown deck: ${id}`);
+  }
+
+  return await fetch(`/decks/${id}.mdeck`).then(response => response.text());
+}
+```
+
+---
+
+# TypeScript
+
+```typescript
+type SlideState = "idle" | "running" | "completed";
+
+interface SlideSummary {
+  id: string;
+  title: string;
+  state: SlideState;
+}
+
+function isRunnable(slide: SlideSummary): boolean {
+  return slide.state !== "running";
+}
+```
+
+---
+
+# JSX and TSX
+
+```tsx
+export function DeckToolbar({ title, onRunAll }: Props) {
+  return (
+    <header className="toolbar">
+      <strong>{title}</strong>
+      <button onClick={onRunAll}>Run all</button>
+    </header>
+  );
+}
+```
+
+---
+
+# Python
+
+```python
+from dataclasses import dataclass
+
+@dataclass
+class Deck:
+    title: str
+    slide_count: int = 0
+
+    def describe(self) -> str:
+        return f"{self.title}: {self.slide_count} slides"
+```
+
+---
+
+# Shell
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+
+deck="${1:-Examples/SyntaxHighlighting.mdeck}"
+if [[ -f "$deck" ]]; then
+  echo "Opening $deck"
+fi
+```
+
+```powershell
+$deck = "Examples/SyntaxHighlighting.mdeck"
+if (Test-Path $deck) {
+  Write-Output "Opening $deck"
+}
+```
+
+---
+
+# JSON
+
+```json
+{
+  "format": "codeck.mdeck",
+  "version": 1,
+  "features": {
+    "syntaxHighlighting": true,
+    "languages": 24
+  }
+}
+```
+
+---
+
+# YAML and TOML
+
+```yaml
+format: codeck.mdeck
+version: 1
+theme: midnight
+codex:
+  sandbox: read-only
+  reasoning: medium
+```
+
+```toml
+format = "codeck.mdeck"
+version = 1
+theme = "midnight"
+syntax_highlighting = true
+```
+
+---
+
+# HTML and XML
+
+```html
+<section class="slide" data-theme="midnight">
+  <h1>Syntax Highlighting</h1>
+  <button type="button">Run all</button>
+</section>
+```
+
+```xml
+<deck format="codeck.mdeck">
+  <slide id="syntax-gallery">Highlighted XML</slide>
+</deck>
+```
+
+---
+
+# CSS and SCSS
+
+```css
+.slide {
+  display: grid;
+  gap: 1rem;
+  color: var(--code-fg);
+}
+
+.slide:hover {
+  border-color: currentColor;
+}
+```
+
+```scss
+$accent: #7bdff2;
+
+.toolbar {
+  &:hover {
+    color: $accent;
+  }
+}
+```
+
+---
+
+# Markdown
+
+```markdown
+# Lesson Plan
+
+- Show the fence
+- Name the language
+- Check the preview
+
+> Code blocks keep their original spacing.
+```
+
+---
+
+# Diff
+
+```diff
+@@ -1,5 +1,6 @@
+ struct Slide {
+-  let markdown: String
++  let markdown: String
++  let language: String?
+ }
+```
+
+---
+
+# SQL
+
+```sql
+select title, count(*) as slide_count
+from decks
+where theme = 'midnight'
+group by title
+order by slide_count desc
+limit 5;
+```
+
+---
+
+# Rust
+
+```rust
+pub struct Slide<'a> {
+    pub title: &'a str,
+    pub visible: bool,
+}
+
+impl<'a> Slide<'a> {
+    pub fn label(&self) -> String {
+        format!("{}: {}", self.title, self.visible)
+    }
+}
+```
+
+---
+
+# Go
+
+```go
+package main
+
+import "fmt"
+
+type Slide struct {
+    Title string
+    Done  bool
+}
+
+func main() {
+    fmt.Println(Slide{Title: "Syntax", Done: true})
+}
+```
+
+---
+
+# Java and Kotlin
+
+```java
+public final class Slide {
+  private final String title;
+
+  public Slide(String title) {
+    this.title = title;
+  }
+}
+```
+
+```kotlin
+data class Slide(
+  val title: String,
+  val visible: Boolean = true
+)
+```
+
+---
+
+# C and C++
+
+```c
+#include <stdio.h>
+
+int main(void) {
+  const char *title = "Syntax";
+  printf("%s\n", title);
+  return 0;
+}
+```
+
+```cpp
+#include <string>
+
+struct Slide {
+  std::string title;
+  bool visible = true;
+};
+```
+
+---
+
+# Objective-C and C Sharp
+
+```objective-c
+@interface Slide : NSObject
+@property (nonatomic, copy) NSString *title;
+@end
+
+@implementation Slide
+@end
+```
+
+```csharp
+public sealed class Slide {
+  public string Title { get; init; } = "Syntax";
+  public bool Visible { get; init; } = true;
+}
+```
+
+---
+
+# Ruby
+
+```ruby
+class Slide
+  attr_reader :title
+
+  def initialize(title)
+    @title = title
+  end
+end
+```
+
+---
+
+# PHP
+
+```php
+<?php
+
+final class Slide {
+  public function __construct(
+    public string $title,
+    public bool $visible = true,
+  ) {}
+}
+```
+
+---
+
+# Plain Text
+
+```plaintext
+Plain text intentionally skips syntax spans.
+Use this for terminal transcripts, logs, or prose.
+```

@@ -343,8 +343,10 @@ enum MarkdownRenderer {
   }
 
   private static func renderCodeBlock(_ code: String, language: String) -> String {
-    let languageClass = language.isEmpty ? "" : " class=\"language-\(escapeAttribute(language))\""
-    return "<pre><code\(languageClass)>\(escapeHTML(code))</code></pre>"
+    let languageIdentifier = SyntaxHighlighter.languageIdentifier(from: language)
+    let languageClass = languageIdentifier.map { " class=\"language-\(escapeAttribute($0))\"" } ?? ""
+    let highlightedCode = SyntaxHighlighter.html(for: code, language: languageIdentifier)
+    return "<pre><code\(languageClass)>\(highlightedCode)</code></pre>"
   }
 
   private static func renderCodexBlock(_ block: CodexBlock, output: CodexSessionOutput?) -> String {
@@ -523,6 +525,54 @@ enum MarkdownRenderer {
     }
     code {
       font-family: "SF Mono", Menlo, Consolas, monospace;
+    }
+    pre code {
+      display: block;
+    }
+    pre code .syntax-comment {
+      color: #8b949e;
+      font-style: italic;
+    }
+    pre code .syntax-keyword {
+      color: #ff7b72;
+    }
+    pre code .syntax-type {
+      color: #ffa657;
+    }
+    pre code .syntax-string {
+      color: #a5d6ff;
+    }
+    pre code .syntax-number,
+    pre code .syntax-literal {
+      color: #79c0ff;
+    }
+    pre code .syntax-function {
+      color: #d2a8ff;
+    }
+    pre code .syntax-property,
+    pre code .syntax-variable {
+      color: #79c0ff;
+    }
+    pre code .syntax-attribute,
+    pre code .syntax-symbol {
+      color: #f2cc60;
+    }
+    pre code .syntax-tag,
+    pre code .syntax-section {
+      color: #7ee787;
+    }
+    pre code .syntax-name {
+      color: #c9d1d9;
+    }
+    pre code .syntax-operator,
+    pre code .syntax-punctuation {
+      color: #ffdf5d;
+    }
+    pre code .syntax-addition {
+      color: #7ee787;
+    }
+    pre code .syntax-deletion {
+      color: #ffa198;
     }
     p code, li code, td code {
       padding: 0.08em 0.28em;

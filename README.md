@@ -88,6 +88,9 @@ corner. Codex responses stream into the slide live and are rendered as Markdown,
 so lists, headings, tables, code, links, and images in the response use the same
 renderer as the rest of the deck.
 
+Fenced code blocks support syntax highlighting when the opening fence includes a
+language, such as ```` ```swift ```` or ```` ```json ````.
+
 ## Presenting
 
 Press the toolbar play button to start a full-screen presentation from the

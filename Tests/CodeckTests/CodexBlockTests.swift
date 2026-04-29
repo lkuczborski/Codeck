@@ -88,6 +88,69 @@ final class CodexBlockTests: XCTestCase {
     XCTAssertTrue(html.contains("Done"))
   }
 
+  func testRendererHighlightsFencedCodeByLanguage() {
+    let slide = Slide(
+      markdown:
+        #"""
+        ```swift
+        struct DemoView: View {
+          let title = "Hello"
+        }
+        ```
+        """#
+    )
+
+    let html = MarkdownRenderer.htmlDocument(for: slide, theme: .studio, codexOutputs: [:])
+
+    XCTAssertTrue(html.contains("<code class=\"language-swift\">"))
+    XCTAssertTrue(html.contains("<span class=\"syntax-keyword\">struct</span>"))
+    XCTAssertTrue(html.contains("<span class=\"syntax-type\">DemoView</span>"))
+    XCTAssertTrue(html.contains("<span class=\"syntax-type\">View</span>"))
+    XCTAssertTrue(html.contains("<span class=\"syntax-string\">&quot;Hello&quot;</span>"))
+  }
+
+  func testRendererUsesFirstFenceInfoTokenAsLanguage() {
+    let slide = Slide(
+      markdown:
+        #"""
+        ```swift title="Example"
+        let count = 3
+        ```
+        """#
+    )
+
+    let html = MarkdownRenderer.htmlDocument(for: slide, theme: .studio, codexOutputs: [:])
+
+    XCTAssertTrue(html.contains("<code class=\"language-swift\">"))
+    XCTAssertFalse(html.contains("language-swift title"))
+    XCTAssertTrue(html.contains("<span class=\"syntax-keyword\">let</span>"))
+    XCTAssertTrue(html.contains("<span class=\"syntax-number\">3</span>"))
+  }
+
+  func testRendererHighlightsDifferentFenceLanguagesAndEscapesCode() {
+    let slide = Slide(
+      markdown:
+        #"""
+        ```json
+        { "enabled": true, "count": 2 }
+        ```
+
+        ```html
+        <script type="module">alert("nope")</script>
+        ```
+        """#
+    )
+
+    let html = MarkdownRenderer.htmlDocument(for: slide, theme: .studio, codexOutputs: [:])
+
+    XCTAssertTrue(html.contains("<code class=\"language-json\">"))
+    XCTAssertTrue(html.contains("<span class=\"syntax-property\">&quot;enabled&quot;</span>"))
+    XCTAssertTrue(html.contains("<span class=\"syntax-literal\">true</span>"))
+    XCTAssertTrue(html.contains("<code class=\"language-html\">"))
+    XCTAssertTrue(html.contains("&lt;"))
+    XCTAssertFalse(html.contains("<script type=\"module\">"))
+  }
+
   func testRendererShowsOnlyCodexResponseByDefaultAndRendersMarkdown() {
     let slide = Slide(
       markdown:
