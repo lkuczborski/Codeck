@@ -21,28 +21,26 @@ struct EditorPaneView: View {
       HStack(spacing: 10) {
         themePicker(width: 232)
 
-        formatButtons
+        toolbarSeparator
+
+        editorControls(labelStyle: .titleAndIcon)
 
         Spacer(minLength: 10)
 
         deckSettingsButton
-          .labelStyle(.titleAndIcon)
-
-        insertMenu
           .labelStyle(.titleAndIcon)
       }
 
       HStack(spacing: 8) {
         themePicker(width: 216)
 
-        formatButtons
+        toolbarSeparator
+
+        editorControls(labelStyle: .iconOnly)
 
         Spacer(minLength: 8)
 
         deckSettingsButton
-          .labelStyle(.iconOnly)
-
-        insertMenu
           .labelStyle(.iconOnly)
       }
     }
@@ -64,6 +62,24 @@ struct EditorPaneView: View {
     .layoutPriority(1)
   }
 
+  private func editorControls(labelStyle: EditorToolbarLabelStyle) -> some View {
+    HStack(spacing: 8) {
+      switch labelStyle {
+      case .titleAndIcon:
+        insertMenu
+          .labelStyle(.titleAndIcon)
+      case .iconOnly:
+        insertMenu
+          .labelStyle(.iconOnly)
+      }
+
+      toolbarSeparator
+
+      formatButtons
+    }
+    .fixedSize(horizontal: true, vertical: false)
+  }
+
   private var formatButtons: some View {
     HStack(spacing: 4) {
       ForEach(MarkdownTextStyle.allCases) { style in
@@ -76,6 +92,14 @@ struct EditorPaneView: View {
     }
     .fixedSize(horizontal: true, vertical: false)
     .accessibilityElement(children: .contain)
+  }
+
+  private var toolbarSeparator: some View {
+    Rectangle()
+      .fill(Color.secondary.opacity(0.28))
+      .frame(width: 1, height: 24)
+      .padding(.horizontal, 2)
+      .accessibilityHidden(true)
   }
 
   private var deckSettingsButton: some View {
@@ -128,6 +152,11 @@ struct EditorPaneView: View {
       Label(insertion.title, systemImage: insertion.systemImage)
     }
   }
+}
+
+private enum EditorToolbarLabelStyle {
+  case titleAndIcon
+  case iconOnly
 }
 
 private struct MarkdownStyleButton: View {
