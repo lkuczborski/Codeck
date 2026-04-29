@@ -393,6 +393,9 @@ enum MarkdownRenderer {
     html = replace(pattern: "\\[([^\\]]+)\\]\\(([^\\)]+)\\)", in: html) { matches in
       "<a href=\"\(matches[2])\">\(matches[1])</a>"
     }
+    html = replace(pattern: "~~([^~]+)~~", in: html) { matches in
+      "<del>\(matches[1])</del>"
+    }
     html = replace(pattern: "\\*\\*([^*]+)\\*\\*", in: html) { matches in
       "<strong>\(matches[1])</strong>"
     }

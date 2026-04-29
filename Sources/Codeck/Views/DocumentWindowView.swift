@@ -128,10 +128,7 @@ struct DocumentWindowView: View {
     EditorPaneView(
       slide: slide,
       settings: $document.deck.settings,
-      modelCatalog: modelCatalog,
-      onInsertCodexBlock: {
-        document.deck.insertCodexBlock(into: selectedSlideID)
-      }
+      modelCatalog: modelCatalog
     )
   }
 

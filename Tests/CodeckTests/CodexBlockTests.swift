@@ -189,6 +189,14 @@ final class CodexBlockTests: XCTestCase {
     XCTAssertTrue(html.contains("<code>Two</code>"))
   }
 
+  func testRendererRendersStrikethroughInlineMarkdown() {
+    let slide = Slide(markdown: "Keep ~~remove~~ revise.")
+
+    let html = MarkdownRenderer.htmlDocument(for: slide, theme: .studio, codexOutputs: [:])
+
+    XCTAssertTrue(html.contains("Keep <del>remove</del> revise."))
+  }
+
   func testRendererStreamsRunningCodexTranscriptResponse() {
     let slide = Slide(
       markdown:

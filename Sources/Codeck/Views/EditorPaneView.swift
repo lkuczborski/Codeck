@@ -4,17 +4,14 @@ struct EditorPaneView: View {
   @Binding var slide: Slide
   @Binding var settings: PresentationSettings
   @ObservedObject var modelCatalog: CodexModelCatalogStore
-  let onInsertCodexBlock: () -> Void
+  @StateObject private var editorController = MarkdownEditorController()
   @State private var showsDeckSettings = false
 
   var body: some View {
     VStack(spacing: 0) {
       toolbar
 
-      TextEditor(text: $slide.markdown)
-        .font(.system(size: 15, design: .monospaced))
-        .scrollContentBackground(.hidden)
-        .padding(10)
+      MarkdownTextEditorView(text: $slide.markdown, controller: editorController)
         .background(.ultraThinMaterial)
     }
   }
@@ -24,24 +21,28 @@ struct EditorPaneView: View {
       HStack(spacing: 10) {
         themePicker(width: 232)
 
+        formatButtons
+
         Spacer(minLength: 10)
 
         deckSettingsButton
           .labelStyle(.titleAndIcon)
 
-        insertCodexButton
+        insertMenu
           .labelStyle(.titleAndIcon)
       }
 
       HStack(spacing: 8) {
         themePicker(width: 216)
 
+        formatButtons
+
         Spacer(minLength: 8)
 
         deckSettingsButton
           .labelStyle(.iconOnly)
 
-        insertCodexButton
+        insertMenu
           .labelStyle(.iconOnly)
       }
     }
@@ -63,6 +64,20 @@ struct EditorPaneView: View {
     .layoutPriority(1)
   }
 
+  private var formatButtons: some View {
+    HStack(spacing: 4) {
+      ForEach(MarkdownTextStyle.allCases) { style in
+        MarkdownStyleButton(
+          style: style,
+          isActive: editorController.activeStyles.contains(style),
+          action: { editorController.toggle(style) }
+        )
+      }
+    }
+    .fixedSize(horizontal: true, vertical: false)
+    .accessibilityElement(children: .contain)
+  }
+
   private var deckSettingsButton: some View {
     Button {
       showsDeckSettings.toggle()
@@ -76,12 +91,88 @@ struct EditorPaneView: View {
     }
   }
 
-  private var insertCodexButton: some View {
-    Button(action: onInsertCodexBlock) {
-      Label("Insert Codex Session", systemImage: "terminal")
+  private var insertMenu: some View {
+    Menu {
+      Section("Text") {
+        insertButton(.heading1)
+        insertButton(.heading2)
+        insertButton(.heading3)
+        insertButton(.paragraph)
+        insertButton(.link)
+      }
+
+      Section("Blocks") {
+        insertButton(.bulletedList)
+        insertButton(.numberedList)
+        insertButton(.blockquote)
+        insertButton(.table)
+        insertButton(.horizontalRule)
+      }
+
+      Section("Media and Code") {
+        insertButton(.image)
+        insertButton(.codeBlock)
+        insertButton(.codexSession)
+      }
+    } label: {
+      Label("Insert", systemImage: "plus")
     }
     .codeckGlassButtonStyle(prominent: true)
-    .help("Insert live Codex session")
+    .help("Insert Markdown element")
+  }
+
+  private func insertButton(_ insertion: MarkdownInsertion) -> some View {
+    Button {
+      editorController.insert(insertion, codexBlockNumber: slide.codexBlocks.count + 1)
+    } label: {
+      Label(insertion.title, systemImage: insertion.systemImage)
+    }
+  }
+}
+
+private struct MarkdownStyleButton: View {
+  let style: MarkdownTextStyle
+  let isActive: Bool
+  let action: () -> Void
+
+  var body: some View {
+    Button(action: action) {
+      styledLabel
+        .frame(width: 26, height: 24)
+        .background(
+          isActive ? Color.accentColor.opacity(0.24) : Color.clear,
+          in: RoundedRectangle(cornerRadius: 7, style: .continuous)
+        )
+        .overlay {
+          RoundedRectangle(cornerRadius: 7, style: .continuous)
+            .stroke(isActive ? Color.accentColor.opacity(0.75) : Color.secondary.opacity(0.2), lineWidth: 1)
+        }
+    }
+    .buttonStyle(.plain)
+    .help(style.help)
+    .accessibilityLabel(style.title)
+  }
+
+  @ViewBuilder
+  private var styledLabel: some View {
+    let base = Text("a")
+      .font(.system(size: 15, weight: .regular))
+
+    switch style {
+    case .bold:
+      base.bold()
+    case .italic:
+      base.italic()
+    case .inlineCode:
+      base
+        .font(.system(size: 14, design: .monospaced))
+        .padding(.horizontal, 3)
+        .background(Color.secondary.opacity(0.16), in: RoundedRectangle(cornerRadius: 4, style: .continuous))
+    case .strikethrough:
+      base.strikethrough()
+    case .link:
+      base.underline()
+    }
   }
 }
 
