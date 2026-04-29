@@ -4,6 +4,12 @@
 
 Codeck is a native macOS document-based Markdown presentation maker for teaching Codex prompting workflows.
 
+## Examples
+
+The [`Examples`](Examples) folder contains sample `.mdeck` decks. It currently
+includes [`SyntaxHighlighting.mdeck`](Examples/SyntaxHighlighting.mdeck), which
+shows fenced code highlighting across supported languages.
+
 ## Document format
 
 Documents use the `.mdeck` extension so macOS can associate them with Codeck
