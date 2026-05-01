@@ -1,0 +1,228 @@
+---
+format: codeck.mdeck
+version: 1
+theme: atelier
+codex:
+  sandbox: read-only
+  model: "gpt-5.5"
+  reasoning: medium
+---
+# Codeck Feature Carnival
+
+A quick, playful tour of Markdown slides, live Codex cards, themes, preview, and presentation mode.
+
+![Codeck screenshot](https://raw.githubusercontent.com/lkuczborski/Codeck/refs/heads/main/screenshot.png)
+
+---
+
+# Codeck In One Slide
+
+| Thing | Why it matters |
+| --- | --- |
+| `.mdeck` files | Plain text decks that open in Codeck |
+| Markdown slides | Easy to write, diff, and edit |
+| Live preview | The slide renders as you work |
+| Live Codex | Run prompts directly from a slide |
+| Presentation mode | Full-screen delivery from the selected slide |
+
+Writing a deck is still just typing Markdown:
+
+![Kermit typing GIF](https://media.giphy.com/media/LmBsnpDCuturMhtLfw/giphy.gif)
+
+---
+
+# The File Format
+
+Front matter sets deck defaults. `---` separates slides.
+
+````markdown
+---
+format: codeck.mdeck
+version: 1
+theme: atelier
+codex:
+  sandbox: read-only
+  model: "gpt-5.5"
+  reasoning: medium
+---
+
+# First Slide
+
+Write Markdown. Present Markdown.
+
+---
+
+# Second Slide
+
+Now with more drama.
+````
+
+---
+
+# Markdown Goodies
+
+Codeck renders the Markdown pieces you need for a real teaching deck:
+
+- **Text styling:** **bold**, *italic*, `inline code`, ~~strikethrough~~, and [links](https://github.com/openai/codex).
+- **Slide structure:** headings, paragraphs, bullets, numbered steps, blockquotes, and `***` dividers.
+- **Rich content:** tables, web images, animated GIFs, and fenced code blocks.
+- **Live demos:** fenced `codex` blocks become runnable prompt cards.
+
+> The deck stays readable in plain text, even outside the app.
+
+***
+
+Use `***` for visual dividers because `---` means "new slide".
+
+---
+
+# Themes
+
+Pick a deck mood from the toolbar or front matter.
+
+| Theme | Vibe |
+| --- | --- |
+| `studio` | Clean workshop |
+| `midnight` | Late-night build |
+| `chalk` | Classroom board |
+| `solar` | Sunny explainer |
+| `atelier` | Cozy studio |
+
+---
+
+# Syntax Highlighting
+
+Name the language after the opening fence.
+
+```swift
+struct SlideFeature: Identifiable {
+  let id: String
+  let isFun = true
+}
+```
+
+```json
+{
+  "renderer": "MarkdownWebView",
+  "themes": 5,
+  "liveCodex": true
+}
+```
+
+```diff
++ live preview
++ runnable prompts
+- mystery formatting
+```
+
+When the language label is right:
+
+![Code works GIF](https://media.giphy.com/media/wGEymBvo6FUlR9bbda/giphy.gif)
+
+---
+
+# Editor And Sidebar
+
+| Control | What it does |
+| --- | --- |
+| Theme picker | Changes the whole deck mood |
+| Insert menu | Adds headings, lists, tables, code, images, and Codex cards |
+| Style buttons | Bold, italic, inline code, strike, link |
+| Deck settings | Model, reasoning, sandbox |
+| Sidebar | Add, duplicate, delete, drag, and scan slide summaries |
+
+---
+
+# Preview And Present
+
+| Mode | What happens |
+| --- | --- |
+| Wide window | Editor and preview sit side by side |
+| Compact window | Switch between Editor and Preview |
+| Hidden preview | Give the editor more room |
+| Play button | Present full-screen from the selected slide |
+
+In presentation mode: Right arrow advances, Left arrow goes back, Escape exits.
+
+---
+
+# Live Codex Card
+
+Fenced `codex` blocks become runnable prompt cards.
+
+For live coding demos, the assistant is part of the slide instead of a separate tab.
+
+![Coding smiley GIF](https://media.giphy.com/media/MT5UUV1d4CXE2A37Dg/giphy.gif)
+
+```codex id=slide-title-polisher
+title: Polish a slide title
+model: gpt-5.5
+reasoning: medium
+sandbox: read-only
+
+Rewrite the title "Markdown Goodies" in three playful styles.
+Keep each option under seven words.
+```
+
+---
+
+# Run-All Codex
+
+Multiple Codex cards on one slide unlock a run-all button in the top-right corner.
+
+```codex id=quiz-writer
+title: Make a quick audience quiz
+reasoning: low
+sandbox: read-only
+
+Write three multiple-choice questions about Codeck's live Codex cards.
+```
+
+```codex id=speaker-notes
+title: Draft short speaker notes
+reasoning: medium
+sandbox: read-only
+
+Create five concise speaker notes for presenting a Markdown deck editor.
+```
+
+---
+
+# Why It Clicks
+
+The old loop: edit, export, reopen, spot one typo, repeat.
+
+![This is fine GIF](https://media.giphy.com/media/tZyxxR4lUIRnTgIzl9/giphy.gif)
+
+Codeck keeps the loop calmer:
+
+1. Write plain Markdown.
+2. Watch the themed slide render.
+3. Run Codex when a prompt needs to teach, explain, or demo.
+4. Present without exporting.
+
+---
+
+# Feature Checklist
+
+| Feature | Covered |
+| --- | --- |
+| `.mdeck` front matter and slide separators | yes |
+| Markdown renderer and syntax highlighting | yes |
+| Web images and GIFs | yes |
+| Themes and app appearance | yes |
+| Editor, sidebar, preview, presentation mode | yes |
+| Live Codex cards and run-all | yes |
+| Deck defaults and per-card overrides | yes |
+
+The trick is that the deck is still just Markdown.
+
+---
+
+# Asset Links
+
+- Screenshot: [raw GitHub image](https://raw.githubusercontent.com/lkuczborski/Codeck/refs/heads/main/screenshot.png)
+- Kermit typing: [GIPHY](https://giphy.com/gifs/muppets-LmBsnpDCuturMhtLfw)
+- Code works: [GIPHY](https://giphy.com/gifs/my-code-works-runs-wGEymBvo6FUlR9bbda)
+- Coding smiley: [GIPHY](https://giphy.com/gifs/Giflytics-MT5UUV1d4CXE2A37Dg)
+- This is fine: [GIPHY](https://giphy.com/gifs/this-is-fine-dumpster-fire-tZyxxR4lUIRnTgIzl9)
