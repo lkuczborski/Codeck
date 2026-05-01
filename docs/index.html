@@ -1,0 +1,289 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Codeck - Markdown decks with live Codex built in</title>
+    <meta
+      name="description"
+      content="Codeck is a native macOS Markdown presentation maker for teaching Codex prompting workflows."
+    />
+    <link rel="icon" href="assets/codeck-icon.png" type="image/png" />
+    <link rel="apple-touch-icon" href="assets/codeck-icon.png" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="site-header" data-elevates>
+      <a class="brand" href="#top" aria-label="Codeck home">
+        <span class="brand-mark" aria-hidden="true">
+          <img src="assets/codeck-icon.png" alt="" />
+        </span>
+        <span>Codeck</span>
+      </a>
+
+      <nav class="nav-links" aria-label="Primary navigation">
+        <a href="#workflow">Workflow</a>
+        <a href="#codex">Live Codex</a>
+        <a href="#format">Format</a>
+        <a href="#themes">Themes</a>
+      </nav>
+
+      <a class="nav-cta" href="https://github.com/lkuczborski/Codeck">GitHub</a>
+    </header>
+
+    <main id="top">
+      <section class="hero" aria-labelledby="hero-title">
+        <div class="hero-copy">
+          <h1 id="hero-title">Codeck</h1>
+          <p class="hero-subtitle">Markdown decks with live Codex built in</p>
+          <p>
+            Create teaching decks from plain Markdown, run Codex prompts directly on slides,
+            and present the whole workflow from one native Mac app.
+          </p>
+
+          <div class="hero-actions" aria-label="Primary actions">
+            <a class="button primary" href="https://github.com/lkuczborski/Codeck">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 5v14M5 12h14" />
+              </svg>
+              View on GitHub
+            </a>
+            <a class="button secondary" href="#format">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M7 4h7l3 3v13H7z" />
+                <path d="M14 4v4h4M9 13h6M9 17h4" />
+              </svg>
+              Read the format
+            </a>
+          </div>
+
+          <dl class="hero-points" aria-label="Codeck highlights">
+            <div>
+              <dt>.mdeck</dt>
+              <dd>Markdown files that macOS opens in Codeck.</dd>
+            </div>
+            <div>
+              <dt>Live cards</dt>
+              <dd>Run fenced Codex blocks from the slide itself.</dd>
+            </div>
+            <div>
+              <dt>Present</dt>
+              <dd>Switch from editing to full-screen teaching.</dd>
+            </div>
+          </dl>
+        </div>
+
+        <div class="hero-visual" aria-label="Codeck application screenshot">
+          <div class="screen-shell">
+            <img
+              src="assets/codeck-screenshot.png"
+              alt="Codeck showing a Markdown editor, slide preview, and a live Codex card"
+            />
+          </div>
+        </div>
+      </section>
+
+      <section class="workflow-section" id="workflow" aria-labelledby="workflow-title">
+        <div class="section-heading">
+          <h2 id="workflow-title">Write, run, present, repeat.</h2>
+          <p>
+            Codeck keeps the lesson source, rendered slide, and live assistant output in one
+            editing loop so prompting demos stay reproducible.
+          </p>
+        </div>
+
+        <div class="workflow-rail" aria-label="Codeck workflow">
+          <article>
+            <span class="step-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                <path d="M5 4h14v16H5z" />
+                <path d="M8 8h8M8 12h6M8 16h4" />
+              </svg>
+            </span>
+            <h3>Author in Markdown</h3>
+            <p>Plain slides, YAML deck settings, images, GIFs, and fenced code blocks.</p>
+          </article>
+
+          <article>
+            <span class="step-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                <path d="m7 8 5 4-5 4z" />
+                <path d="M14 7h4v10h-4" />
+              </svg>
+            </span>
+            <h3>Run Codex cards</h3>
+            <p>Each prompt block has model, reasoning, sandbox, and a dedicated run button.</p>
+          </article>
+
+          <article>
+            <span class="step-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                <path d="M4 5h16v10H4z" />
+                <path d="M12 15v4M8 19h8" />
+              </svg>
+            </span>
+            <h3>Preview the lesson</h3>
+            <p>The slide updates beside the editor with syntax highlighting and rendered Markdown.</p>
+          </article>
+
+          <article>
+            <span class="step-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                <path d="M8 5h10v14H8z" />
+                <path d="m6 9-3 3 3 3M18 9l3 3-3 3" />
+              </svg>
+            </span>
+            <h3>Teach full screen</h3>
+            <p>Launch presentation mode and move through the deck with familiar arrow keys.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="codex-section" id="codex" aria-labelledby="codex-title">
+        <div class="codex-copy">
+          <h2 id="codex-title">Prompting demos that actually run.</h2>
+          <p>
+            A fenced <code>codex</code> block becomes a live card on the slide. Deck defaults
+            keep model, reasoning, and sandbox choices consistent, while individual sessions
+            can override them when a lesson needs more precision.
+          </p>
+
+          <ul class="feature-list">
+            <li>Run one card or run every Codex session on the current slide.</li>
+            <li>Stream Markdown output into the rendered slide as the answer arrives.</li>
+            <li>Keep stable session IDs for repeatable lessons and demos.</li>
+          </ul>
+        </div>
+
+        <div class="demo-panel" aria-label="Interactive Codex card demo">
+          <div class="demo-toolbar">
+            <span>first-demo.mdeck</span>
+            <button class="icon-button" type="button" data-run-demo aria-label="Run Codex demo">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="m8 5 11 7-11 7z" />
+              </svg>
+            </button>
+          </div>
+          <pre aria-label="Codex block source"><code>```codex id=first-demo
+title: First example
+reasoning: xhigh
+sandbox: read-only
+
+Explain three practical ways to make
+a prompt more testable.
+```</code></pre>
+
+          <div class="codex-card">
+            <div class="card-head">
+              <strong>First example</strong>
+              <span data-demo-status>ready</span>
+            </div>
+            <div class="prompt-box">
+              Explain three practical ways to make a prompt more testable.
+            </div>
+            <div class="output-box" data-demo-output>
+              Click run to simulate a streamed Markdown response.
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="format-section" id="format" aria-labelledby="format-title">
+        <div class="format-code" aria-label="mdeck front matter example">
+          <pre><code>---
+format: codeck.mdeck
+version: 1
+theme: studio
+codex:
+  sandbox: read-only
+  model: "gpt-5.5"
+  reasoning: medium
+---
+
+# First Slide
+
+Teach the workflow, then run it live.</code></pre>
+        </div>
+
+        <div class="format-copy">
+          <h2 id="format-title">A deck format you can read in a diff.</h2>
+          <p>
+            Codeck keeps decks as Markdown with YAML front matter. Slides are separated by
+            a simple divider, and the document stays friendly to source control, review, and
+            examples.
+          </p>
+          <div class="format-facts">
+            <span>Markdown body</span>
+            <span>YAML settings</span>
+            <span>Theme metadata</span>
+            <span>Codex defaults</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="themes-section" id="themes" aria-labelledby="themes-title">
+        <div class="section-heading">
+          <h2 id="themes-title">Five moods for one lesson.</h2>
+          <p>
+            Switch the rendered deck between Studio, Midnight, Chalk, Solar, and Atelier
+            without changing the source Markdown.
+          </p>
+        </div>
+
+        <div class="theme-playground" data-theme-preview="studio">
+          <div class="theme-controls" aria-label="Theme selector">
+            <button type="button" data-theme="studio" aria-pressed="true">
+              <span class="swatch studio"></span>
+              Studio
+            </button>
+            <button type="button" data-theme="midnight" aria-pressed="false">
+              <span class="swatch midnight"></span>
+              Midnight
+            </button>
+            <button type="button" data-theme="chalk" aria-pressed="false">
+              <span class="swatch chalk"></span>
+              Chalk
+            </button>
+            <button type="button" data-theme="solar" aria-pressed="false">
+              <span class="swatch solar"></span>
+              Solar
+            </button>
+            <button type="button" data-theme="atelier" aria-pressed="false">
+              <span class="swatch atelier"></span>
+              Atelier
+            </button>
+          </div>
+
+          <div class="theme-slide" aria-live="polite">
+            <span class="slide-label" data-theme-label>Studio</span>
+            <h3>Prompt shape</h3>
+            <p>Ask for observable behavior, name the verification path, then narrow the change.</p>
+            <pre><code>```swift
+let prompt = "Make this change testable"
+```</code></pre>
+          </div>
+        </div>
+      </section>
+
+      <section class="final-section" aria-labelledby="final-title">
+        <h2 id="final-title">Build lessons that can run in front of the room.</h2>
+        <p>
+          Codeck gives Markdown presentations a native editing loop and gives Codex prompts a
+          stage where the result is part of the slide.
+        </p>
+        <a class="button primary" href="https://github.com/lkuczborski/Codeck">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 5v14M5 12h14" />
+          </svg>
+          Open the project
+        </a>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <p class="copyright">© 2026 Łukasz Kuczborski. All rights reserved.</p>
+    </footer>
+
+    <script src="script.js"></script>
+  </body>
+</html>
