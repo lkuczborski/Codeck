@@ -1,4 +1,5 @@
 import XCTest
+@testable import CodeckCore
 @testable import Codeck
 
 @MainActor

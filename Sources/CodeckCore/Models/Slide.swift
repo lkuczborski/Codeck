@@ -1,15 +1,15 @@
 import Foundation
 
-struct Slide: Identifiable, Hashable {
-  let id: UUID
-  var markdown: String
+public struct Slide: Identifiable, Hashable, Sendable {
+  public let id: UUID
+  public var markdown: String
 
-  init(id: UUID = UUID(), markdown: String) {
+  public init(id: UUID = UUID(), markdown: String) {
     self.id = id
     self.markdown = markdown
   }
 
-  var title: String {
+  public var title: String {
     for line in markdown.components(separatedBy: .newlines) {
       let trimmed = line.trimmingCharacters(in: .whitespaces)
       guard trimmed.hasPrefix("#") else { continue }
@@ -22,7 +22,7 @@ struct Slide: Identifiable, Hashable {
     return "Untitled Slide"
   }
 
-  var summary: String {
+  public var summary: String {
     for line in markdown.components(separatedBy: .newlines) {
       let trimmed = line.trimmingCharacters(in: .whitespacesAndNewlines)
       guard !trimmed.isEmpty else { continue }
@@ -43,7 +43,7 @@ struct Slide: Identifiable, Hashable {
     return "Markdown slide"
   }
 
-  var codexBlocks: [CodexBlock] {
+  public var codexBlocks: [CodexBlock] {
     CodexBlock.extract(from: markdown)
   }
 }

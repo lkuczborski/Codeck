@@ -1,7 +1,7 @@
 import Foundation
 
-enum MarkdownFence {
-  static func openingMarker(in line: String) -> String? {
+public enum MarkdownFence {
+  public static func openingMarker(in line: String) -> String? {
     let trimmed = line.trimmingCharacters(in: .whitespaces)
     guard let markerCharacter = trimmed.first, markerCharacter == "`" || markerCharacter == "~" else {
       return nil
@@ -15,14 +15,14 @@ enum MarkdownFence {
     return String(repeating: String(markerCharacter), count: markerLength)
   }
 
-  static func infoString(in openingLine: String, marker: String) -> String {
+  public static func infoString(in openingLine: String, marker: String) -> String {
     openingLine
       .trimmingCharacters(in: .whitespaces)
       .dropFirst(marker.count)
       .trimmingCharacters(in: .whitespaces)
   }
 
-  static func isClosingLine(_ line: String, marker: String) -> Bool {
+  public static func isClosingLine(_ line: String, marker: String) -> Bool {
     let trimmed = line.trimmingCharacters(in: .whitespaces)
     guard let markerCharacter = marker.first, trimmed.first == markerCharacter else {
       return false

@@ -1,4 +1,5 @@
 import Foundation
+import CodeckCore
 import SwiftUI
 import UniformTypeIdentifiers
 

@@ -1,15 +1,15 @@
 import Foundation
 
-enum PresentationTheme: String, CaseIterable, Identifiable {
+public enum PresentationTheme: String, CaseIterable, Identifiable, Sendable {
   case studio
   case midnight
   case chalk
   case solar
   case atelier
 
-  var id: String { rawValue }
+  public var id: String { rawValue }
 
-  var displayName: String {
+  public var displayName: String {
     switch self {
     case .studio:
       "Studio"
@@ -24,7 +24,7 @@ enum PresentationTheme: String, CaseIterable, Identifiable {
     }
   }
 
-  var css: String {
+  public var css: String {
     switch self {
     case .studio:
       """

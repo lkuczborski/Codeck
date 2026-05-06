@@ -8,10 +8,14 @@ let package = Package(
     .macOS(.v14)
   ],
   products: [
-    .executable(name: "Codeck", targets: ["Codeck"])
+    .executable(name: "Codeck", targets: ["Codeck"]),
+    .executable(name: "codeck-mcp", targets: ["CodeckMCP"]),
+    .library(name: "CodeckCore", targets: ["CodeckCore"])
   ],
   targets: [
-    .executableTarget(name: "Codeck"),
-    .testTarget(name: "CodeckTests", dependencies: ["Codeck"])
+    .target(name: "CodeckCore"),
+    .executableTarget(name: "Codeck", dependencies: ["CodeckCore"]),
+    .executableTarget(name: "CodeckMCP", dependencies: ["CodeckCore"]),
+    .testTarget(name: "CodeckTests", dependencies: ["Codeck", "CodeckCore"])
   ]
 )
