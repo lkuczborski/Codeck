@@ -145,6 +145,72 @@ outline, or `view=slide&index=0` for a specific slide. Slide indexes are
 zero-based; slide UUIDs are runtime-only and are not persisted in `.mdeck`
 files.
 
+## Live MCP bridge
+
+Codeck can also expose the currently open app windows through a localhost MCP
+bridge. This is disabled by default.
+
+To enable it in the app:
+
+1. Open Codeck settings.
+2. Enable **MCP > Live Bridge**.
+3. Keep Codeck running with the deck window open.
+
+When enabled, Codeck listens on:
+
+```text
+http://127.0.0.1:49747/mcp
+```
+
+The live bridge uses MCP Streamable HTTP with JSON responses. Configure an
+agent or MCP client with a Streamable HTTP server named `codeck-live` pointing
+to that URL. For clients that use the common JSON MCP manifest shape, the entry
+looks like:
+
+```json
+{
+  "mcpServers": {
+    "codeck-live": {
+      "transport": "streamable-http",
+      "url": "http://127.0.0.1:49747/mcp"
+    }
+  }
+}
+```
+
+Some clients use `type: "http"` or `type: "streamable-http"` instead of
+`transport`; use the field name expected by that agent, but keep the same URL.
+After adding the server to the agent, ask it to call `list_open_decks` first so
+it can get the live `document_id` for the Codeck window it should edit.
+
+Live bridge tools:
+
+- `list_open_decks`
+- `read_deck`
+- `list_slides`
+- `get_slide`
+- `set_slide_markdown`
+- `insert_slide`
+- `delete_slide`
+- `move_slide`
+- `duplicate_slide`
+- `set_deck_settings`
+- `insert_codex_block`
+- `select_slide`
+- `get_selection`
+- `start_presentation`
+- `stop_presentation`
+- `validate_deck`
+
+Live bridge resources use:
+
+```text
+codeck-live://deck/{document_id}{?view,index}
+```
+
+Use `view=document` for full Markdown, `view=outline` for a JSON outline, or
+`view=slide&index=0` for a specific slide.
+
 ## Presenting
 
 Press the toolbar play button to start a full-screen presentation from the
