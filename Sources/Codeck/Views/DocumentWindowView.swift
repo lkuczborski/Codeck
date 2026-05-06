@@ -14,6 +14,7 @@ struct DocumentWindowView: View {
   @AppStorage(AppAppearanceMode.storageKey) private var appAppearanceModeRawValue = AppAppearanceMode.automatic.rawValue
   @State private var columnVisibility: NavigationSplitViewVisibility = .all
   @State private var appearanceRefreshID = UUID()
+  @State private var liveMCPDocumentID = UUID()
 
   private var selectedSlideID: Slide.ID? {
     get {
@@ -88,6 +89,11 @@ struct DocumentWindowView: View {
     .focusedValue(\.previewVisibility, $isPreviewVisible)
     .onAppear(perform: ensureSelection)
     .onAppear(perform: applyStoredAppAppearance)
+    .onAppear(perform: registerLiveMCPDocument)
+    .onDisappear(perform: unregisterLiveMCPDocument)
+    .onChange(of: fileURL) { _, _ in
+      registerLiveMCPDocument()
+    }
     .onChange(of: appAppearanceModeRawValue) { _, rawValue in
       applyAppAppearance(rawValue: rawValue)
     }
@@ -313,6 +319,45 @@ struct DocumentWindowView: View {
         selectedReasoning: document.deck.settings.codex.reasoning
       )
     )
+  }
+
+  private func registerLiveMCPDocument() {
+    let documentBinding = Binding(
+      get: { document },
+      set: { document = $0 }
+    )
+
+    LiveMCPDocumentRegistry.shared.register(
+      LiveMCPDocumentSession(
+        id: liveMCPDocumentID,
+        fileURL: { fileURL },
+        deck: { documentBinding.wrappedValue.deck },
+        setDeck: { deck in
+          documentBinding.wrappedValue.deck = deck
+          ensureSelection()
+        },
+        selectedSlideIndex: { selectedSlideIndex },
+        selectSlide: { index in
+          guard documentBinding.wrappedValue.deck.slides.indices.contains(index) else { return }
+          selectedSlideID = documentBinding.wrappedValue.deck.slides[index].id
+        },
+        present: {
+          presentationPresenter.present(
+            deck: documentBinding.wrappedValue.deck,
+            selectedSlideID: selectedSlideID,
+            baseURL: fileURL?.deletingLastPathComponent(),
+            sessions: sessionStore
+          )
+        },
+        dismissPresentation: {
+          presentationPresenter.dismiss()
+        }
+      )
+    )
+  }
+
+  private func unregisterLiveMCPDocument() {
+    LiveMCPDocumentRegistry.shared.unregister(liveMCPDocumentID)
   }
 
   private var compactPane: CompactDetailPane {

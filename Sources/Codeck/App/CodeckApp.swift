@@ -5,6 +5,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
   func applicationDidFinishLaunching(_ notification: Notification) {
     NSApp.setActivationPolicy(.regular)
     AppAppearanceController.apply(rawValue: UserDefaults.standard.string(forKey: AppAppearanceMode.storageKey))
+    LiveMCPServerController.shared.synchronizeWithPreferences()
     NSApp.activate(ignoringOtherApps: true)
   }
 }
@@ -12,6 +13,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 @main
 struct CodeckApp: App {
   @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
+  @StateObject private var liveMCPServer = LiveMCPServerController.shared
 
   var body: some Scene {
     DocumentGroup(newDocument: PresentationDocument()) { file in
@@ -19,6 +21,10 @@ struct CodeckApp: App {
     }
     .commands {
       PreviewVisibilityCommands()
+    }
+
+    Settings {
+      CodeckSettingsView(liveMCPServer: liveMCPServer)
     }
   }
 }
