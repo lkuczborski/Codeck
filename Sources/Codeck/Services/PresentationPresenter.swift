@@ -1,4 +1,5 @@
 import AppKit
+import CodeckCore
 import SwiftUI
 
 @MainActor

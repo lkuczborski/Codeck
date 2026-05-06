@@ -1,3 +1,4 @@
+import CodeckCore
 import SwiftUI
 
 struct SidebarView: View {

@@ -1,15 +1,15 @@
 import Foundation
 
-struct CodexBlock: Identifiable, Hashable {
-  var id: String
-  var prompt: String
-  var model: String?
-  var reasoning: CodexReasoningEffort?
-  var profile: String?
-  var sandbox: String?
-  var title: String
+public struct CodexBlock: Identifiable, Hashable, Sendable {
+  public var id: String
+  public var prompt: String
+  public var model: String?
+  public var reasoning: CodexReasoningEffort?
+  public var profile: String?
+  public var sandbox: String?
+  public var title: String
 
-  init(
+  public init(
     id: String,
     prompt: String,
     model: String? = nil,
@@ -27,7 +27,7 @@ struct CodexBlock: Identifiable, Hashable {
     self.title = title
   }
 
-  static func extract(from markdown: String) -> [CodexBlock] {
+  public static func extract(from markdown: String) -> [CodexBlock] {
     let lines = markdown.components(separatedBy: .newlines)
     var blocks: [CodexBlock] = []
     var index = 0

@@ -1,36 +1,63 @@
 import Foundation
 
-struct PresentationSettings: Hashable, Sendable {
-  var theme: PresentationTheme
-  var codex: DeckCodexSettings
+public struct PresentationSettings: Hashable, Sendable {
+  public var theme: PresentationTheme
+  public var codex: DeckCodexSettings
 
-  static let `default` = PresentationSettings(
+  public static let `default` = PresentationSettings(
     theme: .studio,
     codex: .default
   )
+
+  public init(theme: PresentationTheme, codex: DeckCodexSettings) {
+    self.theme = theme
+    self.codex = codex
+  }
 }
 
-struct DeckCodexSettings: Hashable, Sendable {
-  var model: String
-  var reasoning: CodexReasoningEffort
-  var sandbox: String
+public struct DeckCodexSettings: Hashable, Sendable {
+  public var model: String
+  public var reasoning: CodexReasoningEffort
+  public var sandbox: String
 
-  static let `default` = DeckCodexSettings(
+  public static let `default` = DeckCodexSettings(
     model: CodexModelOption.defaultModelID,
     reasoning: .medium,
     sandbox: "read-only"
   )
+
+  public init(model: String, reasoning: CodexReasoningEffort, sandbox: String) {
+    self.model = model
+    self.reasoning = reasoning
+    self.sandbox = sandbox
+  }
 }
 
-struct CodexModelOption: Identifiable, Hashable, Sendable {
-  var id: String
-  var displayName: String
-  var description: String
-  var supportedReasoningEfforts: [CodexReasoningEffort]
-  var defaultReasoningEffort: CodexReasoningEffort
-  var isDefault: Bool
+public struct CodexModelOption: Identifiable, Hashable, Sendable {
+  public var id: String
+  public var displayName: String
+  public var description: String
+  public var supportedReasoningEfforts: [CodexReasoningEffort]
+  public var defaultReasoningEffort: CodexReasoningEffort
+  public var isDefault: Bool
 
-  static let fallbackOptions: [CodexModelOption] = [
+  public init(
+    id: String,
+    displayName: String,
+    description: String,
+    supportedReasoningEfforts: [CodexReasoningEffort],
+    defaultReasoningEffort: CodexReasoningEffort,
+    isDefault: Bool
+  ) {
+    self.id = id
+    self.displayName = displayName
+    self.description = description
+    self.supportedReasoningEfforts = supportedReasoningEfforts
+    self.defaultReasoningEffort = defaultReasoningEffort
+    self.isDefault = isDefault
+  }
+
+  public static let fallbackOptions: [CodexModelOption] = [
     CodexModelOption(
       id: "gpt-5.5",
       displayName: "GPT-5.5",
@@ -81,23 +108,23 @@ struct CodexModelOption: Identifiable, Hashable, Sendable {
     )
   ]
 
-  static var defaultOption: CodexModelOption {
+  public static var defaultOption: CodexModelOption {
     defaultOption(in: fallbackOptions)
   }
 
-  static var defaultModelID: String {
+  public static var defaultModelID: String {
     defaultOption.id
   }
 
-  static func defaultOption(in options: [CodexModelOption]) -> CodexModelOption {
+  public static func defaultOption(in options: [CodexModelOption]) -> CodexModelOption {
     options.first(where: \.isDefault) ?? options.first ?? fallbackOptions[0]
   }
 
-  static func option(for modelID: String, in options: [CodexModelOption] = fallbackOptions) -> CodexModelOption? {
+  public static func option(for modelID: String, in options: [CodexModelOption] = fallbackOptions) -> CodexModelOption? {
     options.first { $0.id == modelID }
   }
 
-  static func normalizedModelID(_ value: String?) -> String {
+  public static func normalizedModelID(_ value: String?) -> String {
     guard let value = value?.trimmingCharacters(in: .whitespacesAndNewlines), !value.isEmpty else {
       return defaultModelID
     }
@@ -105,7 +132,7 @@ struct CodexModelOption: Identifiable, Hashable, Sendable {
     return value
   }
 
-  static func normalizedReasoning(
+  public static func normalizedReasoning(
     _ reasoning: CodexReasoningEffort?,
     for modelID: String,
     in options: [CodexModelOption] = fallbackOptions
@@ -126,18 +153,22 @@ struct CodexModelOption: Identifiable, Hashable, Sendable {
   }
 }
 
-struct CodexReasoningEffort: RawRepresentable, CaseIterable, Identifiable, Hashable, Sendable {
-  var rawValue: String
+public struct CodexReasoningEffort: RawRepresentable, CaseIterable, Identifiable, Hashable, Sendable {
+  public var rawValue: String
 
-  static let low = CodexReasoningEffort(rawValue: "low")
-  static let medium = CodexReasoningEffort(rawValue: "medium")
-  static let high = CodexReasoningEffort(rawValue: "high")
-  static let xhigh = CodexReasoningEffort(rawValue: "xhigh")
-  static let allCases: [CodexReasoningEffort] = [.low, .medium, .high, .xhigh]
+  public static let low = CodexReasoningEffort(rawValue: "low")
+  public static let medium = CodexReasoningEffort(rawValue: "medium")
+  public static let high = CodexReasoningEffort(rawValue: "high")
+  public static let xhigh = CodexReasoningEffort(rawValue: "xhigh")
+  public static let allCases: [CodexReasoningEffort] = [.low, .medium, .high, .xhigh]
 
-  var id: String { rawValue }
+  public init(rawValue: String) {
+    self.rawValue = rawValue
+  }
 
-  var displayName: String {
+  public var id: String { rawValue }
+
+  public var displayName: String {
     switch rawValue {
     case Self.low.rawValue:
       "Low"

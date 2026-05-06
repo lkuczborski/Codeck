@@ -1,22 +1,22 @@
 import Foundation
 
-struct PresentationDeck: Hashable {
-  static let defaultSlideMarkdown = "# New Slide\n\nStart writing..."
+public struct PresentationDeck: Hashable, Sendable {
+  public static let defaultSlideMarkdown = "# New Slide\n\nStart writing..."
 
-  var settings: PresentationSettings
-  var slides: [Slide]
+  public var settings: PresentationSettings
+  public var slides: [Slide]
 
-  init(theme: PresentationTheme = .studio, slides: [Slide] = []) {
+  public init(theme: PresentationTheme = .studio, slides: [Slide] = []) {
     self.settings = PresentationSettings(theme: theme, codex: .default)
     self.slides = slides.isEmpty ? [Slide(markdown: Self.defaultSlideMarkdown)] : slides
   }
 
-  init(settings: PresentationSettings = .default, slides: [Slide] = []) {
+  public init(settings: PresentationSettings = .default, slides: [Slide] = []) {
     self.settings = settings
     self.slides = slides.isEmpty ? [Slide(markdown: Self.defaultSlideMarkdown)] : slides
   }
 
-  init(markdownDocument: String) {
+  public init(markdownDocument: String) {
     let parsed = Self.parseMetadata(from: markdownDocument)
     settings = parsed.settings
     slides = Self.parseSlides(from: parsed.markdown)
@@ -25,12 +25,12 @@ struct PresentationDeck: Hashable {
     }
   }
 
-  var theme: PresentationTheme {
+  public var theme: PresentationTheme {
     get { settings.theme }
     set { settings.theme = newValue }
   }
 
-  static var sample: PresentationDeck {
+  public static var sample: PresentationDeck {
     PresentationDeck(
       theme: .studio,
       slides: [
@@ -83,11 +83,11 @@ struct PresentationDeck: Hashable {
     )
   }
 
-  var markdownDocument: String {
+  public var markdownDocument: String {
     deckDocument
   }
 
-  var deckDocument: String {
+  public var deckDocument: String {
     var result = yamlHeader
     result += slides.map(\.markdown).joined(separator: "\n\n---\n\n")
     result += "\n"
@@ -111,7 +111,7 @@ struct PresentationDeck: Hashable {
     return lines.joined(separator: "\n")
   }
 
-  mutating func addSlide(after selectedID: Slide.ID?) -> Slide.ID {
+  public mutating func addSlide(after selectedID: Slide.ID?) -> Slide.ID {
     let slide = Slide(markdown: Self.defaultSlideMarkdown)
     if let selectedID, let index = slides.firstIndex(where: { $0.id == selectedID }) {
       slides.insert(slide, at: min(index + 1, slides.count))
@@ -121,7 +121,7 @@ struct PresentationDeck: Hashable {
     return slide.id
   }
 
-  mutating func duplicateSlide(_ selectedID: Slide.ID?) -> Slide.ID? {
+  public mutating func duplicateSlide(_ selectedID: Slide.ID?) -> Slide.ID? {
     guard let selectedID, let index = slides.firstIndex(where: { $0.id == selectedID }) else {
       return nil
     }
@@ -131,7 +131,7 @@ struct PresentationDeck: Hashable {
     return copy.id
   }
 
-  mutating func deleteSlide(_ selectedID: Slide.ID?) -> Slide.ID? {
+  public mutating func deleteSlide(_ selectedID: Slide.ID?) -> Slide.ID? {
     guard slides.count > 1 else {
       return slides.first?.id
     }
@@ -145,7 +145,7 @@ struct PresentationDeck: Hashable {
   }
 
   @discardableResult
-  mutating func replaceSlideMarkdown(for slideID: Slide.ID, with markdown: String) -> SlideMarkdownReplacement? {
+  public mutating func replaceSlideMarkdown(for slideID: Slide.ID, with markdown: String) -> SlideMarkdownReplacement? {
     guard let index = slides.firstIndex(where: { $0.id == slideID }) else {
       return nil
     }
@@ -169,7 +169,7 @@ struct PresentationDeck: Hashable {
     return SlideMarkdownReplacement(selectedSlideID: selectedSlideID, didSplit: true)
   }
 
-  mutating func insertCodexBlock(into slideID: Slide.ID?) {
+  public mutating func insertCodexBlock(into slideID: Slide.ID?) {
     guard let slideID, let index = slides.firstIndex(where: { $0.id == slideID }) else {
       return
     }
@@ -295,7 +295,7 @@ struct PresentationDeck: Hashable {
   }
 }
 
-struct SlideMarkdownReplacement: Hashable {
-  let selectedSlideID: Slide.ID
-  let didSplit: Bool
+public struct SlideMarkdownReplacement: Hashable, Sendable {
+  public let selectedSlideID: Slide.ID
+  public let didSplit: Bool
 }

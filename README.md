@@ -101,6 +101,50 @@ renderer as the rest of the deck.
 Fenced code blocks support syntax highlighting when the opening fence includes a
 language, such as ```` ```swift ```` or ```` ```json ````.
 
+## MCP server
+
+Codeck includes a file-based MCP server so other agents can create and edit
+`.mdeck` decks without driving the macOS UI. Build or run the `codeck-mcp`
+executable from the repository root:
+
+```bash
+swift run codeck-mcp
+```
+
+By default, the server can read and write only inside its current working
+directory. Set `CODECK_MCP_ALLOWED_ROOTS` to a colon-separated list when an MCP
+client should work elsewhere:
+
+```bash
+CODECK_MCP_ALLOWED_ROOTS="$HOME/Documents:/tmp" swift run codeck-mcp
+```
+
+The server speaks MCP over stdio and exposes tools for deck and slide mutation:
+
+- `create_deck`
+- `read_deck`
+- `list_slides`
+- `get_slide`
+- `set_slide_markdown`
+- `insert_slide`
+- `delete_slide`
+- `move_slide`
+- `duplicate_slide`
+- `set_deck_settings`
+- `insert_codex_block`
+- `validate_deck`
+
+It also exposes a resource template for read-only deck context:
+
+```text
+codeck://deck{?path,view,index}
+```
+
+Use `view=document` for the full Markdown document, `view=outline` for a JSON
+outline, or `view=slide&index=0` for a specific slide. Slide indexes are
+zero-based; slide UUIDs are runtime-only and are not persisted in `.mdeck`
+files.
+
 ## Presenting
 
 Press the toolbar play button to start a full-screen presentation from the
