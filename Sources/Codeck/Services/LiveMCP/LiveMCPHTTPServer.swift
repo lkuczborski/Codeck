@@ -79,23 +79,25 @@ final class LiveMCPHTTPServer: @unchecked Sendable {
 
   private func respond(to request: HTTPRequest, on connection: NWConnection) {
     let response: HTTPResponse
-    if request.method == "OPTIONS" {
-      response = HTTPResponse(status: 204, body: Data())
-    } else if request.path != "/mcp" {
-      response = jsonErrorResponse(status: 404, code: -32004, message: "Not found.")
+    let allowedOrigin = request.allowedCORSOrigin
+
+    if request.path != "/mcp" {
+      response = jsonErrorResponse(status: 404, code: -32004, message: "Not found.", allowedOrigin: allowedOrigin)
     } else if !request.isAllowedOrigin {
       response = jsonErrorResponse(status: 403, code: -32003, message: "Forbidden origin.")
+    } else if request.method == "OPTIONS" {
+      response = HTTPResponse(status: 204, body: Data(), allowedOrigin: allowedOrigin)
     } else if request.method != "POST" {
-      response = jsonErrorResponse(status: 405, code: -32005, message: "Use POST for MCP requests.")
+      response = jsonErrorResponse(status: 405, code: -32005, message: "Use POST for MCP requests.", allowedOrigin: allowedOrigin)
     } else if request.methodHeaderMismatch {
-      response = jsonErrorResponse(status: 400, code: -32600, message: "Mcp-Method header does not match the JSON-RPC method.")
+      response = jsonErrorResponse(status: 400, code: -32600, message: "Mcp-Method header does not match the JSON-RPC method.", allowedOrigin: allowedOrigin)
     } else if request.nameHeaderMismatch {
-      response = jsonErrorResponse(status: 400, code: -32600, message: "Mcp-Name header does not match the JSON-RPC name.")
+      response = jsonErrorResponse(status: 400, code: -32600, message: "Mcp-Name header does not match the JSON-RPC name.", allowedOrigin: allowedOrigin)
     } else {
       let body = request.body
       Task { @MainActor in
         let object = self.handler.handleJSONData(body)
-        self.send(self.jsonResponse(object), on: connection)
+        self.send(self.jsonResponse(object, allowedOrigin: allowedOrigin), on: connection)
       }
       return
     }
@@ -110,20 +112,20 @@ final class LiveMCPHTTPServer: @unchecked Sendable {
     })
   }
 
-  private func jsonResponse(_ object: Any?) -> HTTPResponse {
+  private func jsonResponse(_ object: Any?, allowedOrigin: String?) -> HTTPResponse {
     guard let object else {
-      return HTTPResponse(status: 202, body: Data())
+      return HTTPResponse(status: 202, body: Data(), allowedOrigin: allowedOrigin)
     }
 
     guard JSONSerialization.isValidJSONObject(object),
           let data = try? JSONSerialization.data(withJSONObject: object, options: [.sortedKeys]) else {
-      return jsonErrorResponse(status: 500, code: -32603, message: "Could not encode MCP response.")
+      return jsonErrorResponse(status: 500, code: -32603, message: "Could not encode MCP response.", allowedOrigin: allowedOrigin)
     }
 
-    return HTTPResponse(status: 200, body: data)
+    return HTTPResponse(status: 200, body: data, allowedOrigin: allowedOrigin)
   }
 
-  private func jsonErrorResponse(status: Int, code: Int, message: String) -> HTTPResponse {
+  private func jsonErrorResponse(status: Int, code: Int, message: String, allowedOrigin: String? = nil) -> HTTPResponse {
     let object: [String: Any] = [
       "jsonrpc": "2.0",
       "id": NSNull(),
@@ -133,7 +135,7 @@ final class LiveMCPHTTPServer: @unchecked Sendable {
       ]
     ]
     let data = (try? JSONSerialization.data(withJSONObject: object, options: [.sortedKeys])) ?? Data()
-    return HTTPResponse(status: status, body: data)
+    return HTTPResponse(status: status, body: data, allowedOrigin: allowedOrigin)
   }
 }
 
@@ -189,14 +191,27 @@ private struct HTTPRequest {
     body = data[bodyStart..<(bodyStart + contentLength)]
   }
 
-  var isAllowedOrigin: Bool {
+  var allowedCORSOrigin: String? {
     guard let origin = headers["origin"], !origin.isEmpty else {
+      return nil
+    }
+    guard let url = URL(string: origin),
+          let scheme = url.scheme?.lowercased(),
+          scheme == "http" || scheme == "https",
+          let host = url.host(percentEncoded: false)?.lowercased() else {
+      return nil
+    }
+    guard host == "localhost" || host == "127.0.0.1" || host == "::1" else {
+      return nil
+    }
+    return origin
+  }
+
+  var isAllowedOrigin: Bool {
+    guard headers["origin"] != nil else {
       return true
     }
-    guard let url = URL(string: origin), let host = url.host(percentEncoded: false)?.lowercased() else {
-      return false
-    }
-    return host == "localhost" || host == "127.0.0.1" || host == "::1"
+    return allowedCORSOrigin != nil
   }
 
   var methodHeaderMismatch: Bool {
@@ -234,22 +249,28 @@ private struct HTTPRequest {
 private struct HTTPResponse {
   let status: Int
   let body: Data
+  let allowedOrigin: String?
 
   func serialized() -> Data {
-    let headers = [
+    var headers = [
       "HTTP/1.1 \(status) \(reasonPhrase)",
       "Content-Type: application/json",
       "Content-Length: \(body.count)",
-      "MCP-Protocol-Version: \(LiveMCPSettings.protocolVersion)",
-      "Access-Control-Allow-Origin: http://127.0.0.1",
+      "MCP-Protocol-Version: \(LiveMCPSettings.protocolVersion)"
+    ]
+    if let allowedOrigin {
+      headers.append("Access-Control-Allow-Origin: \(allowedOrigin)")
+    }
+    headers.append(contentsOf: [
       "Access-Control-Allow-Headers: Content-Type, Mcp-Method, Mcp-Name, Mcp-Session-Id, MCP-Protocol-Version",
       "Access-Control-Allow-Methods: POST, OPTIONS",
       "Connection: close",
       "",
       ""
-    ].joined(separator: "\r\n")
+    ])
 
-    var data = Data(headers.utf8)
+    let headerText = headers.joined(separator: "\r\n")
+    var data = Data(headerText.utf8)
     data.append(body)
     return data
   }

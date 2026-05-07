@@ -234,6 +234,45 @@ final class LiveMCPProtocolHandlerTests: XCTestCase {
     XCTAssertTrue(tools.contains { $0["name"] as? String == "list_open_decks" })
   }
 
+  func testLiveMCPHTTPServerEchoesAllowedLocalhostOrigin() async throws {
+    let port = UInt16.random(in: 51000...55000)
+    let server = LiveMCPHTTPServer(port: port, handler: LiveMCPProtocolHandler())
+    try server.start()
+    defer { server.stop() }
+
+    var request = URLRequest(url: URL(string: "http://127.0.0.1:\(port)/mcp")!)
+    request.httpMethod = "OPTIONS"
+    request.setValue("http://localhost:3000", forHTTPHeaderField: "Origin")
+    request.setValue("POST", forHTTPHeaderField: "Access-Control-Request-Method")
+
+    let (_, response) = try await URLSession.shared.data(for: request)
+    let httpResponse = try XCTUnwrap(response as? HTTPURLResponse)
+    XCTAssertEqual(httpResponse.statusCode, 204)
+    XCTAssertEqual(httpResponse.value(forHTTPHeaderField: "Access-Control-Allow-Origin"), "http://localhost:3000")
+  }
+
+  func testLiveMCPHTTPServerRejectsNonLocalOrigins() async throws {
+    let port = UInt16.random(in: 51000...55000)
+    let server = LiveMCPHTTPServer(port: port, handler: LiveMCPProtocolHandler())
+    try server.start()
+    defer { server.stop() }
+
+    var request = URLRequest(url: URL(string: "http://127.0.0.1:\(port)/mcp")!)
+    request.httpMethod = "POST"
+    request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+    request.setValue("https://example.com", forHTTPHeaderField: "Origin")
+    request.httpBody = try JSONSerialization.data(withJSONObject: Self.request(1, "tools/list"))
+
+    let (data, response) = try await URLSession.shared.data(for: request)
+    let httpResponse = try XCTUnwrap(response as? HTTPURLResponse)
+    XCTAssertEqual(httpResponse.statusCode, 403)
+    XCTAssertNil(httpResponse.value(forHTTPHeaderField: "Access-Control-Allow-Origin"))
+
+    let object = try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: Any])
+    let error = try XCTUnwrap(object["error"] as? [String: Any])
+    XCTAssertEqual(error["message"] as? String, "Forbidden origin.")
+  }
+
   private func handle(_ request: [String: Any], with handler: LiveMCPProtocolHandler) throws -> [String: Any] {
     let data = try JSONSerialization.data(withJSONObject: request)
     return try XCTUnwrap(handler.handleJSONData(data) as? [String: Any])
