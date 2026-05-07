@@ -78,13 +78,13 @@ final class LiveMCPProtocolHandlerTests: XCTestCase {
       Self.toolCall(19, "stop_presentation", ["document_id": documentID.uuidString]),
       Self.toolCall(20, "validate_deck", ["document_id": documentID.uuidString]),
       Self.request(21, "resources/read", params: [
-        "uri": "codeck-live://deck/\(documentID.uuidString)?view=document"
+        "uri": "codeck://deck/\(documentID.uuidString)?view=document"
       ]),
       Self.request(22, "resources/read", params: [
-        "uri": "codeck-live://deck/\(documentID.uuidString)?view=outline"
+        "uri": "codeck://deck/\(documentID.uuidString)?view=outline"
       ]),
       Self.request(23, "resources/read", params: [
-        "uri": "codeck-live://deck/\(documentID.uuidString)?view=slide&index=0"
+        "uri": "codeck://deck/\(documentID.uuidString)?view=slide&index=0"
       ])
     ].map { try handle($0, with: handler) }
 
@@ -92,6 +92,10 @@ final class LiveMCPProtocolHandlerTests: XCTestCase {
     XCTAssertTrue(presentationStarted)
     XCTAssertTrue(presentationStopped)
     XCTAssertEqual(selectedIndex, 1)
+
+    let initialize = try result(for: 1, in: responses)
+    let serverInfo = try XCTUnwrap(initialize["serverInfo"] as? [String: Any])
+    XCTAssertEqual(serverInfo["name"] as? String, "codeck")
 
     let tools = try XCTUnwrap(result(for: 2, in: responses)["tools"] as? [[String: Any]])
     XCTAssertTrue(tools.contains { $0["name"] as? String == "select_slide" })

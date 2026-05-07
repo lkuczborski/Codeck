@@ -163,14 +163,14 @@ http://127.0.0.1:49747/mcp
 ```
 
 The live bridge uses MCP Streamable HTTP with JSON responses. Configure an
-agent or MCP client with a Streamable HTTP server named `codeck-live` pointing
+agent or MCP client with a Streamable HTTP server named `codeck` pointing
 to that URL. For clients that use the common JSON MCP manifest shape, the entry
 looks like:
 
 ```json
 {
   "mcpServers": {
-    "codeck-live": {
+    "codeck": {
       "transport": "streamable-http",
       "url": "http://127.0.0.1:49747/mcp"
     }
@@ -205,11 +205,13 @@ Live bridge tools:
 Live bridge resources use:
 
 ```text
-codeck-live://deck/{document_id}{?view,index}
+codeck://deck/{document_id}{?view,index}
 ```
 
 Use `view=document` for full Markdown, `view=outline` for a JSON outline, or
-`view=slide&index=0` for a specific slide.
+`view=slide&index=0` for a specific slide. The file-based MCP server also uses
+the `codeck://` scheme, but with a `path` query item instead of a live document
+id path.
 
 ## Presenting
 
