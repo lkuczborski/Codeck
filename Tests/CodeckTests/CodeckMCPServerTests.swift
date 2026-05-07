@@ -56,13 +56,13 @@ final class CodeckMCPServerTests: XCTestCase {
       ]),
       Self.toolCall(16, "validate_deck", ["path": deckPath]),
       Self.request(17, "resources/read", params: [
-        "uri": "codeck://deck?path=\(deckPath)&view=document"
+        "uri": "codeck://file/deck?path=\(deckPath)&view=document"
       ]),
       Self.request(18, "resources/read", params: [
-        "uri": "codeck://deck?path=\(deckPath)&view=outline"
+        "uri": "codeck://file/deck?path=\(deckPath)&view=outline"
       ]),
       Self.request(19, "resources/read", params: [
-        "uri": "codeck://deck?path=\(deckPath)&view=slide&index=0"
+        "uri": "codeck://file/deck?path=\(deckPath)&view=slide&index=0"
       ])
     ]
 
@@ -91,7 +91,7 @@ final class CodeckMCPServerTests: XCTestCase {
 
     let templateResult = try result(for: 4, in: responses)
     let templates = try XCTUnwrap(templateResult["resourceTemplates"] as? [[String: Any]])
-    XCTAssertEqual(templates.first?["uriTemplate"] as? String, "codeck://deck{?path,view,index}")
+    XCTAssertEqual(templates.first?["uriTemplate"] as? String, "codeck://file/deck{?path,view,index}")
 
     let validation = try toolJSONResult(for: 16, in: responses)
     XCTAssertEqual(validation["valid"] as? Bool, true)
