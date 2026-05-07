@@ -113,6 +113,102 @@ final class LiveMCPProtocolHandlerTests: XCTestCase {
     XCTAssertTrue(documentMarkdown.contains("```codex id=live-block"))
   }
 
+  func testLiveMCPRequiresDocumentIDWhenMultipleDecksAreOpen() throws {
+    let registry = LiveMCPDocumentRegistry.shared
+    let firstDocumentID = UUID()
+    let secondDocumentID = UUID()
+    var firstDeck = PresentationDeck(theme: .studio, slides: [Slide(markdown: "# First")])
+    var secondDeck = PresentationDeck(theme: .studio, slides: [Slide(markdown: "# Second")])
+
+    registry.register(
+      LiveMCPDocumentSession(
+        id: firstDocumentID,
+        fileURL: { nil },
+        deck: { firstDeck },
+        setDeck: { firstDeck = $0 },
+        selectedSlideIndex: { 0 },
+        selectSlide: { _ in },
+        present: {},
+        dismissPresentation: {}
+      )
+    )
+    registry.register(
+      LiveMCPDocumentSession(
+        id: secondDocumentID,
+        fileURL: { nil },
+        deck: { secondDeck },
+        setDeck: { secondDeck = $0 },
+        selectedSlideIndex: { 0 },
+        selectSlide: { _ in },
+        present: {},
+        dismissPresentation: {}
+      )
+    )
+    defer {
+      registry.unregister(firstDocumentID)
+      registry.unregister(secondDocumentID)
+    }
+
+    let handler = LiveMCPProtocolHandler(registry: registry)
+    let response = try handle(Self.toolCall(1, "list_slides", [:]), with: handler)
+
+    let result = try XCTUnwrap(response["result"] as? [String: Any])
+    XCTAssertEqual(result["isError"] as? Bool, true)
+    XCTAssertTrue(try toolText(for: 1, in: [response]).contains("Multiple Codeck documents are open"))
+  }
+
+  func testLiveMCPSelectsSlidesAfterInstallingMutatedDeck() throws {
+    let registry = LiveMCPDocumentRegistry.shared
+    let documentID = UUID()
+    var deck = PresentationDeck(theme: .studio, slides: [Slide(markdown: "# Intro")])
+    var selectedIndex: Int? = 0
+
+    registry.register(
+      LiveMCPDocumentSession(
+        id: documentID,
+        fileURL: { nil },
+        deck: { deck },
+        setDeck: { deck = $0 },
+        selectedSlideIndex: { selectedIndex },
+        selectSlide: { index in
+          guard deck.slides.indices.contains(index) else { return }
+          selectedIndex = index
+        },
+        present: {},
+        dismissPresentation: {}
+      )
+    )
+    defer { registry.unregister(documentID) }
+
+    let handler = LiveMCPProtocolHandler(registry: registry)
+    let insertResponse = try handle(
+      Self.toolCall(1, "insert_slide", [
+        "document_id": documentID.uuidString,
+        "position": 1,
+        "markdown": "# Appended"
+      ]),
+      with: handler
+    )
+    try assertNoProtocolOrToolErrors(in: [insertResponse])
+    XCTAssertEqual(deck.slides.map(\.title), ["Intro", "Appended"])
+    XCTAssertEqual(selectedIndex, 1)
+
+    deck = PresentationDeck(theme: .studio, slides: [Slide(markdown: "# Single")])
+    selectedIndex = 0
+
+    let splitResponse = try handle(
+      Self.toolCall(2, "set_slide_markdown", [
+        "document_id": documentID.uuidString,
+        "index": 0,
+        "markdown": "# First\n\n---\n\n# Split"
+      ]),
+      with: handler
+    )
+    try assertNoProtocolOrToolErrors(in: [splitResponse])
+    XCTAssertEqual(deck.slides.map(\.title), ["First", "Split"])
+    XCTAssertEqual(selectedIndex, 1)
+  }
+
   func testLiveMCPHTTPServerRespondsOverLocalhost() async throws {
     let port = UInt16.random(in: 51000...55000)
     let server = LiveMCPHTTPServer(port: port, handler: LiveMCPProtocolHandler())

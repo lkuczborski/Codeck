@@ -113,45 +113,45 @@ final class LiveMCPProtocolHandler {
       let index = try requiredIndex(arguments, "index", in: deck.slides.indices)
       return try jsonText(LiveSlideResponse(document: document, index: index, slide: deck.slides[index]))
     case "set_slide_markdown":
-      return try mutateDeck(arguments, message: "Slide updated.") { deck, document in
+      return try mutateDeck(arguments, message: "Slide updated.") { deck, _ in
         let index = try requiredIndex(arguments, "index", in: deck.slides.indices)
         let markdown = try requiredString(arguments, "markdown")
         let slideID = deck.slides[index].id
         let result = deck.replaceSlideMarkdown(for: slideID, with: markdown)
-        if let result, let selectedIndex = deck.slides.firstIndex(where: { $0.id == result.selectedSlideID }) {
-          document.selectSlide(selectedIndex)
+        return result.flatMap { result in
+          deck.slides.firstIndex(where: { $0.id == result.selectedSlideID })
         }
       }
     case "insert_slide":
-      return try mutateDeck(arguments, message: "Slide inserted.") { deck, document in
+      return try mutateDeck(arguments, message: "Slide inserted.") { deck, _ in
         let markdown = optionalString(arguments, "markdown") ?? PresentationDeck.defaultSlideMarkdown
         let position = try optionalInt(arguments, "position").map { try boundedInsertionIndex($0, count: deck.slides.count) } ?? deck.slides.count
         deck.slides.insert(Slide(markdown: markdown), at: position)
-        document.selectSlide(position)
+        return position
       }
     case "delete_slide":
-      return try mutateDeck(arguments, message: "Slide deleted.") { deck, document in
+      return try mutateDeck(arguments, message: "Slide deleted.") { deck, _ in
         guard deck.slides.count > 1 else {
           throw LiveMCPError.operationFailed("A Codeck deck must keep at least one slide.")
         }
         let index = try requiredIndex(arguments, "index", in: deck.slides.indices)
         deck.slides.remove(at: index)
-        document.selectSlide(min(index, deck.slides.count - 1))
+        return min(index, deck.slides.count - 1)
       }
     case "move_slide":
-      return try mutateDeck(arguments, message: "Slide moved.") { deck, document in
+      return try mutateDeck(arguments, message: "Slide moved.") { deck, _ in
         let fromIndex = try requiredIndex(arguments, "from_index", in: deck.slides.indices)
         let toIndex = try boundedInsertionIndex(try requiredInt(arguments, "to_index"), count: deck.slides.count)
         let slide = deck.slides.remove(at: fromIndex)
         let adjustedDestination = min(toIndex, deck.slides.count)
         deck.slides.insert(slide, at: adjustedDestination)
-        document.selectSlide(adjustedDestination)
+        return adjustedDestination
       }
     case "duplicate_slide":
-      return try mutateDeck(arguments, message: "Slide duplicated.") { deck, document in
+      return try mutateDeck(arguments, message: "Slide duplicated.") { deck, _ in
         let index = try requiredIndex(arguments, "index", in: deck.slides.indices)
         deck.slides.insert(Slide(markdown: deck.slides[index].markdown), at: index + 1)
-        document.selectSlide(index + 1)
+        return index + 1
       }
     case "set_deck_settings":
       return try mutateDeck(arguments, message: "Deck settings updated.") { deck, _ in
@@ -170,9 +170,10 @@ final class LiveMCPProtocolHandler {
         if let sandbox = optionalString(arguments, "sandbox") {
           deck.settings.codex.sandbox = sandbox
         }
+        return nil
       }
     case "insert_codex_block":
-      return try mutateDeck(arguments, message: "Codex block inserted.") { deck, document in
+      return try mutateDeck(arguments, message: "Codex block inserted.") { deck, _ in
         let index = try requiredIndex(arguments, "index", in: deck.slides.indices)
         let prompt = optionalString(arguments, "prompt") ?? "Explain this concept with one concrete example."
         let blockID = optionalString(arguments, "id") ?? "demo-\(deck.slides[index].codexBlocks.count + 1)"
@@ -191,7 +192,7 @@ final class LiveMCPProtocolHandler {
         let body = (metadata + ["", prompt]).joined(separator: "\n")
         let fence = fenceMarker(for: body)
         deck.slides[index].markdown += "\n\n\(fence)codex id=\(blockID)\n\(body)\n\(fence)"
-        document.selectSlide(index)
+        return index
       }
     case "select_slide":
       let document = try document(from: arguments)
@@ -221,12 +222,15 @@ final class LiveMCPProtocolHandler {
   private func mutateDeck(
     _ arguments: [String: Any],
     message: String,
-    mutation: (inout PresentationDeck, LiveMCPDocumentSession) throws -> Void
+    mutation: (inout PresentationDeck, LiveMCPDocumentSession) throws -> Int?
   ) throws -> String {
     let document = try document(from: arguments)
     var deck = document.deck()
-    try mutation(&deck, document)
+    let selectedIndex = try mutation(&deck, document)
     document.setDeck(deck)
+    if let selectedIndex, deck.slides.indices.contains(selectedIndex) {
+      document.selectSlide(selectedIndex)
+    }
     return try jsonText(LiveMutationResponse(document: document, message: message, deck: deck))
   }
 

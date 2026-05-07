@@ -6,25 +6,15 @@ final class LiveMCPDocumentRegistry {
   static let shared = LiveMCPDocumentRegistry()
 
   private var documents: [UUID: LiveMCPDocumentSession] = [:]
-  private var activeDocumentID: UUID?
 
   private init() {}
 
   func register(_ session: LiveMCPDocumentSession) {
     documents[session.id] = session
-    activeDocumentID = session.id
   }
 
   func unregister(_ id: UUID) {
     documents[id] = nil
-    if activeDocumentID == id {
-      activeDocumentID = documents.keys.sorted { $0.uuidString < $1.uuidString }.first
-    }
-  }
-
-  func activate(_ id: UUID) {
-    guard documents[id] != nil else { return }
-    activeDocumentID = id
   }
 
   func listDocuments() -> [LiveMCPDocumentSession] {
@@ -46,12 +36,12 @@ final class LiveMCPDocumentRegistry {
       throw LiveMCPError.invalidParams("No open Codeck document has document_id \(rawID).")
     }
 
-    if let activeDocumentID, let document = documents[activeDocumentID] {
+    if documents.count == 1, let document = documents.values.first {
       return document
     }
 
-    if documents.count == 1, let document = documents.values.first {
-      return document
+    if documents.count > 1 {
+      throw LiveMCPError.invalidParams("Multiple Codeck documents are open. Pass document_id from list_open_decks.")
     }
 
     throw LiveMCPError.operationFailed("No Codeck document is available. Open a deck in Codeck or pass document_id.")
