@@ -137,7 +137,7 @@ The server speaks MCP over stdio and exposes tools for deck and slide mutation:
 It also exposes a resource template for read-only deck context:
 
 ```text
-codeck://deck{?path,view,index}
+codeck://file/deck{?path,view,index}
 ```
 
 Use `view=document` for the full Markdown document, `view=outline` for a JSON
@@ -205,13 +205,13 @@ Live bridge tools:
 Live bridge resources use:
 
 ```text
-codeck://deck/{document_id}{?view,index}
+codeck://live/deck/{document_id}{?view,index}
 ```
 
 Use `view=document` for full Markdown, `view=outline` for a JSON outline, or
-`view=slide&index=0` for a specific slide. The file-based MCP server also uses
-the `codeck://` scheme, but with a `path` query item instead of a live document
-id path.
+`view=slide&index=0` for a specific slide. The shared `codeck://` scheme uses
+`file` and `live` host segments so agents can distinguish file-backed deck
+resources from open app-window resources.
 
 ## Presenting
 

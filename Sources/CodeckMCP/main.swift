@@ -318,8 +318,9 @@ private final class CodeckMCPServer {
   private func resourceContent(for uri: String) throws -> (mimeType: String, text: String) {
     guard let components = URLComponents(string: uri),
           components.scheme == "codeck",
-          components.host == "deck" else {
-      throw CodeckMCPError.invalidParams("Unsupported resource URI. Use codeck://deck?path=<deck>&view=document|outline|slide.")
+          components.host == "file",
+          components.path == "/deck" else {
+      throw CodeckMCPError.invalidParams("Unsupported resource URI. Use codeck://file/deck?path=<deck>&view=document|outline|slide.")
     }
 
     let query = (components.queryItems ?? []).reduce(into: [String: String]()) { result, item in
@@ -451,7 +452,7 @@ private final class CodeckMCPServer {
       [
         "name": "Codeck deck",
         "description": "Read a deck document, outline, or slide. Use view=document, view=outline, or view=slide with index.",
-        "uriTemplate": "codeck://deck{?path,view,index}"
+        "uriTemplate": "codeck://file/deck{?path,view,index}"
       ]
     ]
   }

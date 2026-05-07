@@ -78,13 +78,13 @@ final class LiveMCPProtocolHandlerTests: XCTestCase {
       Self.toolCall(19, "stop_presentation", ["document_id": documentID.uuidString]),
       Self.toolCall(20, "validate_deck", ["document_id": documentID.uuidString]),
       Self.request(21, "resources/read", params: [
-        "uri": "codeck://deck/\(documentID.uuidString)?view=document"
+        "uri": "codeck://live/deck/\(documentID.uuidString)?view=document"
       ]),
       Self.request(22, "resources/read", params: [
-        "uri": "codeck://deck/\(documentID.uuidString)?view=outline"
+        "uri": "codeck://live/deck/\(documentID.uuidString)?view=outline"
       ]),
       Self.request(23, "resources/read", params: [
-        "uri": "codeck://deck/\(documentID.uuidString)?view=slide&index=0"
+        "uri": "codeck://live/deck/\(documentID.uuidString)?view=slide&index=0"
       ])
     ].map { try handle($0, with: handler) }
 
