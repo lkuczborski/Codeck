@@ -73,7 +73,7 @@ final class LiveMCPProtocolHandler {
         "resources": ["listChanged": true]
       ],
       "serverInfo": [
-        "name": "codeck-live",
+        "name": "codeck",
         "version": "0.1.0"
       ],
       "instructions": """
@@ -252,9 +252,9 @@ final class LiveMCPProtocolHandler {
 
   private func resourceContent(for uri: String) throws -> (mimeType: String, text: String) {
     guard let components = URLComponents(string: uri),
-          components.scheme == "codeck-live",
+          components.scheme == "codeck",
           components.host == "deck" else {
-      throw LiveMCPError.invalidParams("Unsupported resource URI. Use codeck-live://deck/<document_id>?view=document|outline|slide.")
+      throw LiveMCPError.invalidParams("Unsupported resource URI. Use codeck://deck/<document_id>?view=document|outline|slide.")
     }
 
     let documentID = components.path.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
@@ -288,7 +288,7 @@ final class LiveMCPProtocolHandler {
   private var resourceList: [[String: Any]] {
     registry.listDocuments().map { document in
       [
-        "uri": "codeck-live://deck/\(document.id.uuidString)?view=outline",
+        "uri": "codeck://deck/\(document.id.uuidString)?view=outline",
         "name": document.displayName,
         "mimeType": "application/json",
         "description": "Open Codeck deck outline"
@@ -301,7 +301,7 @@ final class LiveMCPProtocolHandler {
       [
         "name": "Open Codeck deck",
         "description": "Read an open deck document, outline, or slide. Use view=document, view=outline, or view=slide with index.",
-        "uriTemplate": "codeck-live://deck/{document_id}{?view,index}"
+        "uriTemplate": "codeck://deck/{document_id}{?view,index}"
       ]
     ]
   }
