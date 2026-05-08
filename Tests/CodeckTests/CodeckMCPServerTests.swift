@@ -119,6 +119,31 @@ final class CodeckMCPServerTests: XCTestCase {
     XCTAssertEqual(slideDescription["codexBlockCount"] as? Int, 1)
   }
 
+  func testMCPServerDoesNotEmitNullIDsForNotificationsOrInvalidRequestIDs() throws {
+    let requests: [[String: Any]] = [
+      ["jsonrpc": "2.0", "method": "tools/list"],
+      ["jsonrpc": "2.0", "id": NSNull(), "method": "tools/list"],
+      ["jsonrpc": "2.0", "id": true, "method": "tools/list"],
+      ["jsonrpc": "2.0", "id": 1.5, "method": "tools/list"],
+      ["jsonrpc": "2.0", "id": "valid-id", "method": "tools/list"]
+    ]
+
+    let responses = try runMCPServer(requests: requests, allowedRoots: "/private/tmp")
+
+    XCTAssertEqual(responses.count, 4)
+    XCTAssertFalse(responses.contains { $0["id"] is NSNull })
+
+    for response in responses.prefix(3) {
+      XCTAssertNil(response["id"])
+      let error = try XCTUnwrap(response["error"] as? [String: Any])
+      XCTAssertEqual(error["code"] as? Int, -32600)
+    }
+
+    let validResponse = try XCTUnwrap(responses.last)
+    XCTAssertEqual(validResponse["id"] as? String, "valid-id")
+    XCTAssertNotNil(validResponse["result"] as? [String: Any])
+  }
+
   private func runMCPServer(requests: [[String: Any]], allowedRoots: String) throws -> [[String: Any]] {
     let process = Process()
     process.executableURL = serverExecutableURL()

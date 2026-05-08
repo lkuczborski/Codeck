@@ -213,6 +213,37 @@ final class LiveMCPProtocolHandlerTests: XCTestCase {
     XCTAssertEqual(selectedIndex, 1)
   }
 
+  func testLiveMCPDoesNotEmitNullIDsForNotificationsOrInvalidRequestIDs() throws {
+    let handler = LiveMCPProtocolHandler()
+
+    let notificationData = try JSONSerialization.data(withJSONObject: [
+      "jsonrpc": "2.0",
+      "method": "tools/list"
+    ])
+    XCTAssertNil(handler.handleJSONData(notificationData))
+
+    for invalidID: Any in [NSNull(), true, 1.5] {
+      let data = try JSONSerialization.data(withJSONObject: [
+        "jsonrpc": "2.0",
+        "id": invalidID,
+        "method": "tools/list"
+      ])
+      let response = try XCTUnwrap(handler.handleJSONData(data) as? [String: Any])
+      XCTAssertNil(response["id"])
+      let error = try XCTUnwrap(response["error"] as? [String: Any])
+      XCTAssertEqual(error["code"] as? Int, -32600)
+    }
+
+    let validData = try JSONSerialization.data(withJSONObject: [
+      "jsonrpc": "2.0",
+      "id": "valid-id",
+      "method": "tools/list"
+    ])
+    let validResponse = try XCTUnwrap(handler.handleJSONData(validData) as? [String: Any])
+    XCTAssertEqual(validResponse["id"] as? String, "valid-id")
+    XCTAssertNotNil(validResponse["result"] as? [String: Any])
+  }
+
   func testLiveMCPHTTPServerRespondsOverLocalhost() async throws {
     let port = UInt16.random(in: 51000...55000)
     let server = LiveMCPHTTPServer(port: port, handler: LiveMCPProtocolHandler())
@@ -269,6 +300,7 @@ final class LiveMCPProtocolHandlerTests: XCTestCase {
     XCTAssertNil(httpResponse.value(forHTTPHeaderField: "Access-Control-Allow-Origin"))
 
     let object = try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: Any])
+    XCTAssertNil(object["id"])
     let error = try XCTUnwrap(object["error"] as? [String: Any])
     XCTAssertEqual(error["message"] as? String, "Forbidden origin.")
   }
