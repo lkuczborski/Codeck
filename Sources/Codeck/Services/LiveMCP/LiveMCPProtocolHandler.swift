@@ -4,6 +4,7 @@ import Foundation
 @MainActor
 final class LiveMCPProtocolHandler {
   private let registry: LiveMCPDocumentRegistry
+  private let requestDecoder = JSONDecoder()
   private let encoder: JSONEncoder = {
     let encoder = JSONEncoder()
     encoder.outputFormatting = [.prettyPrinted, .sortedKeys, .withoutEscapingSlashes]
@@ -18,29 +19,32 @@ final class LiveMCPProtocolHandler {
     do {
       let message = try JSONSerialization.jsonObject(with: data)
       if let batch = message as? [[String: Any]] {
-        let responses = batch.compactMap(handleMessage)
+        let envelopes = try requestDecoder.decode([JSONRPCMessageEnvelope].self, from: data)
+        let responses = zip(batch, envelopes).compactMap { message, envelope in
+          handleMessage(message, envelope: envelope)
+        }
         return responses.isEmpty ? nil : responses
       }
       guard let object = message as? [String: Any] else {
         return errorResponse(id: nil, code: -32600, message: "Invalid JSON-RPC message.")
       }
-      return handleMessage(object)
+      let envelope = try requestDecoder.decode(JSONRPCMessageEnvelope.self, from: data)
+      return handleMessage(object, envelope: envelope)
     } catch {
       return errorResponse(id: nil, code: -32700, message: "Parse error: \(error.localizedDescription)")
     }
   }
 
-  private func handleMessage(_ message: [String: Any]) -> [String: Any]? {
-    guard let method = message["method"] as? String else {
-      return errorResponse(id: JSONRPCRequestID(message["id"]), code: -32600, message: "Missing method.")
+  private func handleMessage(_ message: [String: Any], envelope: JSONRPCMessageEnvelope) -> [String: Any]? {
+    guard let method = envelope.method else {
+      return errorResponse(id: envelope.responseID, code: -32600, message: "Missing method.")
     }
 
-    guard message.keys.contains("id") else {
+    guard case .valid(let id) = envelope.idState else {
+      if case .invalid = envelope.idState {
+        return errorResponse(id: nil, code: -32600, message: "Invalid JSON-RPC request id.")
+      }
       return nil
-    }
-
-    guard let id = JSONRPCRequestID(message["id"]) else {
-      return errorResponse(id: nil, code: -32600, message: "Invalid JSON-RPC request id.")
     }
 
     do {
