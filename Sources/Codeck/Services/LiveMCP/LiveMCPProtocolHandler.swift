@@ -31,9 +31,16 @@ final class LiveMCPProtocolHandler {
   }
 
   private func handleMessage(_ message: [String: Any]) -> [String: Any]? {
-    let id = message["id"]
     guard let method = message["method"] as? String else {
-      return errorResponse(id: id, code: -32600, message: "Missing method.")
+      return errorResponse(id: JSONRPCRequestID(message["id"]), code: -32600, message: "Missing method.")
+    }
+
+    guard message.keys.contains("id") else {
+      return nil
+    }
+
+    guard let id = JSONRPCRequestID(message["id"]) else {
+      return errorResponse(id: nil, code: -32600, message: "Invalid JSON-RPC request id.")
     }
 
     do {
@@ -395,19 +402,22 @@ final class LiveMCPProtocolHandler {
     return params
   }
 
-  private func response(id: Any?, result: [String: Any]) -> [String: Any] {
-    ["jsonrpc": "2.0", "id": id ?? NSNull(), "result": result]
+  private func response(id: JSONRPCRequestID, result: [String: Any]) -> [String: Any] {
+    ["jsonrpc": "2.0", "id": id.jsonValue, "result": result]
   }
 
-  private func errorResponse(id: Any?, code: Int, message: String) -> [String: Any] {
-    [
+  private func errorResponse(id: JSONRPCRequestID?, code: Int, message: String) -> [String: Any] {
+    var response: [String: Any] = [
       "jsonrpc": "2.0",
-      "id": id ?? NSNull(),
       "error": [
         "code": code,
         "message": message
       ]
     ]
+    if let id {
+      response["id"] = id.jsonValue
+    }
+    return response
   }
 
   private func toolError(_ message: String) -> [String: Any] {
@@ -420,6 +430,45 @@ final class LiveMCPProtocolHandler {
       throw LiveMCPError.operationFailed("Could not encode JSON response.")
     }
     return text
+  }
+}
+
+private enum JSONRPCRequestID {
+  case string(String)
+  case integer(Int)
+
+  init?(_ rawValue: Any?) {
+    guard let rawValue, !(rawValue is NSNull) else {
+      return nil
+    }
+
+    if let string = rawValue as? String {
+      self = .string(string)
+      return
+    }
+
+    guard let number = rawValue as? NSNumber,
+          CFGetTypeID(number) != CFBooleanGetTypeID() else {
+      return nil
+    }
+
+    let value = number.doubleValue
+    guard value.isFinite,
+          value.rounded(.towardZero) == value,
+          value >= Double(Int.min),
+          value <= Double(Int.max) else {
+      return nil
+    }
+    self = .integer(number.intValue)
+  }
+
+  var jsonValue: Any {
+    switch self {
+    case .string(let value):
+      value
+    case .integer(let value):
+      value
+    }
   }
 }
 

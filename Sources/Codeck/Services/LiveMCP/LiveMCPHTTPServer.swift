@@ -128,7 +128,6 @@ final class LiveMCPHTTPServer: @unchecked Sendable {
   private func jsonErrorResponse(status: Int, code: Int, message: String, allowedOrigin: String? = nil) -> HTTPResponse {
     let object: [String: Any] = [
       "jsonrpc": "2.0",
-      "id": NSNull(),
       "error": [
         "code": code,
         "message": message
