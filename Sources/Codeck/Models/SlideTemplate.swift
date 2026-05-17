@@ -16,133 +16,194 @@ struct SlideTemplateSection: Identifiable, Hashable {
 enum SlideTemplateCatalog {
   static let sections: [SlideTemplateSection] = [
     SlideTemplateSection(
-      id: "structure",
-      title: "Structure",
+      id: "story",
+      title: "Story and Framing",
       templates: [
         SlideTemplate(
-          id: "title-thesis",
-          name: "Title and Thesis",
-          description: "Open a deck or section with a clear promise.",
+          id: "opening-promise",
+          name: "Opening Promise",
+          description: "Start with the deck title and the value it promises.",
           markdown:
             """
-            # Working Title
+            # Presentation Title
 
-            One sentence that says what this deck will make easier, clearer, or possible.
+            A compact promise for what the audience will understand, decide, or be able to do by the end.
             """
         ),
         SlideTemplate(
-          id: "agenda",
-          name: "Agenda",
-          description: "Set expectations with a simple ordered flow.",
+          id: "problem-framing",
+          name: "Problem Framing",
+          description: "Name the tension before introducing the answer.",
           markdown:
             """
-            # Agenda
+            # The Problem
 
-            1. Context
-            2. The key decision
-            3. Demo or evidence
-            4. Next steps
+            > The current workflow forces the team to spend attention in the wrong place.
+
+            - Who feels it most
+            - Where it appears in the work
+            - Why it matters now
             """
         ),
         SlideTemplate(
-          id: "section-break",
-          name: "Section Break",
-          description: "Mark a transition with one strong idea.",
+          id: "big-number",
+          name: "Big Number",
+          description: "Anchor a section around one metric and its implication.",
           markdown:
             """
-            # New Section
+            # One Number to Remember
 
-            > The shift in focus goes here.
+            ## 42%
+
+            What changed, why it matters, and which decision this number should influence.
+            """
+        ),
+        SlideTemplate(
+          id: "customer-quote",
+          name: "Customer Quote",
+          description: "Use a direct voice or memorable observation as evidence.",
+          markdown:
+            """
+            # Voice of the Customer
+
+            > "The moment it clicked was when the work stopped feeling like setup and started feeling like progress."
+
+            Segment, source, or interview context
             """
         )
       ]
     ),
     SlideTemplateSection(
-      id: "analysis",
-      title: "Analysis",
+      id: "planning",
+      title: "Planning and Decisions",
       templates: [
         SlideTemplate(
-          id: "comparison",
-          name: "Comparison",
-          description: "Compare options, tradeoffs, or approaches.",
+          id: "decision-matrix",
+          name: "Decision Matrix",
+          description: "Compare a few options against the criteria that matter.",
           markdown:
             """
-            # Option Comparison
+            # Decision Matrix
 
-            | Option | Strength | Tradeoff |
-            | --- | --- | --- |
-            | A | Fast to ship | Leaves manual work |
-            | B | More complete | Needs validation |
+            | Option | Best for | Risk | Recommendation |
+            | --- | --- | --- | --- |
+            | A | Fast learning | Manual follow-up | Short-term |
+            | B | Durable workflow | More implementation | Preferred |
             """
         ),
         SlideTemplate(
-          id: "status-update",
-          name: "Status Update",
-          description: "Summarize progress, risks, and ownership.",
+          id: "roadmap",
+          name: "Roadmap",
+          description: "Show a sequence of phases without turning it into a table.",
           markdown:
             """
-            # Status Update
+            # Roadmap
 
-            | Area | Status | Owner |
-            | --- | --- | --- |
-            | Shipped | Ready | Team |
-            | Risk | Needs decision | Lead |
-            | Next | In progress | Team |
+            1. **Now:** Validate the core workflow with real content.
+            2. **Next:** Remove the largest source of manual cleanup.
+            3. **Later:** Automate the repeatable path and measure adoption.
             """
         ),
         SlideTemplate(
-          id: "decision-brief",
-          name: "Decision Brief",
-          description: "Frame a recommendation and what changes next.",
+          id: "risk-radar",
+          name: "Risk Radar",
+          description: "Separate risks, mitigations, and the ask.",
           markdown:
             """
-            # Decision Brief
+            # Risk Radar
 
-            **Recommendation:** Choose the path that gives us the most learning this week.
+            **Primary risk:** The team optimizes the wrong part of the workflow.
 
-            - Why now: the current constraint is clear
-            - What changes: the team can move without another review loop
-            - How we know: define one measurable signal
+            - Watch for: slow review cycles and repeated handoffs
+            - Mitigate with: one owner and one validation checkpoint
+            - Ask today: approve the next experiment
+            """
+        ),
+        SlideTemplate(
+          id: "before-after",
+          name: "Before and After",
+          description: "Make a process or product improvement easy to scan.",
+          markdown:
+            """
+            # Before and After
+
+            ## Before
+
+            The old path, constraint, or user experience.
+
+            ***
+
+            ## After
+
+            The improved path and the reason it matters.
             """
         )
       ]
     ),
     SlideTemplateSection(
-      id: "live-codex",
-      title: "Live Codex",
+      id: "demo-teaching",
+      title: "Demo and Teaching",
       templates: [
         SlideTemplate(
-          id: "codex-demo",
-          name: "Codex Demo",
-          description: "Run a focused live prompt during presentation.",
+          id: "demo-runbook",
+          name: "Demo Runbook",
+          description: "Keep a live demo focused on the beats that matter.",
           markdown:
             """
-            # Live Codex Demo
+            # Demo Runbook
 
-            ```codex id=demo-1
-            title: Explain the implementation plan
+            1. **Setup:** Start from the smallest believable example.
+            2. **Show:** Perform the action the audience cares about.
+            3. **Prove:** Check the result or compare before and after.
+            4. **Fallback:** Know what to show if the live path fails.
+            """
+        ),
+        SlideTemplate(
+          id: "code-walkthrough",
+          name: "Code Walkthrough",
+          description: "Explain a small implementation detail with context.",
+          markdown:
+            """
+            # Code Walkthrough
 
-            Review the current code and propose the smallest safe implementation plan.
+            The important part is how the boundary stays explicit.
+
+            ```swift
+            struct SlideStep {
+              let goal: String
+              let evidence: String
+            }
             ```
             """
         ),
         SlideTemplate(
-          id: "prompt-lab",
-          name: "Prompt Lab",
-          description: "Compare a rough prompt with a stronger one.",
+          id: "live-investigation",
+          name: "Live Investigation",
+          description: "Ask Codex to inspect, explain, or test something live.",
           markdown:
             """
-            # Prompt Lab
+            # Live Investigation
 
-            | Draft | Improved |
-            | --- | --- |
-            | Make this better | Refactor this view into smaller SwiftUI subviews without changing behavior |
+            ```codex id=investigate
+            title: Inspect the current state
 
-            ```codex id=prompt-review
-            title: Improve this prompt
-
-            Rewrite the draft prompt so it gives Codex clearer scope, constraints, and verification steps.
+            Review the relevant files and explain what is happening, what is risky, and what should be verified next.
             ```
+            """
+        ),
+        SlideTemplate(
+          id: "workshop-exercise",
+          name: "Workshop Exercise",
+          description: "Give the audience a clear task and success criteria.",
+          markdown:
+            """
+            # Workshop Exercise
+
+            **Scenario:** A user needs to complete the workflow without reading documentation.
+
+            - Define the first action they should take
+            - Identify the feedback they need
+            - Share one improvement you would make
             """
         )
       ]

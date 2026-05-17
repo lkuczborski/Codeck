@@ -313,12 +313,229 @@ final class PresentationDeckTests: XCTestCase {
     XCTAssertTrue(deck.slides[0].markdown.contains("title: Describe the goal for this prompt"))
   }
 
-  func testTemplateCatalogGroupsTemplatesByUse() throws {
-    XCTAssertGreaterThanOrEqual(SlideTemplateCatalog.sections.count, 3)
-    XCTAssertTrue(SlideTemplateCatalog.sections.allSatisfy { !$0.title.isEmpty && !$0.templates.isEmpty })
+  func testTemplateCatalogUsesExpectedSectionsAndOrder() {
+    XCTAssertEqual(SlideTemplateCatalog.sections.map(\.id), ["story", "planning", "demo-teaching"])
+    XCTAssertEqual(SlideTemplateCatalog.sections.map(\.title), ["Story and Framing", "Planning and Decisions", "Demo and Teaching"])
+    XCTAssertEqual(
+      SlideTemplateCatalog.sections.map { $0.templates.map(\.id) },
+      [
+        ["opening-promise", "problem-framing", "big-number", "customer-quote"],
+        ["decision-matrix", "roadmap", "risk-radar", "before-after"],
+        ["demo-runbook", "code-walkthrough", "live-investigation", "workshop-exercise"]
+      ]
+    )
+    XCTAssertEqual(SlideTemplateCatalog.defaultTemplate?.id, "opening-promise")
+  }
 
-    let codexDemo = try XCTUnwrap(SlideTemplateCatalog.template(withID: "codex-demo"))
-    XCTAssertTrue(codexDemo.markdown.contains("```codex"))
+  func testOpeningPromiseTemplate() throws {
+    try assertTemplate(
+      "opening-promise",
+      name: "Opening Promise",
+      description: "Start with the deck title and the value it promises.",
+      markdown:
+        """
+        # Presentation Title
+
+        A compact promise for what the audience will understand, decide, or be able to do by the end.
+        """
+    )
+  }
+
+  func testProblemFramingTemplate() throws {
+    try assertTemplate(
+      "problem-framing",
+      name: "Problem Framing",
+      description: "Name the tension before introducing the answer.",
+      markdown:
+        """
+        # The Problem
+
+        > The current workflow forces the team to spend attention in the wrong place.
+
+        - Who feels it most
+        - Where it appears in the work
+        - Why it matters now
+        """
+    )
+  }
+
+  func testBigNumberTemplate() throws {
+    try assertTemplate(
+      "big-number",
+      name: "Big Number",
+      description: "Anchor a section around one metric and its implication.",
+      markdown:
+        """
+        # One Number to Remember
+
+        ## 42%
+
+        What changed, why it matters, and which decision this number should influence.
+        """
+    )
+  }
+
+  func testCustomerQuoteTemplate() throws {
+    try assertTemplate(
+      "customer-quote",
+      name: "Customer Quote",
+      description: "Use a direct voice or memorable observation as evidence.",
+      markdown:
+        """
+        # Voice of the Customer
+
+        > "The moment it clicked was when the work stopped feeling like setup and started feeling like progress."
+
+        Segment, source, or interview context
+        """
+    )
+  }
+
+  func testDecisionMatrixTemplate() throws {
+    try assertTemplate(
+      "decision-matrix",
+      name: "Decision Matrix",
+      description: "Compare a few options against the criteria that matter.",
+      markdown:
+        """
+        # Decision Matrix
+
+        | Option | Best for | Risk | Recommendation |
+        | --- | --- | --- | --- |
+        | A | Fast learning | Manual follow-up | Short-term |
+        | B | Durable workflow | More implementation | Preferred |
+        """
+    )
+  }
+
+  func testRoadmapTemplate() throws {
+    try assertTemplate(
+      "roadmap",
+      name: "Roadmap",
+      description: "Show a sequence of phases without turning it into a table.",
+      markdown:
+        """
+        # Roadmap
+
+        1. **Now:** Validate the core workflow with real content.
+        2. **Next:** Remove the largest source of manual cleanup.
+        3. **Later:** Automate the repeatable path and measure adoption.
+        """
+    )
+  }
+
+  func testRiskRadarTemplate() throws {
+    try assertTemplate(
+      "risk-radar",
+      name: "Risk Radar",
+      description: "Separate risks, mitigations, and the ask.",
+      markdown:
+        """
+        # Risk Radar
+
+        **Primary risk:** The team optimizes the wrong part of the workflow.
+
+        - Watch for: slow review cycles and repeated handoffs
+        - Mitigate with: one owner and one validation checkpoint
+        - Ask today: approve the next experiment
+        """
+    )
+  }
+
+  func testBeforeAfterTemplate() throws {
+    try assertTemplate(
+      "before-after",
+      name: "Before and After",
+      description: "Make a process or product improvement easy to scan.",
+      markdown:
+        """
+        # Before and After
+
+        ## Before
+
+        The old path, constraint, or user experience.
+
+        ***
+
+        ## After
+
+        The improved path and the reason it matters.
+        """
+    )
+  }
+
+  func testDemoRunbookTemplate() throws {
+    try assertTemplate(
+      "demo-runbook",
+      name: "Demo Runbook",
+      description: "Keep a live demo focused on the beats that matter.",
+      markdown:
+        """
+        # Demo Runbook
+
+        1. **Setup:** Start from the smallest believable example.
+        2. **Show:** Perform the action the audience cares about.
+        3. **Prove:** Check the result or compare before and after.
+        4. **Fallback:** Know what to show if the live path fails.
+        """
+    )
+  }
+
+  func testCodeWalkthroughTemplate() throws {
+    try assertTemplate(
+      "code-walkthrough",
+      name: "Code Walkthrough",
+      description: "Explain a small implementation detail with context.",
+      markdown:
+        """
+        # Code Walkthrough
+
+        The important part is how the boundary stays explicit.
+
+        ```swift
+        struct SlideStep {
+          let goal: String
+          let evidence: String
+        }
+        ```
+        """
+    )
+  }
+
+  func testLiveInvestigationTemplate() throws {
+    try assertTemplate(
+      "live-investigation",
+      name: "Live Investigation",
+      description: "Ask Codex to inspect, explain, or test something live.",
+      markdown:
+        """
+        # Live Investigation
+
+        ```codex id=investigate
+        title: Inspect the current state
+
+        Review the relevant files and explain what is happening, what is risky, and what should be verified next.
+        ```
+        """
+    )
+  }
+
+  func testWorkshopExerciseTemplate() throws {
+    try assertTemplate(
+      "workshop-exercise",
+      name: "Workshop Exercise",
+      description: "Give the audience a clear task and success criteria.",
+      markdown:
+        """
+        # Workshop Exercise
+
+        **Scenario:** A user needs to complete the workflow without reading documentation.
+
+        - Define the first action they should take
+        - Identify the feedback they need
+        - Share one improvement you would make
+        """
+    )
   }
 
   @MainActor
@@ -376,7 +593,7 @@ final class PresentationDeckTests: XCTestCase {
   @MainActor
   func testSlideCommandsAddTemplateSlideAndSelectIt() throws {
     let firstSlide = Slide(markdown: "# One")
-    let template = try XCTUnwrap(SlideTemplateCatalog.template(withID: "decision-brief"))
+    let template = try XCTUnwrap(SlideTemplateCatalog.template(withID: "live-investigation"))
     var document = PresentationDocument(deck: PresentationDeck(theme: .studio, slides: [firstSlide]))
     var selectedSlideIDString: String? = firstSlide.id.uuidString
     let commands = SlideCommandActions(
@@ -396,5 +613,20 @@ final class PresentationDeckTests: XCTestCase {
     XCTAssertEqual(document.deck.slides.count, 2)
     XCTAssertEqual(document.deck.slides[1].id, addedSlideID)
     XCTAssertEqual(document.deck.slides[1].markdown, template.markdown)
+  }
+
+  private func assertTemplate(
+    _ id: String,
+    name: String,
+    description: String,
+    markdown: String,
+    file: StaticString = #filePath,
+    line: UInt = #line
+  ) throws {
+    let template = try XCTUnwrap(SlideTemplateCatalog.template(withID: id), file: file, line: line)
+
+    XCTAssertEqual(template.name, name, file: file, line: line)
+    XCTAssertEqual(template.description, description, file: file, line: line)
+    XCTAssertEqual(template.markdown, markdown, file: file, line: line)
   }
 }
