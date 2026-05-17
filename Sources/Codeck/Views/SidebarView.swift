@@ -8,6 +8,7 @@ struct SidebarView: View {
   let onDuplicateSlide: () -> Void
   let onDeleteSlide: () -> Void
   let onMoveSlides: (IndexSet, Int) -> Void
+  @State private var isConfirmingDelete = false
 
   var body: some View {
     ScrollViewReader { proxy in
@@ -25,6 +26,17 @@ struct SidebarView: View {
         sidebarFooter
       }
       .navigationTitle("Slides")
+      .onDeleteCommand {
+        confirmDeleteSlide()
+      }
+      .alert("Delete Slide?", isPresented: $isConfirmingDelete) {
+        Button("Cancel", role: .cancel) {}
+        Button("Delete", role: .destructive) {
+          deleteSlide()
+        }
+      } message: {
+        Text("This will remove the current slide from the deck.")
+      }
       .onAppear {
         scrollToSelectedSlide(with: proxy, animated: false)
       }
@@ -66,11 +78,11 @@ struct SidebarView: View {
 
       Spacer(minLength: 10)
 
-      Button(role: .destructive, action: deleteSlide) {
+      Button(role: .destructive, action: confirmDeleteSlide) {
         Label("Delete Slide", systemImage: "trash")
       }
       .help("Delete slide")
-      .disabled(deck.slides.count <= 1)
+      .disabled(!canDeleteSelectedSlide)
     }
     .labelStyle(.iconOnly)
     .buttonBorderShape(.circle)
@@ -85,6 +97,15 @@ struct SidebarView: View {
 
   private func duplicateSlide() {
     onDuplicateSlide()
+  }
+
+  private var canDeleteSelectedSlide: Bool {
+    selection != nil && deck.slides.count > 1
+  }
+
+  private func confirmDeleteSlide() {
+    guard canDeleteSelectedSlide else { return }
+    isConfirmingDelete = true
   }
 
   private func deleteSlide() {
