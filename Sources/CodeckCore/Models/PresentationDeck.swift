@@ -116,8 +116,8 @@ public struct PresentationDeck: Hashable, Sendable {
     return lines.joined(separator: "\n")
   }
 
-  public mutating func addSlide(after selectedID: Slide.ID?) -> Slide.ID {
-    let slide = Slide(markdown: Self.defaultSlideMarkdown)
+  public mutating func addSlide(after selectedID: Slide.ID?, markdown: String = Self.defaultSlideMarkdown) -> Slide.ID {
+    let slide = Slide(markdown: markdown)
     if let selectedID, let index = slides.firstIndex(where: { $0.id == selectedID }) {
       slides.insert(slide, at: min(index + 1, slides.count))
     } else {

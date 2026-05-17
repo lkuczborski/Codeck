@@ -15,6 +15,7 @@ struct DocumentWindowView: View {
   @State private var columnVisibility: NavigationSplitViewVisibility = .all
   @State private var appearanceRefreshID = UUID()
   @State private var liveMCPDocumentID = UUID()
+  @State private var isShowingTemplatePicker = false
 
   private var selectedSlideID: Slide.ID? {
     get {
@@ -43,6 +44,7 @@ struct DocumentWindowView: View {
           set: { selectedSlideID = $0 }
         ),
         onAddSlide: addSlide,
+        onAddTemplateSlide: showTemplatePicker,
         onDuplicateSlide: duplicateSlide,
         onDeleteSlide: deleteSlide,
         onMoveSlides: moveSlides
@@ -91,9 +93,17 @@ struct DocumentWindowView: View {
       \.slideCommandActions,
       SlideCommandActions(
         document: $document,
-        selectedSlideIDString: $selectedSlideIDString
+        selectedSlideIDString: $selectedSlideIDString,
+        presentTemplatePicker: showTemplatePicker
       )
     )
+    .sheet(isPresented: $isShowingTemplatePicker) {
+      SlideTemplatePickerView(
+        theme: document.deck.theme,
+        onCancel: hideTemplatePicker,
+        onInsert: insertTemplateSlide
+      )
+    }
     .onAppear(perform: ensureSelection)
     .onAppear(perform: applyStoredAppAppearance)
     .onAppear(perform: registerLiveMCPDocument)
@@ -264,6 +274,19 @@ struct DocumentWindowView: View {
     slideCommandActions.addSlide()
   }
 
+  private func showTemplatePicker() {
+    isShowingTemplatePicker = true
+  }
+
+  private func hideTemplatePicker() {
+    isShowingTemplatePicker = false
+  }
+
+  private func insertTemplateSlide(_ template: SlideTemplate) {
+    slideCommandActions.addSlide(from: template)
+    isShowingTemplatePicker = false
+  }
+
   private func duplicateSlide() {
     slideCommandActions.duplicateSlide()
   }
@@ -381,7 +404,8 @@ struct DocumentWindowView: View {
   private var slideCommandActions: SlideCommandActions {
     SlideCommandActions(
       document: $document,
-      selectedSlideIDString: $selectedSlideIDString
+      selectedSlideIDString: $selectedSlideIDString,
+      presentTemplatePicker: showTemplatePicker
     )
   }
 }

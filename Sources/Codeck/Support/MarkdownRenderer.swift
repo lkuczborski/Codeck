@@ -18,6 +18,32 @@ enum MarkdownRenderer {
     theme: PresentationTheme,
     codexOutputs: [String: CodexSessionOutput]
   ) -> String {
+    htmlDocument(
+      for: slide,
+      theme: theme,
+      codexOutputs: codexOutputs,
+      extraCSS: ""
+    )
+  }
+
+  static func templatePreviewHTMLDocument(
+    for slide: Slide,
+    theme: PresentationTheme
+  ) -> String {
+    htmlDocument(
+      for: slide,
+      theme: theme,
+      codexOutputs: [:],
+      extraCSS: templatePreviewCSS
+    )
+  }
+
+  private static func htmlDocument(
+    for slide: Slide,
+    theme: PresentationTheme,
+    codexOutputs: [String: CodexSessionOutput],
+    extraCSS: String
+  ) -> String {
     let codexBlocks = slide.codexBlocks
     let body = renderBlocks(from: slide.markdown, codexOutputs: codexOutputs)
     return
@@ -30,6 +56,7 @@ enum MarkdownRenderer {
       <style>
       \(theme.css)
       \(baseCSS)
+      \(extraCSS)
       </style>
       <script>
       window.Codeck = {
@@ -802,6 +829,54 @@ enum MarkdownRenderer {
         top: 12px;
         right: 12px;
       }
+    }
+    """
+
+  private static let templatePreviewCSS =
+    """
+    html, body {
+      height: 100%;
+      min-height: 100%;
+      overflow: hidden;
+      font-size: 11px;
+    }
+    body {
+      align-items: stretch;
+      justify-content: stretch;
+    }
+    .slide {
+      width: 100vw;
+      min-height: 100vh;
+      padding: 18px;
+      overflow: hidden;
+    }
+    h1 { font-size: 30px; }
+    h2 { font-size: 24px; }
+    h3 { font-size: 18px; }
+    p, ul, ol, blockquote, table, pre, .codex-card {
+      margin-bottom: 0.7em;
+    }
+    table {
+      font-size: 0.8em;
+    }
+    th, td {
+      padding: 0.45em 0.55em;
+    }
+    pre {
+      max-height: 78px;
+      padding: 0.7em;
+      font-size: 0.62em;
+    }
+    .codex-card {
+      font-size: 0.72em;
+      padding: 0.9em;
+    }
+    .codex-prompt {
+      max-height: 54px;
+    }
+    .slide-actions,
+    .codex-action {
+      display: none;
     }
     """
 }

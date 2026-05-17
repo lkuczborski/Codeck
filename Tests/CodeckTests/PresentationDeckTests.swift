@@ -150,6 +150,17 @@ final class PresentationDeckTests: XCTestCase {
     XCTAssertTrue(deck.deckDocument.contains("\n\n---\n\n# Three"))
   }
 
+  func testAddsTemplateSlideAfterSelectedSlide() {
+    var deck = PresentationDeck(theme: .studio, slides: [Slide(markdown: "# One")])
+    let firstID = deck.slides[0].id
+
+    let templateID = deck.addSlide(after: firstID, markdown: "# Decision\n\n- Ship it")
+
+    XCTAssertEqual(deck.slides.count, 2)
+    XCTAssertEqual(deck.slides[1].id, templateID)
+    XCTAssertEqual(deck.slides[1].markdown, "# Decision\n\n- Ship it")
+  }
+
   func testReplacingSlideMarkdownSplitsSlideDelimiters() {
     var deck = PresentationDeck(theme: .studio, slides: [Slide(markdown: "# One")])
     let firstID = deck.slides[0].id
@@ -302,6 +313,14 @@ final class PresentationDeckTests: XCTestCase {
     XCTAssertTrue(deck.slides[0].markdown.contains("title: Describe the goal for this prompt"))
   }
 
+  func testTemplateCatalogGroupsTemplatesByUse() throws {
+    XCTAssertGreaterThanOrEqual(SlideTemplateCatalog.sections.count, 3)
+    XCTAssertTrue(SlideTemplateCatalog.sections.allSatisfy { !$0.title.isEmpty && !$0.templates.isEmpty })
+
+    let codexDemo = try XCTUnwrap(SlideTemplateCatalog.template(withID: "codex-demo"))
+    XCTAssertTrue(codexDemo.markdown.contains("```codex"))
+  }
+
   @MainActor
   func testSlideCommandsCanDuplicateRepeatedlyFromLatestSelectedSlide() throws {
     let firstSlide = Slide(markdown: "# One")
@@ -352,5 +371,30 @@ final class PresentationDeckTests: XCTestCase {
     XCTAssertEqual(document.deck.slides.count, 2)
     XCTAssertEqual(document.deck.slides[1].id, addedSlideID)
     XCTAssertEqual(document.deck.slides[1].markdown, PresentationDeck.defaultSlideMarkdown)
+  }
+
+  @MainActor
+  func testSlideCommandsAddTemplateSlideAndSelectIt() throws {
+    let firstSlide = Slide(markdown: "# One")
+    let template = try XCTUnwrap(SlideTemplateCatalog.template(withID: "decision-brief"))
+    var document = PresentationDocument(deck: PresentationDeck(theme: .studio, slides: [firstSlide]))
+    var selectedSlideIDString: String? = firstSlide.id.uuidString
+    let commands = SlideCommandActions(
+      document: Binding(
+        get: { document },
+        set: { document = $0 }
+      ),
+      selectedSlideIDString: Binding(
+        get: { selectedSlideIDString },
+        set: { selectedSlideIDString = $0 }
+      )
+    )
+
+    commands.addSlide(from: template)
+    let addedSlideID = try XCTUnwrap(selectedSlideIDString.flatMap(UUID.init(uuidString:)))
+
+    XCTAssertEqual(document.deck.slides.count, 2)
+    XCTAssertEqual(document.deck.slides[1].id, addedSlideID)
+    XCTAssertEqual(document.deck.slides[1].markdown, template.markdown)
   }
 }

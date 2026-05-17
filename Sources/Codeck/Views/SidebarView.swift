@@ -5,6 +5,7 @@ struct SidebarView: View {
   let deck: PresentationDeck
   @Binding var selection: Slide.ID?
   let onAddSlide: () -> Void
+  let onAddTemplateSlide: () -> Void
   let onDuplicateSlide: () -> Void
   let onDeleteSlide: () -> Void
   let onMoveSlides: (IndexSet, Int) -> Void
@@ -70,6 +71,11 @@ struct SidebarView: View {
       }
       .help("Add slide")
 
+      Button(action: addTemplateSlide) {
+        Label("Add Slide from Template", systemImage: "square.grid.2x2")
+      }
+      .help("Add slide from template")
+
       Button(action: duplicateSlide) {
         Label("Duplicate Slide", systemImage: "doc.on.doc")
       }
@@ -93,6 +99,10 @@ struct SidebarView: View {
 
   private func addSlide() {
     onAddSlide()
+  }
+
+  private func addTemplateSlide() {
+    onAddTemplateSlide()
   }
 
   private func duplicateSlide() {

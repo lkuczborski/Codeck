@@ -1,3 +1,4 @@
+import CodeckCore
 import SwiftUI
 
 struct PresentationCommands: Commands {
@@ -12,6 +13,12 @@ struct PresentationCommands: Commands {
         }
         .keyboardShortcut("n", modifiers: [.command, .shift])
         .disabled(slideCommandActions == nil)
+
+        Button("New Slide from Template...") {
+          slideCommandActions?.showTemplatePicker()
+        }
+        .keyboardShortcut("n", modifiers: [.command, .option, .shift])
+        .disabled(slideCommandActions?.canShowTemplatePicker != true)
 
         Button("Duplicate Slide") {
           slideCommandActions?.duplicateSlide()
@@ -34,16 +41,25 @@ struct PresentationCommands: Commands {
 struct SlideCommandActions {
   let document: Binding<PresentationDocument>
   let selectedSlideIDString: Binding<String?>
+  var presentTemplatePicker: (() -> Void)?
 
   var canDuplicateSlide: Bool {
     resolvedSelectedSlideID(in: document.wrappedValue.deck) != nil
   }
 
-  func addSlide() {
+  var canShowTemplatePicker: Bool {
+    presentTemplatePicker != nil
+  }
+
+  func addSlide(markdown: String = PresentationDeck.defaultSlideMarkdown) {
     var deck = document.wrappedValue.deck
-    let newID = deck.addSlide(after: resolvedSelectedSlideID(in: deck))
+    let newID = deck.addSlide(after: resolvedSelectedSlideID(in: deck), markdown: markdown)
     document.wrappedValue.deck = deck
     setSelectedSlideID(newID)
+  }
+
+  func addSlide(from template: SlideTemplate) {
+    addSlide(markdown: template.markdown)
   }
 
   func duplicateSlide() {
@@ -54,6 +70,10 @@ struct SlideCommandActions {
 
     document.wrappedValue.deck = deck
     setSelectedSlideID(newID)
+  }
+
+  func showTemplatePicker() {
+    presentTemplatePicker?()
   }
 
   private var selectedSlideID: Slide.ID? {
