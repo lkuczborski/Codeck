@@ -59,6 +59,18 @@ final class MarkdownEditorOperationTests: XCTestCase {
     XCTAssertEqual(result.selection, NSRange(location: 7, length: 5))
   }
 
+  func testItalicStyleDoesNotTreatBoldMarkersAsItalicMarkers() {
+    let text = "This is **bold** text"
+    let selection = NSRange(location: 10, length: 4)
+
+    XCTAssertFalse(MarkdownEditorOperation.activeStyles(in: text, selection: selection).contains(.italic))
+
+    let result = MarkdownEditorOperation.toggle(.italic, in: text, selection: selection)
+
+    XCTAssertEqual(result.text, "This is ***bold*** text")
+    XCTAssertEqual(result.selection, NSRange(location: 11, length: 4))
+  }
+
   func testInlineCodeToggleWithoutSelectionWrapsCurrentWord() {
     let text = "Use value here"
     let cursorInsideWord = NSRange(location: 5, length: 0)
@@ -67,6 +79,23 @@ final class MarkdownEditorOperationTests: XCTestCase {
 
     XCTAssertEqual(result.text, "Use `value` here")
     XCTAssertEqual(result.selection, NSRange(location: 5, length: 5))
+  }
+
+  func testStrikethroughToggleWrapsAndUnwrapsSelectionIncludingMarkers() {
+    let text = "Remove this"
+    let selection = NSRange(location: 7, length: 4)
+
+    let wrapped = MarkdownEditorOperation.toggle(.strikethrough, in: text, selection: selection)
+
+    XCTAssertEqual(wrapped.text, "Remove ~~this~~")
+    XCTAssertEqual(wrapped.selection, NSRange(location: 9, length: 4))
+    XCTAssertTrue(MarkdownEditorOperation.activeStyles(in: wrapped.text, selection: wrapped.selection).contains(.strikethrough))
+
+    let fullMarkedRange = NSRange(location: 7, length: 8)
+    let unwrapped = MarkdownEditorOperation.toggle(.strikethrough, in: wrapped.text, selection: fullMarkedRange)
+
+    XCTAssertEqual(unwrapped.text, text)
+    XCTAssertEqual(unwrapped.selection, selection)
   }
 
   func testLinkToggleWrapsSelectionAndSelectsURL() {
@@ -100,6 +129,16 @@ final class MarkdownEditorOperationTests: XCTestCase {
     XCTAssertEqual(result.selection, NSRange(location: 5, length: 4))
   }
 
+  func testLinkToggleUnwrapsWhenSelectionIsInsideExistingLinkTitle() {
+    let text = "Read [docs](https://example.com)"
+    let titleSelection = NSRange(location: 7, length: 2)
+
+    let result = MarkdownEditorOperation.toggle(.link, in: text, selection: titleSelection)
+
+    XCTAssertEqual(result.text, "Read docs")
+    XCTAssertEqual(result.selection, NSRange(location: 5, length: 4))
+  }
+
   func testCodeBlockInsertionAddsBlockSpacingAndSelectsCode() {
     let text = "# Demo"
     let selection = NSRange(location: (text as NSString).length, length: 0)
@@ -117,6 +156,25 @@ final class MarkdownEditorOperationTests: XCTestCase {
       """
     )
     XCTAssertEqual((result.text as NSString).substring(with: result.selection), "let value = \"Hello\"")
+  }
+
+  func testBlockInsertionReplacesSelectedTextAndKeepsParagraphSpacing() {
+    let text = "Intro\nreplace me\nOutro"
+    let selection = (text as NSString).range(of: "replace me")
+
+    let result = MarkdownEditorOperation.insert(.blockquote, into: text, selection: selection, codexBlockNumber: 1)
+
+    XCTAssertEqual(
+      result.text,
+      """
+      Intro
+
+      > Quote text
+
+      Outro
+      """
+    )
+    XCTAssertEqual((result.text as NSString).substring(with: result.selection), "Quote text")
   }
 
   func testCodexSessionInsertionSelectsTitlePlaceholder() {
@@ -139,5 +197,17 @@ final class MarkdownEditorOperationTests: XCTestCase {
 
     XCTAssertTrue(result.text.contains("\n\n***"))
     XCTAssertFalse(result.text.contains("\n\n---"))
+  }
+
+  func testOutOfBoundsSelectionIsClampedBeforeInsertion() {
+    let result = MarkdownEditorOperation.insert(
+      .paragraph,
+      into: "Hi",
+      selection: NSRange(location: 50, length: 10),
+      codexBlockNumber: 1
+    )
+
+    XCTAssertEqual(result.text, "Hi\n\nParagraph text")
+    XCTAssertEqual((result.text as NSString).substring(with: result.selection), "Paragraph text")
   }
 }

@@ -150,6 +150,15 @@ final class PresentationDeckTests: XCTestCase {
     XCTAssertTrue(deck.deckDocument.contains("\n\n---\n\n# Three"))
   }
 
+  func testSampleDeckExercisesMarkdownCodexAndCodeSlideTypes() {
+    let sample = PresentationDeck.sample
+
+    XCTAssertEqual(sample.slides.map(\.title), ["Prompting Codex Live", "Live Codex Block", "Rich Markdown"])
+    XCTAssertTrue(sample.slides[0].markdown.contains("| Slide part | Purpose |"))
+    XCTAssertEqual(sample.slides[1].codexBlocks.count, 1)
+    XCTAssertTrue(sample.slides[2].markdown.contains("```swift"))
+  }
+
   func testAddsTemplateSlideAfterSelectedSlide() {
     var deck = PresentationDeck(theme: .studio, slides: [Slide(markdown: "# One")])
     let firstID = deck.slides[0].id
@@ -159,6 +168,46 @@ final class PresentationDeckTests: XCTestCase {
     XCTAssertEqual(deck.slides.count, 2)
     XCTAssertEqual(deck.slides[1].id, templateID)
     XCTAssertEqual(deck.slides[1].markdown, "# Decision\n\n- Ship it")
+  }
+
+  func testAddSlideAppendsWhenSelectionIsMissing() {
+    var deck = PresentationDeck(theme: .studio, slides: [Slide(markdown: "# One")])
+
+    let newID = deck.addSlide(after: UUID(), markdown: "# Two")
+
+    XCTAssertEqual(deck.slides.map(\.title), ["One", "Two"])
+    XCTAssertEqual(deck.slides.last?.id, newID)
+  }
+
+  func testDuplicateSlideReturnsNilForMissingSelectionWithoutMutatingDeck() {
+    var deck = PresentationDeck(theme: .studio, slides: [Slide(markdown: "# One")])
+
+    let duplicateID = deck.duplicateSlide(UUID())
+
+    XCTAssertNil(duplicateID)
+    XCTAssertEqual(deck.slides.map(\.title), ["One"])
+  }
+
+  func testDeleteSlideKeepsOneSlideAndSelectsNeighbor() {
+    let first = Slide(markdown: "# One")
+    let second = Slide(markdown: "# Two")
+    let third = Slide(markdown: "# Three")
+    var deck = PresentationDeck(theme: .studio, slides: [first, second, third])
+
+    let selectedAfterMiddleDelete = deck.deleteSlide(second.id)
+
+    XCTAssertEqual(selectedAfterMiddleDelete, third.id)
+    XCTAssertEqual(deck.slides.map(\.title), ["One", "Three"])
+
+    let selectedAfterLastDelete = deck.deleteSlide(third.id)
+
+    XCTAssertEqual(selectedAfterLastDelete, first.id)
+    XCTAssertEqual(deck.slides.map(\.title), ["One"])
+
+    let selectedAfterOnlySlideDelete = deck.deleteSlide(first.id)
+
+    XCTAssertEqual(selectedAfterOnlySlideDelete, first.id)
+    XCTAssertEqual(deck.slides.map(\.title), ["One"])
   }
 
   func testReplacingSlideMarkdownSplitsSlideDelimiters() {
@@ -266,6 +315,27 @@ final class PresentationDeckTests: XCTestCase {
     XCTAssertEqual(deck.settings.codex.model, "gpt-5.5")
     XCTAssertEqual(deck.settings.codex.reasoning, .medium)
     XCTAssertEqual(deck.settings.codex.sandbox, "read-only")
+  }
+
+  func testReadsLegacyRootLevelCodexMetadataKeys() {
+    let deck = PresentationDeck(
+      markdownDocument:
+        """
+        ---
+        theme: solar
+        model: "future-model"
+        reasoning_effort: ultra
+        sandbox: workspace-write
+        ---
+
+        # Defaults
+        """
+    )
+
+    XCTAssertEqual(deck.theme, .solar)
+    XCTAssertEqual(deck.settings.codex.model, "future-model")
+    XCTAssertEqual(deck.settings.codex.reasoning.rawValue, "ultra")
+    XCTAssertEqual(deck.settings.codex.sandbox, "workspace-write")
   }
 
   func testPreservesFutureModelAndReasoningMetadata() {
