@@ -142,7 +142,8 @@ final class CodexSessionStore: ObservableObject {
   private struct AppServerContext {
     let block: CodexBlock
     let settings: DeckCodexSettings
-    let workingDirectory: URL?
+    let workingDirectory: URL
+    let sandboxMode: String
     let initializeRequestID: String
     let threadStartRequestID: String
     let turnStartRequestID: String
@@ -152,7 +153,8 @@ final class CodexSessionStore: ObservableObject {
     init(block: CodexBlock, settings: DeckCodexSettings, workingDirectory: URL?) {
       self.block = block
       self.settings = settings
-      self.workingDirectory = workingDirectory
+      self.workingDirectory = CodexSessionRunner.sessionWorkingDirectory(from: workingDirectory)
+      self.sandboxMode = CodexSandbox.mode(for: block, settings: settings)
       self.initializeRequestID = "\(block.id)-initialize"
       self.threadStartRequestID = "\(block.id)-thread-start"
       self.turnStartRequestID = "\(block.id)-turn-start"
@@ -342,13 +344,11 @@ final class CodexSessionStore: ObservableObject {
     var params: [String: Any] = [
       "approvalPolicy": "never",
       "ephemeral": true,
-      "sandbox": context.block.sandbox ?? context.settings.sandbox,
+      "sandbox": context.sandboxMode,
       "serviceName": "Codeck"
     ]
 
-    if let workingDirectory = context.workingDirectory {
-      params["cwd"] = workingDirectory.path
-    }
+    params["cwd"] = context.workingDirectory.path
 
     params["model"] = context.block.model ?? context.settings.model
 
@@ -369,9 +369,11 @@ final class CodexSessionStore: ObservableObject {
       "threadId": threadID
     ]
 
-    if let workingDirectory = context.workingDirectory {
-      params["cwd"] = workingDirectory.path
-    }
+    params["cwd"] = context.workingDirectory.path
+    params["sandboxPolicy"] = CodexSandbox.turnPolicy(
+      for: context.sandboxMode,
+      workingDirectory: context.workingDirectory
+    )
 
     params["model"] = context.block.model ?? context.settings.model
 

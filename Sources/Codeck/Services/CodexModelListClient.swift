@@ -30,9 +30,7 @@ enum CodexModelListClient {
   }
 
   private static func queryModels(timeout: TimeInterval) throws -> [CodexModelOption] {
-    let process = Process()
-    process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
-    process.arguments = ["codex", "app-server", "--listen", "stdio://"]
+    let process = makeProcess()
 
     let outputPipe = Pipe()
     let errorPipe = Pipe()
@@ -85,6 +83,26 @@ enum CodexModelListClient {
     case .failure(let error):
       throw error
     }
+  }
+
+  static func makeProcess() -> Process {
+    let process = Process()
+    let sessionDirectory = CodexSessionRunner.sessionWorkingDirectory(from: nil)
+    process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
+    process.arguments = [
+      "codex",
+      "--sandbox",
+      "read-only",
+      "--ask-for-approval",
+      "never",
+      "--cd",
+      sessionDirectory.path,
+      "app-server",
+      "--listen",
+      "stdio://"
+    ]
+    process.currentDirectoryURL = sessionDirectory
+    return process
   }
 
   private static func sendInitialize(to inputPipe: Pipe) throws {

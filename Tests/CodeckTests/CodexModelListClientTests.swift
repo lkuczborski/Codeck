@@ -3,6 +3,17 @@ import XCTest
 @testable import Codeck
 
 final class CodexModelListClientTests: XCTestCase {
+  func testModelListProcessUsesSandboxedTemporaryDirectory() {
+    let process = CodexModelListClient.makeProcess()
+    let arguments = process.arguments ?? []
+
+    XCTAssertEqual(Array(arguments.prefix(5)), ["codex", "--sandbox", "read-only", "--ask-for-approval", "never"])
+    XCTAssertEqual(arguments[5], "--cd")
+    XCTAssertFalse(arguments[6].isEmpty)
+    XCTAssertEqual(process.currentDirectoryURL?.path, CodexSessionRunner.sessionWorkingDirectory(from: nil).path)
+    XCTAssertEqual(Array(arguments.suffix(3)), ["app-server", "--listen", "stdio://"])
+  }
+
   func testParsesModelListResponseWithDynamicReasoningValues() {
     let object: [String: Any] = [
       "id": "codeck-model-list",
