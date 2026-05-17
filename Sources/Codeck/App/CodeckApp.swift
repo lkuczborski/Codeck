@@ -20,7 +20,7 @@ struct CodeckApp: App {
       DocumentWindowView(document: file.$document, fileURL: file.fileURL)
     }
     .commands {
-      PreviewVisibilityCommands()
+      PresentationCommands()
     }
 
     Settings {

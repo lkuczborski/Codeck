@@ -1,3 +1,4 @@
+import SwiftUI
 import XCTest
 @testable import CodeckCore
 @testable import Codeck
@@ -299,5 +300,57 @@ final class PresentationDeckTests: XCTestCase {
 
     XCTAssertTrue(deck.slides[0].markdown.contains("```codex id=demo-1"))
     XCTAssertTrue(deck.slides[0].markdown.contains("title: Describe the goal for this prompt"))
+  }
+
+  @MainActor
+  func testSlideCommandsCanDuplicateRepeatedlyFromLatestSelectedSlide() throws {
+    let firstSlide = Slide(markdown: "# One")
+    var document = PresentationDocument(deck: PresentationDeck(theme: .studio, slides: [firstSlide]))
+    var selectedSlideIDString: String? = firstSlide.id.uuidString
+    let commands = SlideCommandActions(
+      document: Binding(
+        get: { document },
+        set: { document = $0 }
+      ),
+      selectedSlideIDString: Binding(
+        get: { selectedSlideIDString },
+        set: { selectedSlideIDString = $0 }
+      )
+    )
+
+    commands.duplicateSlide()
+    let firstCopyID = try XCTUnwrap(selectedSlideIDString.flatMap(UUID.init(uuidString:)))
+
+    commands.duplicateSlide()
+    let secondCopyID = try XCTUnwrap(selectedSlideIDString.flatMap(UUID.init(uuidString:)))
+
+    XCTAssertEqual(document.deck.slides.count, 3)
+    XCTAssertEqual(document.deck.slides.map(\.title), ["One", "One", "One"])
+    XCTAssertEqual(document.deck.slides[1].id, firstCopyID)
+    XCTAssertEqual(document.deck.slides[2].id, secondCopyID)
+  }
+
+  @MainActor
+  func testSlideCommandsRecoverFromInvalidStoredSelection() throws {
+    let firstSlide = Slide(markdown: "# One")
+    var document = PresentationDocument(deck: PresentationDeck(theme: .studio, slides: [firstSlide]))
+    var selectedSlideIDString: String? = UUID().uuidString
+    let commands = SlideCommandActions(
+      document: Binding(
+        get: { document },
+        set: { document = $0 }
+      ),
+      selectedSlideIDString: Binding(
+        get: { selectedSlideIDString },
+        set: { selectedSlideIDString = $0 }
+      )
+    )
+
+    commands.addSlide()
+    let addedSlideID = try XCTUnwrap(selectedSlideIDString.flatMap(UUID.init(uuidString:)))
+
+    XCTAssertEqual(document.deck.slides.count, 2)
+    XCTAssertEqual(document.deck.slides[1].id, addedSlideID)
+    XCTAssertEqual(document.deck.slides[1].markdown, PresentationDeck.defaultSlideMarkdown)
   }
 }

@@ -10,19 +10,31 @@ struct SidebarView: View {
   let onMoveSlides: (IndexSet, Int) -> Void
 
   var body: some View {
-    List(selection: $selection) {
-      ForEach(Array(deck.slides.enumerated()), id: \.element.id) { index, slide in
-        SidebarSlideRow(index: index + 1, slide: slide)
-          .tag(slide.id)
+    ScrollViewReader { proxy in
+      List(selection: $selection) {
+        ForEach(Array(deck.slides.enumerated()), id: \.element.id) { index, slide in
+          SidebarSlideRow(index: index + 1, slide: slide)
+            .id(slide.id)
+            .tag(slide.id)
+        }
+        .onMove(perform: moveSlides)
       }
-      .onMove(perform: moveSlides)
+      .listStyle(.sidebar)
+      .scrollContentBackground(.hidden)
+      .safeAreaInset(edge: .bottom, spacing: 0) {
+        sidebarFooter
+      }
+      .navigationTitle("Slides")
+      .onAppear {
+        scrollToSelectedSlide(with: proxy, animated: false)
+      }
+      .onChange(of: selection) { _, _ in
+        scrollToSelectedSlide(with: proxy, animated: true)
+      }
+      .onChange(of: deck.slides.map(\.id)) { _, _ in
+        scrollToSelectedSlide(with: proxy, animated: true)
+      }
     }
-    .listStyle(.sidebar)
-    .scrollContentBackground(.hidden)
-    .safeAreaInset(edge: .bottom, spacing: 0) {
-      sidebarFooter
-    }
-    .navigationTitle("Slides")
   }
 
   @ViewBuilder
@@ -81,6 +93,20 @@ struct SidebarView: View {
 
   private func moveSlides(from source: IndexSet, to destination: Int) {
     onMoveSlides(source, destination)
+  }
+
+  private func scrollToSelectedSlide(with proxy: ScrollViewProxy, animated: Bool) {
+    guard let selection else { return }
+
+    DispatchQueue.main.async {
+      if animated {
+        withAnimation(.easeInOut(duration: 0.16)) {
+          proxy.scrollTo(selection, anchor: .center)
+        }
+      } else {
+        proxy.scrollTo(selection, anchor: .center)
+      }
+    }
   }
 }
 

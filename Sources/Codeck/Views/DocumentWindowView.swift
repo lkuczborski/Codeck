@@ -87,6 +87,13 @@ struct DocumentWindowView: View {
       }
     }
     .focusedValue(\.previewVisibility, $isPreviewVisible)
+    .focusedSceneValue(
+      \.slideCommandActions,
+      SlideCommandActions(
+        document: $document,
+        selectedSlideIDString: $selectedSlideIDString
+      )
+    )
     .onAppear(perform: ensureSelection)
     .onAppear(perform: applyStoredAppAppearance)
     .onAppear(perform: registerLiveMCPDocument)
@@ -218,7 +225,7 @@ struct DocumentWindowView: View {
   }
 
   private var selectedSlideBinding: Binding<Slide>? {
-    guard let index = selectedSlideIndex else { return nil }
+    guard let index = effectiveSelectedSlideIndex else { return nil }
     let slideID = document.deck.slides[index].id
     return Binding(
       get: {
@@ -232,38 +239,38 @@ struct DocumentWindowView: View {
   }
 
   private var selectedSlideIndex: Int? {
-    if let selectedSlideID, let index = document.deck.slides.firstIndex(where: { $0.id == selectedSlideID }) {
-      return index
+    guard let selectedSlideID else { return nil }
+    return document.deck.slides.firstIndex(where: { $0.id == selectedSlideID })
+  }
+
+  private var effectiveSelectedSlideIndex: Int? {
+    selectedSlideIndex ?? document.deck.slides.indices.first
+  }
+
+  private var effectiveSelectedSlideID: Slide.ID? {
+    if let selectedSlideID, document.deck.slides.contains(where: { $0.id == selectedSlideID }) {
+      return selectedSlideID
     }
-    return document.deck.slides.indices.first
+    return document.deck.slides.first?.id
   }
 
   private func ensureSelection() {
-    if selectedSlideIndex == nil {
-      selectedSlideID = document.deck.slides.first?.id
-    } else if selectedSlideID == nil {
+    if effectiveSelectedSlideID != selectedSlideID {
       selectedSlideID = document.deck.slides.first?.id
     }
   }
 
   private func addSlide() {
-    var deck = document.deck
-    let newID = deck.addSlide(after: selectedSlideID)
-    document.deck = deck
-    selectedSlideID = newID
+    slideCommandActions.addSlide()
   }
 
   private func duplicateSlide() {
-    var deck = document.deck
-    if let newID = deck.duplicateSlide(selectedSlideID) {
-      document.deck = deck
-      selectedSlideID = newID
-    }
+    slideCommandActions.duplicateSlide()
   }
 
   private func deleteSlide() {
     var deck = document.deck
-    selectedSlideID = deck.deleteSlide(selectedSlideID)
+    selectedSlideID = deck.deleteSlide(effectiveSelectedSlideID)
     document.deck = deck
   }
 
@@ -368,6 +375,13 @@ struct DocumentWindowView: View {
     Binding(
       get: { compactPane },
       set: { compactPaneRawValue = $0.rawValue }
+    )
+  }
+
+  private var slideCommandActions: SlideCommandActions {
+    SlideCommandActions(
+      document: $document,
+      selectedSlideIDString: $selectedSlideIDString
     )
   }
 }
