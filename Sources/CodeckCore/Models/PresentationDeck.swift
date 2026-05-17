@@ -1,10 +1,15 @@
 import Foundation
 
 public struct PresentationDeck: Hashable, Sendable {
-  public static let defaultSlideMarkdown = "# New Slide\n\nStart writing..."
+  public static let defaultSlideMarkdown = "# "
+  public static let defaultSlideCursorLocation = 2
 
   public var settings: PresentationSettings
   public var slides: [Slide]
+
+  public static var blank: PresentationDeck {
+    PresentationDeck(settings: .default, slides: [])
+  }
 
   public init(theme: PresentationTheme = .studio, slides: [Slide] = []) {
     self.settings = PresentationSettings(theme: theme, codex: .default)

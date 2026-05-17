@@ -3,6 +3,21 @@ import XCTest
 @testable import Codeck
 
 final class PresentationDeckTests: XCTestCase {
+  func testDefaultDeckStartsWithEditableTitlePlaceholder() {
+    let deck = PresentationDeck.blank
+
+    XCTAssertEqual(deck.slides.count, 1)
+    XCTAssertEqual(deck.slides[0].markdown, "# ")
+    XCTAssertEqual(PresentationDeck.defaultSlideCursorLocation, 2)
+  }
+
+  func testNewPresentationDocumentStartsWithDefaultDeck() {
+    let document = PresentationDocument()
+
+    XCTAssertEqual(document.deck.slides.count, 1)
+    XCTAssertEqual(document.deck.slides[0].markdown, "# ")
+  }
+
   func testParsesThemeAndSlideSeparatorsOutsideFences() {
     let deck = PresentationDeck(
       markdownDocument:

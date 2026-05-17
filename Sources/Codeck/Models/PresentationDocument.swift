@@ -14,7 +14,7 @@ struct PresentationDocument: FileDocument {
 
   var deck: PresentationDeck
 
-  init(deck: PresentationDeck = .sample) {
+  init(deck: PresentationDeck = .blank) {
     self.deck = deck
   }
 

@@ -27,7 +27,21 @@ fileprivate enum MarkdownEditorCommand {
 struct MarkdownTextEditorView: NSViewRepresentable {
   @Binding var text: String
   @ObservedObject var controller: MarkdownEditorController
+  let initialSelection: NSRange?
+  let focusesInitially: Bool
   @Environment(\.colorScheme) private var colorScheme
+
+  init(
+    text: Binding<String>,
+    controller: MarkdownEditorController,
+    initialSelection: NSRange? = nil,
+    focusesInitially: Bool = false
+  ) {
+    self._text = text
+    self.controller = controller
+    self.initialSelection = initialSelection
+    self.focusesInitially = focusesInitially
+  }
 
   func makeNSView(context: Context) -> NSScrollView {
     let scrollView = NSScrollView()
@@ -62,14 +76,17 @@ struct MarkdownTextEditorView: NSViewRepresentable {
     textView.maxSize = NSSize(width: CGFloat.greatestFiniteMagnitude, height: CGFloat.greatestFiniteMagnitude)
 
     scrollView.documentView = textView
-    context.coordinator.textView = textView
+    context.coordinator.attach(textView)
     applyAppearance(to: scrollView, textView: textView)
+    context.coordinator.applyInitialSelectionIfNeeded(to: textView)
     context.coordinator.publishState(for: textView)
     return scrollView
   }
 
   func updateNSView(_ scrollView: NSScrollView, context: Context) {
     context.coordinator.text = $text
+    context.coordinator.initialSelection = initialSelection
+    context.coordinator.focusesInitially = focusesInitially
 
     guard let textView = context.coordinator.textView else { return }
     applyAppearance(to: scrollView, textView: textView)
@@ -81,6 +98,8 @@ struct MarkdownTextEditorView: NSViewRepresentable {
       context.coordinator.publishState(for: textView)
     }
 
+    context.coordinator.applyInitialSelectionIfNeeded(to: textView)
+
     if context.coordinator.handledCommandVersion != controller.commandVersion,
        let command = controller.pendingCommand {
       context.coordinator.handledCommandVersion = controller.commandVersion
@@ -89,7 +108,12 @@ struct MarkdownTextEditorView: NSViewRepresentable {
   }
 
   func makeCoordinator() -> Coordinator {
-    Coordinator(text: $text, controller: controller)
+    Coordinator(
+      text: $text,
+      controller: controller,
+      initialSelection: initialSelection,
+      focusesInitially: focusesInitially
+    )
   }
 
   private static func clamped(_ range: NSRange, length: Int) -> NSRange {
@@ -120,14 +144,29 @@ struct MarkdownTextEditorView: NSViewRepresentable {
   @MainActor
   final class Coordinator: NSObject, NSTextViewDelegate {
     var text: Binding<String>
+    var initialSelection: NSRange?
+    var focusesInitially: Bool
     private let controller: MarkdownEditorController
     weak var textView: NSTextView?
     var handledCommandVersion = 0
     var isApplyingCommand = false
+    private var didApplyInitialSelection = false
 
-    init(text: Binding<String>, controller: MarkdownEditorController) {
+    init(
+      text: Binding<String>,
+      controller: MarkdownEditorController,
+      initialSelection: NSRange?,
+      focusesInitially: Bool
+    ) {
       self.text = text
       self.controller = controller
+      self.initialSelection = initialSelection
+      self.focusesInitially = focusesInitially
+    }
+
+    func attach(_ textView: NSTextView) {
+      self.textView = textView
+      didApplyInitialSelection = false
     }
 
     func textDidChange(_ notification: Notification) {
@@ -168,6 +207,35 @@ struct MarkdownTextEditorView: NSViewRepresentable {
       publishState(for: textView)
       textView.window?.makeFirstResponder(textView)
       textView.scrollRangeToVisible(result.selection)
+    }
+
+    func applyInitialSelectionIfNeeded(to textView: NSTextView) {
+      guard !didApplyInitialSelection, let initialSelection else { return }
+
+      let selection = MarkdownTextEditorView.clamped(
+        initialSelection,
+        length: (textView.string as NSString).length
+      )
+      textView.setSelectedRange(selection)
+      publishState(for: textView)
+      didApplyInitialSelection = true
+
+      guard focusesInitially else { return }
+      requestFocus(for: textView, selection: selection)
+    }
+
+    private func requestFocus(for textView: NSTextView, selection: NSRange, attemptsRemaining: Int = 5) {
+      DispatchQueue.main.async { [weak self, weak textView] in
+        guard let self, let textView else { return }
+
+        textView.setSelectedRange(selection)
+        if let window = textView.window {
+          window.makeFirstResponder(textView)
+          textView.scrollRangeToVisible(selection)
+        } else if attemptsRemaining > 0 {
+          self.requestFocus(for: textView, selection: selection, attemptsRemaining: attemptsRemaining - 1)
+        }
+      }
     }
 
     func publishState(for textView: NSTextView) {

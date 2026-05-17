@@ -14,10 +14,20 @@ struct EditorPaneView: View {
     VStack(spacing: 0) {
       toolbar
 
-      MarkdownTextEditorView(text: $slide.markdown, controller: editorController)
+      MarkdownTextEditorView(
+        text: $slide.markdown,
+        controller: editorController,
+        initialSelection: initialEditorSelection,
+        focusesInitially: initialEditorSelection != nil
+      )
         .id(editorIdentity)
         .background(.ultraThinMaterial)
     }
+  }
+
+  private var initialEditorSelection: NSRange? {
+    guard slide.markdown == PresentationDeck.defaultSlideMarkdown else { return nil }
+    return NSRange(location: PresentationDeck.defaultSlideCursorLocation, length: 0)
   }
 
   private var editorIdentity: String {
