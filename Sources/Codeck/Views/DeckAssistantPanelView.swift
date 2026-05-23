@@ -12,12 +12,13 @@ struct DeckAssistantPanelView: View {
   let onApply: ([DeckAssistantChange]) -> Void
 
   @State private var scope: DeckAssistantScope = .currentSlide
-  @State private var allowsWebResearch = true
+  @AppStorage("codeck.deckAssistant.allowsWebResearch") private var allowsWebResearch = false
   @State private var goal = ""
   @State private var proposal: DeckAssistantProposal = .empty
   @State private var selectedChangeIDs: Set<DeckAssistantChange.ID> = []
   @State private var parseError: String?
   @State private var parsedOutputText = ""
+  @State private var deckContextCache = DeckAssistantDeckContextCache()
 
   var body: some View {
     VStack(spacing: 0) {
@@ -120,7 +121,7 @@ struct DeckAssistantPanelView: View {
           Label(isRunning ? "Running" : "Ask Codex", systemImage: isRunning ? "hourglass" : "paperplane")
         }
         .keyboardShortcut(.defaultAction)
-        .disabled(!canRun)
+        .disabled(!canAskCodex)
         .codeckGlassButtonStyle(prominent: true)
       }
     }
@@ -269,6 +270,10 @@ struct DeckAssistantPanelView: View {
     !isRunning && !deck.slides.isEmpty
   }
 
+  private var canAskCodex: Bool {
+    canRun && !goal.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+  }
+
   private var selectedChanges: [DeckAssistantChange] {
     proposal.changes.filter { selectedChangeIDs.contains($0.id) }
   }
@@ -285,7 +290,7 @@ struct DeckAssistantPanelView: View {
     guard canRun(action) else { return }
 
     goal = action.prompt
-    runAssistant()
+    runAssistant(goalOverride: action.prompt)
   }
 
   private func canRun(_ action: DeckAssistantQuickAction) -> Bool {
@@ -304,55 +309,66 @@ struct DeckAssistantPanelView: View {
     return action.prompt
   }
 
-  private func runAssistant() {
-    guard canRun else { return }
+  private func runAssistant(goalOverride: String? = nil) {
+    let requestGoal = (goalOverride ?? goal).trimmingCharacters(in: .whitespacesAndNewlines)
+    guard canRun, !requestGoal.isEmpty else { return }
 
     parseError = nil
     parsedOutputText = ""
     proposal = DeckAssistantProposal(
-      title: "Codex is thinking",
-      summary: "Reviewing context and preparing structured slide edits.",
+      title: "Codex is drafting",
+      summary: "Using a fast pass with compact deck context.",
       changes: []
     )
     selectedChangeIDs = []
+    let deckOutline = deckContextCache.outline(for: deck)
 
     let prompt = DeckAssistantPromptBuilder.prompt(
-      goal: goal,
+      goal: requestGoal,
       scope: scope,
       allowsWebResearch: allowsWebResearch,
       deck: deck,
-      selectedSlideIndex: selectedSlideIndex
+      selectedSlideIndex: selectedSlideIndex,
+      deckOutline: deckOutline
+    )
+    let runSettings = DeckCodexSettings(
+      model: settings.model,
+      reasoning: .low,
+      sandbox: "read-only"
     )
 
     let block = CodexBlock(
       id: Self.assistantBlockID,
       prompt: prompt,
       model: settings.model,
-      reasoning: settings.reasoning,
+      reasoning: runSettings.reasoning,
       sandbox: "read-only",
       title: "Deck Assistant"
     )
 
     sessions.run(
       block,
-      settings: settings,
+      settings: runSettings,
       workingDirectory: workingDirectory,
-      allowsNetwork: allowsWebResearch
+      allowsNetwork: allowsWebResearch,
+      keepsSessionAlive: true
     )
   }
 
   private func handleAssistantOutput(_ output: CodexSessionOutput) {
-    guard output.state == .completed else { return }
+    guard output.state == .running || output.state == .completed else { return }
     guard output.text != parsedOutputText else { return }
-
-    parsedOutputText = output.text
+    guard !output.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
 
     do {
       let parsedProposal = try DeckAssistantProposalParser.proposal(from: output.text, deck: deck)
+      parsedOutputText = output.text
       proposal = parsedProposal
       selectedChangeIDs = Set(parsedProposal.changes.map(\.id))
       parseError = nil
     } catch {
+      guard output.state == .completed else { return }
+      parsedOutputText = output.text
       proposal = .empty
       selectedChangeIDs = []
       parseError = error.localizedDescription

@@ -24,9 +24,38 @@ final class DeckAssistantTests: XCTestCase {
     XCTAssertTrue(prompt.contains("Make this sharper."))
     XCTAssertTrue(prompt.contains("Web research:\nEnabled."))
     XCTAssertTrue(prompt.contains("Selected slide:\nindex: 1"))
+    XCTAssertTrue(prompt.contains("Deck outline:"))
+    XCTAssertTrue(prompt.contains("1. Evidence - Needs data."))
     XCTAssertTrue(prompt.contains("<slide index=\"0\" title=\"Intro\">"))
-    XCTAssertTrue(prompt.contains("<slide index=\"1\" title=\"Evidence\">"))
+    XCTAssertFalse(prompt.contains("<slide index=\"1\" title=\"Evidence\">"))
     XCTAssertTrue(prompt.contains("\"operation\": \"replace\""))
+  }
+
+  func testQuickPromptKeepsSlideScopeCompact() {
+    let deck = PresentationDeck(
+      settings: .default,
+      slides: [
+        Slide(markdown: "# Intro\n\nOpening summary.\n\nOpening private detail."),
+        Slide(markdown: "# Evidence\n\nSelected summary.\n\nSelected private detail."),
+        Slide(markdown: "# Nearby\n\nNeighbor summary.\n\nNeighbor private detail."),
+        Slide(markdown: "# Appendix\n\nFar summary.\n\nFar private detail.")
+      ]
+    )
+
+    let prompt = DeckAssistantPromptBuilder.prompt(
+      goal: "Improve this slide.",
+      scope: .currentSlide,
+      allowsWebResearch: false,
+      deck: deck,
+      selectedSlideIndex: 1,
+      currentDate: Date(timeIntervalSince1970: 0)
+    )
+
+    XCTAssertTrue(prompt.contains("Selected private detail."))
+    XCTAssertTrue(prompt.contains("Neighbor private detail."))
+    XCTAssertTrue(prompt.contains("3. Appendix - Far summary."))
+    XCTAssertFalse(prompt.contains("Far private detail."))
+    XCTAssertFalse(prompt.contains("<slide index=\"3\" title=\"Appendix\">"))
   }
 
   func testPromptForDisabledWebForbidsBrowsing() {

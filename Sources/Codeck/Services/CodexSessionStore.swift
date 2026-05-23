@@ -49,8 +49,18 @@ final class CodexSessionStore: ObservableObject {
     _ block: CodexBlock,
     settings: DeckCodexSettings = .default,
     workingDirectory: URL?,
-    allowsNetwork: Bool = false
+    allowsNetwork: Bool = false,
+    keepsSessionAlive: Bool = false
   ) {
+    if keepsSessionAlive, reuseSessionIfPossible(
+      block,
+      settings: settings,
+      workingDirectory: workingDirectory,
+      allowsNetwork: allowsNetwork
+    ) {
+      return
+    }
+
     stop(block.id)
 
     let process = CodexSessionRunner.makeProcess(for: block, settings: settings, workingDirectory: workingDirectory)
@@ -72,7 +82,8 @@ final class CodexSessionStore: ObservableObject {
       block: block,
       settings: settings,
       workingDirectory: workingDirectory,
-      allowsNetwork: allowsNetwork
+      allowsNetwork: allowsNetwork,
+      keepsSessionAlive: keepsSessionAlive
     )
 
     outputPipe.fileHandleForReading.readabilityHandler = { [weak self] handle in
@@ -146,27 +157,82 @@ final class CodexSessionStore: ObservableObject {
   }
 
   private struct AppServerContext {
-    let block: CodexBlock
-    let settings: DeckCodexSettings
-    let workingDirectory: URL
-    let sandboxMode: String
-    let allowsNetwork: Bool
+    var block: CodexBlock
+    var settings: DeckCodexSettings
+    var workingDirectory: URL
+    var sandboxMode: String
+    var allowsNetwork: Bool
+    var keepsSessionAlive: Bool
     let initializeRequestID: String
     let threadStartRequestID: String
-    let turnStartRequestID: String
+    var turnStartRequestID: String
+    var turnSequence: Int
     var threadID: String?
     var turnID: String?
 
-    init(block: CodexBlock, settings: DeckCodexSettings, workingDirectory: URL?, allowsNetwork: Bool) {
+    init(
+      block: CodexBlock,
+      settings: DeckCodexSettings,
+      workingDirectory: URL?,
+      allowsNetwork: Bool,
+      keepsSessionAlive: Bool
+    ) {
       self.block = block
       self.settings = settings
       self.workingDirectory = CodexSessionRunner.sessionWorkingDirectory(from: workingDirectory)
       self.sandboxMode = CodexSandbox.mode(for: block, settings: settings)
       self.allowsNetwork = allowsNetwork
+      self.keepsSessionAlive = keepsSessionAlive
       self.initializeRequestID = "\(block.id)-initialize"
       self.threadStartRequestID = "\(block.id)-thread-start"
-      self.turnStartRequestID = "\(block.id)-turn-start"
+      self.turnSequence = 0
+      self.turnStartRequestID = "\(block.id)-turn-start-0"
     }
+
+    mutating func prepareForNextTurn(
+      block: CodexBlock,
+      settings: DeckCodexSettings,
+      workingDirectory: URL?,
+      allowsNetwork: Bool
+    ) {
+      self.block = block
+      self.settings = settings
+      self.workingDirectory = CodexSessionRunner.sessionWorkingDirectory(from: workingDirectory)
+      self.sandboxMode = CodexSandbox.mode(for: block, settings: settings)
+      self.allowsNetwork = allowsNetwork
+      self.turnID = nil
+      self.turnSequence += 1
+      self.turnStartRequestID = "\(block.id)-turn-start-\(turnSequence)"
+    }
+  }
+
+  private func reuseSessionIfPossible(
+    _ block: CodexBlock,
+    settings: DeckCodexSettings,
+    workingDirectory: URL?,
+    allowsNetwork: Bool
+  ) -> Bool {
+    guard var context = appServerContexts[block.id],
+          context.keepsSessionAlive,
+          processes[block.id] != nil,
+          inputPipes[block.id] != nil,
+          let threadID = context.threadID,
+          output(for: block.id).state != .running else {
+      return false
+    }
+
+    context.prepareForNextTurn(
+      block: block,
+      settings: settings,
+      workingDirectory: workingDirectory,
+      allowsNetwork: allowsNetwork
+    )
+    appServerContexts[block.id] = context
+    outputs[block.id] = CodexSessionOutput(state: .running, text: "")
+    runningIDs.insert(block.id)
+    outputLineBuffers[block.id] = nil
+    sendTurnStart(to: block.id, threadID: threadID)
+    return true
   }
 
   private func append(_ text: String, to blockID: String, stream: SessionStream) {
@@ -309,7 +375,13 @@ final class CodexSessionStore: ObservableObject {
     }
 
     outputs[blockID] = output
-    terminate(blockID: blockID)
+
+    if completed, appServerContexts[blockID]?.keepsSessionAlive == true {
+      runningIDs.remove(blockID)
+      appServerContexts[blockID]?.turnID = nil
+    } else {
+      terminate(blockID: blockID)
+    }
   }
 
   private func fail(blockID: String, message: String) {

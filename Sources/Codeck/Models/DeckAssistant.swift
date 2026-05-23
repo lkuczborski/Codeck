@@ -110,6 +110,38 @@ enum DeckAssistantRunPolicy {
   }
 }
 
+struct DeckAssistantDeckContextCache: Hashable {
+  private(set) var fingerprint = ""
+  private(set) var outline = ""
+
+  mutating func outline(for deck: PresentationDeck) -> String {
+    let nextFingerprint = Self.fingerprint(for: deck)
+    guard nextFingerprint != fingerprint else { return outline }
+
+    fingerprint = nextFingerprint
+    outline = Self.makeOutline(for: deck)
+    return outline
+  }
+
+  static func makeOutline(for deck: PresentationDeck) -> String {
+    guard !deck.slides.isEmpty else { return "No slides." }
+
+    return deck.slides.enumerated().map { index, slide in
+      let summary = slide.summary.trimmingCharacters(in: .whitespacesAndNewlines)
+      let detail = summary.isEmpty ? "No summary." : summary
+      return "\(index). \(slide.title) - \(detail)"
+    }
+    .joined(separator: "\n")
+  }
+
+  private static func fingerprint(for deck: PresentationDeck) -> String {
+    deck.slides.map { slide in
+      "\(slide.id.uuidString)|\(slide.markdown)"
+    }
+    .joined(separator: "\n")
+  }
+}
+
 struct DeckAssistantProposal: Identifiable, Hashable {
   let id: UUID
   var title: String
@@ -165,6 +197,7 @@ enum DeckAssistantPromptBuilder {
     allowsWebResearch: Bool,
     deck: PresentationDeck,
     selectedSlideIndex: Int?,
+    deckOutline: String? = nil,
     currentDate: Date = Date()
   ) -> String {
     let selectedIndex = resolvedSelectedIndex(in: deck, selectedSlideIndex: selectedSlideIndex)
@@ -173,12 +206,18 @@ enum DeckAssistantPromptBuilder {
       ? DeckAssistantQuickAction.diagnose.prompt
       : trimmedGoal
     let currentDateString = ISO8601DateFormatter().string(from: currentDate)
+    let deckOutline = deckOutline ?? DeckAssistantDeckContextCache.makeOutline(for: deck)
+    let context = deckContext(
+      deck,
+      scope: scope,
+      selectedIndex: selectedIndex
+    )
 
     return """
     You are Codeck's interactive presentation assistant. You are running inside a Markdown slide editor.
 
     Your job:
-    - Read the full deck context and the selected slide.
+    - Read the deck outline, selected slide, and any included supporting slide markdown.
     - Decide what is missing, weak, too long, unsupported, or unclear.
     - Propose concrete slide edits that improve the presentation.
     - Keep the user's intent and existing voice unless the user asks for a different tone.
@@ -188,6 +227,9 @@ enum DeckAssistantPromptBuilder {
 
     Scope:
     \(scope.promptInstruction)
+
+    Response mode:
+    Run a fast targeted pass. Prefer the selected slide, deck outline, and nearby slide context over broad deck rewrites.
 
     Current date:
     \(currentDateString)
@@ -236,8 +278,11 @@ enum DeckAssistantPromptBuilder {
     Selected slide:
     \(selectedSlideDescription(in: deck, selectedIndex: selectedIndex))
 
-    Full deck:
-    \(deckContext(deck))
+    Deck outline:
+    \(deckOutline)
+
+    \(context.title):
+    \(context.body)
     """
   }
 
@@ -263,17 +308,50 @@ enum DeckAssistantPromptBuilder {
     """
   }
 
-  private static func deckContext(_ deck: PresentationDeck) -> String {
-    deck.slides.enumerated().map { index, slide in
-      """
-      <slide index="\(index)" title="\(escapeAttribute(slide.title))">
-      ~~~~markdown
-      \(slide.markdown)
-      ~~~~
-      </slide>
-      """
+  private static func deckContext(
+    _ deck: PresentationDeck,
+    scope: DeckAssistantScope,
+    selectedIndex: Int?
+  ) -> (title: String, body: String) {
+    switch scope {
+    case .currentSlide:
+      return ("Nearby slide context", nearbySlideContext(deck, selectedIndex: selectedIndex))
+    case .wholeDeck:
+      return ("Full deck", fullDeckContext(deck))
+    }
+  }
+
+  private static func nearbySlideContext(_ deck: PresentationDeck, selectedIndex: Int?) -> String {
+    guard let selectedIndex else { return "None" }
+
+    let nearbyIndices = [selectedIndex - 1, selectedIndex + 1]
+      .filter { deck.slides.indices.contains($0) }
+
+    guard !nearbyIndices.isEmpty else {
+      return "No adjacent slides."
+    }
+
+    return nearbyIndices.map { index in
+      slideContext(index: index, slide: deck.slides[index])
     }
     .joined(separator: "\n\n")
+  }
+
+  private static func fullDeckContext(_ deck: PresentationDeck) -> String {
+    deck.slides.enumerated().map { index, slide in
+      slideContext(index: index, slide: slide)
+    }
+    .joined(separator: "\n\n")
+  }
+
+  private static func slideContext(index: Int, slide: Slide) -> String {
+    """
+    <slide index="\(index)" title="\(escapeAttribute(slide.title))">
+    ~~~~markdown
+    \(slide.markdown)
+    ~~~~
+    </slide>
+    """
   }
 
   private static func escapeAttribute(_ value: String) -> String {
