@@ -45,7 +45,12 @@ final class CodexSessionStore: ObservableObject {
     outputs[blockID] ?? CodexSessionOutput(state: .idle, text: "")
   }
 
-  func run(_ block: CodexBlock, settings: DeckCodexSettings = .default, workingDirectory: URL?) {
+  func run(
+    _ block: CodexBlock,
+    settings: DeckCodexSettings = .default,
+    workingDirectory: URL?,
+    allowsNetwork: Bool = false
+  ) {
     stop(block.id)
 
     let process = CodexSessionRunner.makeProcess(for: block, settings: settings, workingDirectory: workingDirectory)
@@ -66,7 +71,8 @@ final class CodexSessionStore: ObservableObject {
     appServerContexts[block.id] = AppServerContext(
       block: block,
       settings: settings,
-      workingDirectory: workingDirectory
+      workingDirectory: workingDirectory,
+      allowsNetwork: allowsNetwork
     )
 
     outputPipe.fileHandleForReading.readabilityHandler = { [weak self] handle in
@@ -144,17 +150,19 @@ final class CodexSessionStore: ObservableObject {
     let settings: DeckCodexSettings
     let workingDirectory: URL
     let sandboxMode: String
+    let allowsNetwork: Bool
     let initializeRequestID: String
     let threadStartRequestID: String
     let turnStartRequestID: String
     var threadID: String?
     var turnID: String?
 
-    init(block: CodexBlock, settings: DeckCodexSettings, workingDirectory: URL?) {
+    init(block: CodexBlock, settings: DeckCodexSettings, workingDirectory: URL?, allowsNetwork: Bool) {
       self.block = block
       self.settings = settings
       self.workingDirectory = CodexSessionRunner.sessionWorkingDirectory(from: workingDirectory)
       self.sandboxMode = CodexSandbox.mode(for: block, settings: settings)
+      self.allowsNetwork = allowsNetwork
       self.initializeRequestID = "\(block.id)-initialize"
       self.threadStartRequestID = "\(block.id)-thread-start"
       self.turnStartRequestID = "\(block.id)-turn-start"
@@ -372,7 +380,8 @@ final class CodexSessionStore: ObservableObject {
     params["cwd"] = context.workingDirectory.path
     params["sandboxPolicy"] = CodexSandbox.turnPolicy(
       for: context.sandboxMode,
-      workingDirectory: context.workingDirectory
+      workingDirectory: context.workingDirectory,
+      allowsNetwork: context.allowsNetwork
     )
 
     params["model"] = context.block.model ?? context.settings.model

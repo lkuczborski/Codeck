@@ -100,6 +100,17 @@ final class CodexSessionRunnerTests: XCTestCase {
     XCTAssertEqual(policy["networkAccess"] as? Bool, false)
   }
 
+  func testReadOnlyTurnPolicyCanOptIntoNetwork() {
+    let policy = CodexSandbox.turnPolicy(
+      for: "read-only",
+      workingDirectory: URL(fileURLWithPath: "/tmp/deck", isDirectory: true),
+      allowsNetwork: true
+    )
+
+    XCTAssertEqual(policy["type"] as? String, "readOnly")
+    XCTAssertEqual(policy["networkAccess"] as? Bool, true)
+  }
+
   func testWorkspaceWriteTurnPolicyOnlyWritesWorkingDirectory() {
     let workingDirectory = URL(fileURLWithPath: "/tmp/deck", isDirectory: true)
 
@@ -110,6 +121,20 @@ final class CodexSessionRunnerTests: XCTestCase {
     XCTAssertEqual(policy["networkAccess"] as? Bool, false)
     XCTAssertEqual(policy["excludeTmpdirEnvVar"] as? Bool, false)
     XCTAssertEqual(policy["excludeSlashTmp"] as? Bool, false)
+  }
+
+  func testWorkspaceWriteTurnPolicyCanOptIntoNetwork() {
+    let workingDirectory = URL(fileURLWithPath: "/tmp/deck", isDirectory: true)
+
+    let policy = CodexSandbox.turnPolicy(
+      for: "workspace-write",
+      workingDirectory: workingDirectory,
+      allowsNetwork: true
+    )
+
+    XCTAssertEqual(policy["type"] as? String, "workspaceWrite")
+    XCTAssertEqual(policy["writableRoots"] as? [String], [workingDirectory.path])
+    XCTAssertEqual(policy["networkAccess"] as? Bool, true)
   }
 
   func testDangerFullAccessTurnPolicyRequiresExplicitDangerMode() {

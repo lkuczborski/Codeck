@@ -55,13 +55,17 @@ enum CodexSandbox {
     return supportedModes.contains(mode) ? mode : "read-only"
   }
 
-  static func turnPolicy(for mode: String, workingDirectory: URL) -> [String: Any] {
+  static func turnPolicy(
+    for mode: String,
+    workingDirectory: URL,
+    allowsNetwork: Bool = false
+  ) -> [String: Any] {
     switch normalizedMode(mode) {
     case "workspace-write":
       return [
         "type": "workspaceWrite",
         "writableRoots": [workingDirectory.path],
-        "networkAccess": false,
+        "networkAccess": allowsNetwork,
         "excludeTmpdirEnvVar": false,
         "excludeSlashTmp": false
       ]
@@ -72,7 +76,7 @@ enum CodexSandbox {
     default:
       return [
         "type": "readOnly",
-        "networkAccess": false
+        "networkAccess": allowsNetwork
       ]
     }
   }

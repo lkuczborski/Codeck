@@ -2,7 +2,7 @@ import CodeckCore
 import SwiftUI
 
 struct PresentationCommands: Commands {
-  @FocusedValue(\.previewVisibility) private var previewVisibility
+  @FocusedValue(\.rightUtilityActions) private var rightUtilityActions
   @FocusedValue(\.slideCommandActions) private var slideCommandActions
 
   var body: some Commands {
@@ -29,12 +29,58 @@ struct PresentationCommands: Commands {
 
       Divider()
 
-      Button(previewVisibility?.wrappedValue == true ? "Hide Preview" : "Show Preview") {
-        previewVisibility?.wrappedValue.toggle()
+      Button(rightUtilityActions?.isPreviewActive == true ? "Hide Preview" : "Show Preview") {
+        rightUtilityActions?.togglePreview()
       }
       .keyboardShortcut("0", modifiers: [.command, .option])
-      .disabled(previewVisibility == nil)
+      .disabled(rightUtilityActions == nil)
+
+      Button(rightUtilityActions?.isAssistantActive == true ? "Hide Deck Assistant" : "Show Deck Assistant") {
+        rightUtilityActions?.toggleAssistant()
+      }
+      .keyboardShortcut("1", modifiers: [.command, .option])
+      .disabled(rightUtilityActions == nil)
     }
+  }
+}
+
+enum DocumentRightUtilityPane: String, CaseIterable, Identifiable {
+  case preview
+  case assistant
+
+  var id: String { rawValue }
+
+  var title: String {
+    switch self {
+    case .preview:
+      "Preview"
+    case .assistant:
+      "Assistant"
+    }
+  }
+
+  var systemImage: String {
+    switch self {
+    case .preview:
+      "play.rectangle"
+    case .assistant:
+      "sparkles"
+    }
+  }
+}
+
+struct DocumentRightUtilityActions {
+  let isVisible: Bool
+  let mode: DocumentRightUtilityPane
+  let togglePreview: () -> Void
+  let toggleAssistant: () -> Void
+
+  var isPreviewActive: Bool {
+    isVisible && mode == .preview
+  }
+
+  var isAssistantActive: Bool {
+    isVisible && mode == .assistant
   }
 }
 
@@ -97,8 +143,8 @@ private struct SlideCommandActionsFocusedKey: FocusedValueKey {
   typealias Value = SlideCommandActions
 }
 
-private struct PreviewVisibilityFocusedKey: FocusedValueKey {
-  typealias Value = Binding<Bool>
+private struct RightUtilityActionsFocusedKey: FocusedValueKey {
+  typealias Value = DocumentRightUtilityActions
 }
 
 extension FocusedValues {
@@ -107,8 +153,8 @@ extension FocusedValues {
     set { self[SlideCommandActionsFocusedKey.self] = newValue }
   }
 
-  var previewVisibility: Binding<Bool>? {
-    get { self[PreviewVisibilityFocusedKey.self] }
-    set { self[PreviewVisibilityFocusedKey.self] = newValue }
+  var rightUtilityActions: DocumentRightUtilityActions? {
+    get { self[RightUtilityActionsFocusedKey.self] }
+    set { self[RightUtilityActionsFocusedKey.self] = newValue }
   }
 }
