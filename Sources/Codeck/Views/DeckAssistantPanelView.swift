@@ -442,21 +442,22 @@ private struct MarkdownSnippetView: View {
   let markdown: String
 
   var body: some View {
-    VStack(alignment: .leading, spacing: 4) {
+    VStack(alignment: .leading, spacing: 6) {
       Text(title)
         .font(.caption2.weight(.semibold))
         .foregroundStyle(.secondary)
 
-      ScrollView(.horizontal) {
+      ScrollView([.horizontal, .vertical]) {
         Text(markdown)
           .font(.system(size: 11, design: .monospaced))
           .textSelection(.enabled)
-          .fixedSize(horizontal: false, vertical: true)
-          .frame(maxWidth: .infinity, alignment: .leading)
+          .fixedSize(horizontal: true, vertical: true)
           .padding(8)
       }
-      .frame(maxHeight: 170)
+      .frame(maxWidth: .infinity, minHeight: 44, maxHeight: 170, alignment: .topLeading)
       .background(Color.secondary.opacity(0.08), in: RoundedRectangle(cornerRadius: 6, style: .continuous))
+      .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
     }
+    .frame(maxWidth: .infinity, alignment: .leading)
   }
 }

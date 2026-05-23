@@ -11,6 +11,7 @@ struct DocumentWindowView: View {
   @SceneStorage("selectedSlideID") private var selectedSlideIDString: String?
   @SceneStorage("isRightUtilityVisible") private var isRightUtilityVisible = true
   @SceneStorage("rightUtilityMode") private var rightUtilityModeRawValue = DocumentRightUtilityPane.preview.rawValue
+  @SceneStorage("compactDetailPaneSelection") private var compactPaneRawValue = CompactDetailPane.editor.rawValue
   @AppStorage(AppAppearanceMode.storageKey) private var appAppearanceModeRawValue = AppAppearanceMode.automatic.rawValue
   @State private var columnVisibility: NavigationSplitViewVisibility = .all
   @State private var appearanceRefreshID = UUID()
@@ -501,29 +502,18 @@ struct DocumentWindowView: View {
   }
 
   private var compactPane: CompactDetailPane {
-    guard isRightUtilityVisible else { return .editor }
-
-    switch rightUtilityMode {
-    case .preview:
-      return .preview
-    case .assistant:
-      return .assistant
+    get {
+      CompactDetailPane(rawValue: compactPaneRawValue) ?? .editor
+    }
+    nonmutating set {
+      compactPaneRawValue = newValue.rawValue
     }
   }
 
   private var compactPaneBinding: Binding<CompactDetailPane> {
     Binding(
       get: { compactPane },
-      set: { pane in
-        switch pane {
-        case .editor:
-          hideRightUtility()
-        case .preview:
-          showRightUtility(.preview)
-        case .assistant:
-          showRightUtility(.assistant)
-        }
-      }
+      set: { compactPane = $0 }
     )
   }
 
