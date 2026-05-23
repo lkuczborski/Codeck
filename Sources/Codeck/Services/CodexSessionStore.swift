@@ -164,8 +164,9 @@ final class CodexSessionStore: ObservableObject {
     var allowsNetwork: Bool
     var keepsSessionAlive: Bool
     let initializeRequestID: String
-    let threadStartRequestID: String
+    var threadStartRequestID: String
     var turnStartRequestID: String
+    var threadSequence: Int
     var turnSequence: Int
     var threadID: String?
     var turnID: String?
@@ -184,12 +185,13 @@ final class CodexSessionStore: ObservableObject {
       self.allowsNetwork = allowsNetwork
       self.keepsSessionAlive = keepsSessionAlive
       self.initializeRequestID = "\(block.id)-initialize"
-      self.threadStartRequestID = "\(block.id)-thread-start"
+      self.threadSequence = 0
       self.turnSequence = 0
+      self.threadStartRequestID = "\(block.id)-thread-start-0"
       self.turnStartRequestID = "\(block.id)-turn-start-0"
     }
 
-    mutating func prepareForNextTurn(
+    mutating func prepareForNextRequest(
       block: CodexBlock,
       settings: DeckCodexSettings,
       workingDirectory: URL?,
@@ -200,8 +202,11 @@ final class CodexSessionStore: ObservableObject {
       self.workingDirectory = CodexSessionRunner.sessionWorkingDirectory(from: workingDirectory)
       self.sandboxMode = CodexSandbox.mode(for: block, settings: settings)
       self.allowsNetwork = allowsNetwork
+      self.threadID = nil
       self.turnID = nil
+      self.threadSequence += 1
       self.turnSequence += 1
+      self.threadStartRequestID = "\(block.id)-thread-start-\(threadSequence)"
       self.turnStartRequestID = "\(block.id)-turn-start-\(turnSequence)"
     }
   }
@@ -216,12 +221,11 @@ final class CodexSessionStore: ObservableObject {
           context.keepsSessionAlive,
           processes[block.id] != nil,
           inputPipes[block.id] != nil,
-          let threadID = context.threadID,
           output(for: block.id).state != .running else {
       return false
     }
 
-    context.prepareForNextTurn(
+    context.prepareForNextRequest(
       block: block,
       settings: settings,
       workingDirectory: workingDirectory,
@@ -231,7 +235,7 @@ final class CodexSessionStore: ObservableObject {
     outputs[block.id] = CodexSessionOutput(state: .running, text: "")
     runningIDs.insert(block.id)
     outputLineBuffers[block.id] = nil
-    sendTurnStart(to: block.id, threadID: threadID)
+    sendThreadStart(to: block.id)
     return true
   }
 
@@ -378,6 +382,7 @@ final class CodexSessionStore: ObservableObject {
 
     if completed, appServerContexts[blockID]?.keepsSessionAlive == true {
       runningIDs.remove(blockID)
+      appServerContexts[blockID]?.threadID = nil
       appServerContexts[blockID]?.turnID = nil
     } else {
       terminate(blockID: blockID)
