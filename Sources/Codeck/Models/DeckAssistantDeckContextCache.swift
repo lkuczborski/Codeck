@@ -25,7 +25,7 @@ struct DeckAssistantDeckContextCache: Hashable {
     .joined(separator: "\n")
   }
 
-  private static func fingerprint(for deck: PresentationDeck) -> String {
+  static func fingerprint(for deck: PresentationDeck) -> String {
     deck.slides.map { slide in
       "\(slide.id.uuidString)|\(slide.markdown)"
     }

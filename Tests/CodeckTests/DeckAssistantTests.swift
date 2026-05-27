@@ -100,6 +100,31 @@ final class DeckAssistantTests: XCTestCase {
     )
   }
 
+  func testDeckFingerprintChangesForContentAndOrder() {
+    let firstSlide = Slide(
+      id: UUID(uuidString: "00000000-0000-0000-0000-000000000001")!,
+      markdown: "# Intro\n\nOpening."
+    )
+    let secondSlide = Slide(
+      id: UUID(uuidString: "00000000-0000-0000-0000-000000000002")!,
+      markdown: "# Evidence\n\nProof."
+    )
+    let deck = PresentationDeck(settings: .default, slides: [firstSlide, secondSlide])
+    let originalFingerprint = DeckAssistantDeckContextCache.fingerprint(for: deck)
+
+    let editedDeck = PresentationDeck(
+      settings: .default,
+      slides: [
+        Slide(id: firstSlide.id, markdown: "# Intro\n\nEdited."),
+        secondSlide
+      ]
+    )
+    let reorderedDeck = PresentationDeck(settings: .default, slides: [secondSlide, firstSlide])
+
+    XCTAssertNotEqual(DeckAssistantDeckContextCache.fingerprint(for: editedDeck), originalFingerprint)
+    XCTAssertNotEqual(DeckAssistantDeckContextCache.fingerprint(for: reorderedDeck), originalFingerprint)
+  }
+
   func testParserBuildsReplacementAndInsertChangesFromFencedJSON() throws {
     let deck = PresentationDeck(
       settings: .default,

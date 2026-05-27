@@ -19,6 +19,8 @@ struct DeckAssistantPanelView: View {
   @State private var parseError: String?
   @State private var parsedOutputText = ""
   @State private var deckContextCache = DeckAssistantDeckContextCache()
+  @State private var activeRunDeck: PresentationDeck?
+  @State private var activeRunFingerprint: String?
 
   var body: some View {
     VStack(spacing: 0) {
@@ -45,7 +47,7 @@ struct DeckAssistantPanelView: View {
       handleAssistantOutput(output)
     }
     .onChange(of: deck) { _, _ in
-      resetProposalIfIdle()
+      handleDeckChange()
     }
     .onChange(of: selectedSlideIndex) { _, _ in
       resetProposalIfIdle()
@@ -321,13 +323,18 @@ struct DeckAssistantPanelView: View {
       changes: []
     )
     selectedChangeIDs = []
-    let deckOutline = deckContextCache.outline(for: deck)
+    let runDeck = deck
+    let runDeckFingerprint = DeckAssistantDeckContextCache.fingerprint(for: runDeck)
+    activeRunDeck = runDeck
+    activeRunFingerprint = runDeckFingerprint
+
+    let deckOutline = deckContextCache.outline(for: runDeck)
 
     let prompt = DeckAssistantPromptBuilder.prompt(
       goal: requestGoal,
       scope: scope,
       allowsWebResearch: allowsWebResearch,
-      deck: deck,
+      deck: runDeck,
       selectedSlideIndex: selectedSlideIndex,
       deckOutline: deckOutline
     )
@@ -359,20 +366,53 @@ struct DeckAssistantPanelView: View {
     guard output.state == .running || output.state == .completed else { return }
     guard output.text != parsedOutputText else { return }
     guard !output.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
+    guard let activeRunDeck, let activeRunFingerprint else { return }
+
+    guard DeckAssistantDeckContextCache.fingerprint(for: deck) == activeRunFingerprint else {
+      invalidateActiveRunDueToDeckChange()
+      return
+    }
 
     do {
-      let parsedProposal = try DeckAssistantProposalParser.proposal(from: output.text, deck: deck)
+      let parsedProposal = try DeckAssistantProposalParser.proposal(from: output.text, deck: activeRunDeck)
       parsedOutputText = output.text
       proposal = parsedProposal
       selectedChangeIDs = Set(parsedProposal.changes.map(\.id))
       parseError = nil
+      if output.state == .completed {
+        self.activeRunDeck = nil
+        self.activeRunFingerprint = nil
+      }
     } catch {
       guard output.state == .completed else { return }
       parsedOutputText = output.text
       proposal = .empty
       selectedChangeIDs = []
       parseError = error.localizedDescription
+      self.activeRunDeck = nil
+      self.activeRunFingerprint = nil
     }
+  }
+
+  private func handleDeckChange() {
+    guard isRunning else {
+      resetProposalIfIdle()
+      return
+    }
+
+    guard let activeRunFingerprint else { return }
+    guard DeckAssistantDeckContextCache.fingerprint(for: deck) != activeRunFingerprint else { return }
+    invalidateActiveRunDueToDeckChange()
+  }
+
+  private func invalidateActiveRunDueToDeckChange() {
+    activeRunDeck = nil
+    activeRunFingerprint = nil
+    proposal = .empty
+    selectedChangeIDs = []
+    parsedOutputText = ""
+    parseError = "The deck changed while Codex was reviewing it. Run Assistant again to use the latest slides."
+    sessions.stop(Self.assistantBlockID)
   }
 
   private func resetProposalIfIdle() {
@@ -381,6 +421,8 @@ struct DeckAssistantPanelView: View {
     selectedChangeIDs = []
     parseError = nil
     parsedOutputText = ""
+    activeRunDeck = nil
+    activeRunFingerprint = nil
   }
 }
 
