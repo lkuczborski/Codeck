@@ -9,8 +9,9 @@ struct DocumentWindowView: View {
   @StateObject private var modelCatalog = CodexModelCatalogStore()
   @StateObject private var presentationPresenter = PresentationPresenter()
   @SceneStorage("selectedSlideID") private var selectedSlideIDString: String?
-  @SceneStorage("isPreviewVisible") private var isPreviewVisible = true
-  @SceneStorage("compactDetailPane") private var compactPaneRawValue = "editor"
+  @SceneStorage("isRightUtilityVisible") private var isRightUtilityVisible = true
+  @SceneStorage("rightUtilityMode") private var rightUtilityModeRawValue = DocumentRightUtilityPane.preview.rawValue
+  @SceneStorage("compactDetailPaneSelection") private var compactPaneRawValue = CompactDetailPane.editor.rawValue
   @AppStorage(AppAppearanceMode.storageKey) private var appAppearanceModeRawValue = AppAppearanceMode.automatic.rawValue
   @State private var columnVisibility: NavigationSplitViewVisibility = .all
   @State private var appearanceRefreshID = UUID()
@@ -71,7 +72,7 @@ struct DocumentWindowView: View {
         ToolbarSpacer(.fixed)
 
         ToolbarItem(placement: .automatic) {
-          previewVisibilityToolbarButton
+          rightUtilityToolbarButton
         }
         .sharedBackgroundVisibility(.hidden)
       } else {
@@ -84,11 +85,11 @@ struct DocumentWindowView: View {
         }
 
         ToolbarItem(placement: .automatic) {
-          previewVisibilityToolbarButton
+          rightUtilityToolbarButton
         }
       }
     }
-    .focusedValue(\.previewVisibility, $isPreviewVisible)
+    .focusedValue(\.rightUtilityActions, rightUtilityActions)
     .focusedSceneValue(
       \.slideCommandActions,
       SlideCommandActions(
@@ -151,13 +152,13 @@ struct DocumentWindowView: View {
     .codeckToolbarIconButtonStyle(prominent: true)
   }
 
-  private var previewVisibilityToolbarButton: some View {
+  private var rightUtilityToolbarButton: some View {
     Button {
-      isPreviewVisible.toggle()
+      toggleRightUtilityVisibility()
     } label: {
-      Label(isPreviewVisible ? "Hide Preview" : "Show Preview", systemImage: "sidebar.right")
+      Label(isRightUtilityVisible ? "Hide Right Pane" : "Show Right Pane", systemImage: "sidebar.right")
     }
-    .help(isPreviewVisible ? "Hide preview" : "Show preview")
+    .help(isRightUtilityVisible ? "Hide right pane" : "Show right pane")
     .codeckToolbarIconButtonStyle()
   }
 
@@ -167,23 +168,75 @@ struct DocumentWindowView: View {
       GeometryReader { proxy in
         let isCompact = proxy.size.width < 780
 
-        if isPreviewVisible, isCompact {
-          compactDetail(slide)
-        } else if isPreviewVisible {
-          HSplitView {
-            editorPane(slide)
-              .frame(minWidth: 320, idealWidth: 520)
-
-            previewPane(slide.wrappedValue)
-              .frame(minWidth: 340, idealWidth: 640)
-          }
-        } else {
-          editorPane(slide)
-        }
+        detailWorkspace(slide, isCompact: isCompact)
       }
     } else {
       ContentUnavailableView("No Slide", systemImage: "rectangle.stack", description: Text("Create a slide to start editing."))
     }
+  }
+
+  @ViewBuilder
+  private func detailWorkspace(_ slide: Binding<Slide>, isCompact: Bool) -> some View {
+    if isCompact {
+      compactDetail(slide)
+    } else if isRightUtilityVisible {
+      HSplitView {
+        editorPane(slide)
+          .frame(minWidth: 320, idealWidth: 520)
+
+        rightUtilityContainer(slide)
+          .frame(minWidth: 340, idealWidth: rightUtilityIdealWidth)
+      }
+    } else {
+      editorPane(slide)
+    }
+  }
+
+  private func rightUtilityContainer(_ slide: Binding<Slide>) -> some View {
+    VStack(spacing: 0) {
+      rightUtilityModeSelector
+
+      rightUtilityPane(slide)
+    }
+  }
+
+  private var rightUtilityModeSelector: some View {
+    ZStack {
+      Picker("Right Pane", selection: rightUtilityModeBinding) {
+        ForEach(DocumentRightUtilityPane.allCases) { pane in
+          Label(pane.title, systemImage: pane.systemImage)
+            .tag(pane)
+        }
+      }
+      .pickerStyle(.segmented)
+      .labelsHidden()
+      .frame(width: 260)
+    }
+    .frame(maxWidth: .infinity)
+    .padding(10)
+    .padding(.horizontal, 10)
+    .padding(.vertical, 8)
+  }
+
+  @ViewBuilder
+  private func rightUtilityPane(_ slide: Binding<Slide>) -> some View {
+    switch rightUtilityMode {
+    case .preview:
+      previewPane(slide.wrappedValue)
+    case .assistant:
+      deckAssistantPane
+    }
+  }
+
+  private var deckAssistantPane: some View {
+    DeckAssistantPanelView(
+      deck: document.deck,
+      selectedSlideIndex: effectiveSelectedSlideIndex,
+      settings: document.deck.settings.codex,
+      workingDirectory: fileURL?.deletingLastPathComponent(),
+      sessions: sessionStore,
+      onApply: applyAssistantChanges
+    )
   }
 
   private func compactDetail(_ slide: Binding<Slide>) -> some View {
@@ -206,6 +259,8 @@ struct DocumentWindowView: View {
         editorPane(slide)
       case .preview:
         previewPane(slide.wrappedValue)
+      case .assistant:
+        deckAssistantPane
       }
     }
   }
@@ -285,6 +340,44 @@ struct DocumentWindowView: View {
   private func insertTemplateSlide(_ template: SlideTemplate) {
     slideCommandActions.addSlide(from: template)
     isShowingTemplatePicker = false
+  }
+
+  private func applyAssistantChanges(_ changes: [DeckAssistantChange]) {
+    guard !changes.isEmpty else { return }
+
+    var deck = document.deck
+    var selectedIndexAfterApply: Int?
+
+    for change in changes {
+      switch change.operation {
+      case .replace(let index):
+        guard deck.slides.indices.contains(index) else { continue }
+        deck.slides[index].markdown = change.afterMarkdown
+        selectedIndexAfterApply = index
+      case .insert:
+        continue
+      }
+    }
+
+    let insertions = changes.compactMap { change -> (position: Int, markdown: String)? in
+      guard case .insert(let position) = change.operation else { return nil }
+      return (position, change.afterMarkdown)
+    }
+    .sorted { $0.position < $1.position }
+
+    for (offset, insertion) in insertions.enumerated() {
+      let insertionIndex = min(max(insertion.position + offset, 0), deck.slides.count)
+      deck.slides.insert(Slide(markdown: insertion.markdown), at: insertionIndex)
+      selectedIndexAfterApply = insertionIndex
+    }
+
+    document.deck = deck
+
+    if let selectedIndexAfterApply, deck.slides.indices.contains(selectedIndexAfterApply) {
+      selectedSlideID = deck.slides[selectedIndexAfterApply].id
+    } else {
+      ensureSelection()
+    }
   }
 
   private func duplicateSlide() {
@@ -390,14 +483,53 @@ struct DocumentWindowView: View {
     LiveMCPDocumentRegistry.shared.unregister(liveMCPDocumentID)
   }
 
+  private var rightUtilityMode: DocumentRightUtilityPane {
+    get {
+      DocumentRightUtilityPane(rawValue: rightUtilityModeRawValue) ?? .preview
+    }
+    nonmutating set {
+      rightUtilityModeRawValue = newValue.rawValue
+    }
+  }
+
+  private var rightUtilityIdealWidth: CGFloat {
+    switch rightUtilityMode {
+    case .preview:
+      640
+    case .assistant:
+      460
+    }
+  }
+
   private var compactPane: CompactDetailPane {
-    CompactDetailPane(rawValue: compactPaneRawValue) ?? .editor
+    get {
+      CompactDetailPane(rawValue: compactPaneRawValue) ?? .editor
+    }
+    nonmutating set {
+      compactPaneRawValue = newValue.rawValue
+    }
   }
 
   private var compactPaneBinding: Binding<CompactDetailPane> {
     Binding(
       get: { compactPane },
-      set: { compactPaneRawValue = $0.rawValue }
+      set: { compactPane = $0 }
+    )
+  }
+
+  private var rightUtilityModeBinding: Binding<DocumentRightUtilityPane> {
+    Binding(
+      get: { rightUtilityMode },
+      set: { showRightUtility($0) }
+    )
+  }
+
+  private var rightUtilityActions: DocumentRightUtilityActions {
+    DocumentRightUtilityActions(
+      isVisible: isRightUtilityVisible,
+      mode: rightUtilityMode,
+      togglePreview: { toggleRightUtility(.preview) },
+      toggleAssistant: { toggleRightUtility(.assistant) }
     )
   }
 
@@ -408,11 +540,37 @@ struct DocumentWindowView: View {
       presentTemplatePicker: showTemplatePicker
     )
   }
+
+  private func isRightUtilityActive(_ mode: DocumentRightUtilityPane) -> Bool {
+    isRightUtilityVisible && rightUtilityMode == mode
+  }
+
+  private func toggleRightUtility(_ mode: DocumentRightUtilityPane) {
+    if isRightUtilityActive(mode) {
+      hideRightUtility()
+    } else {
+      showRightUtility(mode)
+    }
+  }
+
+  private func toggleRightUtilityVisibility() {
+    isRightUtilityVisible.toggle()
+  }
+
+  private func showRightUtility(_ mode: DocumentRightUtilityPane) {
+    rightUtilityMode = mode
+    isRightUtilityVisible = true
+  }
+
+  private func hideRightUtility() {
+    isRightUtilityVisible = false
+  }
 }
 
 private enum CompactDetailPane: String, CaseIterable, Identifiable {
   case editor
   case preview
+  case assistant
 
   var id: String { rawValue }
 
@@ -422,6 +580,8 @@ private enum CompactDetailPane: String, CaseIterable, Identifiable {
       "Editor"
     case .preview:
       "Preview"
+    case .assistant:
+      "Assistant"
     }
   }
 
@@ -431,6 +591,8 @@ private enum CompactDetailPane: String, CaseIterable, Identifiable {
       "pencil"
     case .preview:
       "play.rectangle"
+    case .assistant:
+      "sparkles"
     }
   }
 }

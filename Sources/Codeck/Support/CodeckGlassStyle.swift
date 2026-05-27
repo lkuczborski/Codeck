@@ -29,11 +29,13 @@ extension View {
 
   @ViewBuilder
   func codeckToolbarIconButtonStyle(prominent: Bool = false) -> some View {
+    let buttonWidth: CGFloat = 48
+    let buttonHeight: CGFloat = 36
     let button = self
       .labelStyle(.iconOnly)
       .font(.system(size: 19, weight: .medium))
       .imageScale(.large)
-      .frame(width: 48, height: 36)
+      .frame(width: buttonWidth, height: buttonHeight)
       .contentShape(.rect(cornerRadius: 18))
       .controlSize(.large)
       .buttonBorderShape(.capsule)
@@ -42,17 +44,21 @@ extension View {
       if prominent {
         button
           .buttonStyle(.glassProminent)
+          .frame(width: buttonWidth, height: buttonHeight)
       } else {
         button
           .buttonStyle(.glass)
+          .frame(width: buttonWidth, height: buttonHeight)
       }
     } else {
       if prominent {
         button
           .buttonStyle(.borderedProminent)
+          .frame(width: buttonWidth, height: buttonHeight)
       } else {
         button
           .buttonStyle(.bordered)
+          .frame(width: buttonWidth, height: buttonHeight)
       }
     }
   }
