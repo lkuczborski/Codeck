@@ -317,7 +317,7 @@ struct DeckAssistantPanelView: View {
     parsedOutputText = ""
     proposal = DeckAssistantProposal(
       title: "Codex is drafting",
-      summary: "Using a fast pass with compact deck context.",
+      summary: "Using the selected deck context.",
       changes: []
     )
     selectedChangeIDs = []
@@ -447,16 +447,15 @@ private struct MarkdownSnippetView: View {
         .font(.caption2.weight(.semibold))
         .foregroundStyle(.secondary)
 
-      ScrollView([.horizontal, .vertical]) {
-        Text(markdown)
-          .font(.system(size: 11, design: .monospaced))
-          .textSelection(.enabled)
-          .fixedSize(horizontal: true, vertical: true)
-          .padding(8)
-      }
-      .frame(maxWidth: .infinity, minHeight: 44, maxHeight: 170, alignment: .topLeading)
+      Text(markdown)
+        .font(.system(size: 11, design: .monospaced))
+        .textSelection(.enabled)
+        .multilineTextAlignment(.leading)
+        .lineLimit(nil)
+        .fixedSize(horizontal: false, vertical: true)
+        .frame(maxWidth: .infinity, alignment: .topLeading)
+        .padding(8)
       .background(Color.secondary.opacity(0.08), in: RoundedRectangle(cornerRadius: 6, style: .continuous))
-      .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
     }
     .frame(maxWidth: .infinity, alignment: .leading)
   }

@@ -9,11 +9,7 @@ codex:
 ---
 # Codeck Feature Carnival
 
-A Markdown slide editor where decks stay plain text, previews update live, and Codex can run directly inside a slide.
-
-- Write and version decks as `.mdeck` files
-- Preview, theme, and present without exporting
-- Turn fenced `codex` blocks into live demo cards
+A quick, playful tour of Markdown slides, live Codex cards, themes, preview, and presentation mode.
 
 ![Codeck screenshot](https://raw.githubusercontent.com/lkuczborski/Codeck/refs/heads/main/screenshot.png)
 

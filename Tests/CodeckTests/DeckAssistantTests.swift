@@ -167,7 +167,7 @@ final class DeckAssistantTests: XCTestCase {
       """
 
     XCTAssertThrowsError(try DeckAssistantProposalParser.proposal(from: response, deck: deck)) { error in
-      XCTAssertEqual(error as? DeckAssistantProposalParser.ParseError, .noValidChanges)
+      XCTAssertEqual(error as? DeckAssistantProposalParseError, .noValidChanges)
     }
   }
 }
