@@ -1,3 +1,4 @@
+import AppKit
 import CodeckCore
 import SwiftUI
 
@@ -8,6 +9,7 @@ struct DocumentWindowView: View {
   @StateObject private var sessionStore = CodexSessionStore()
   @StateObject private var modelCatalog = CodexModelCatalogStore()
   @StateObject private var presentationPresenter = PresentationPresenter()
+  @StateObject private var presentationPreviewPresenter = PresentationPreviewPresenter()
   @SceneStorage("selectedSlideID") private var selectedSlideIDString: String?
   @SceneStorage("isRightUtilityVisible") private var isRightUtilityVisible = true
   @SceneStorage("rightUtilityMode") private var rightUtilityModeRawValue = DocumentRightUtilityPane.preview.rawValue
@@ -17,6 +19,11 @@ struct DocumentWindowView: View {
   @State private var appearanceRefreshID = UUID()
   @State private var liveMCPDocumentID = UUID()
   @State private var isShowingTemplatePicker = false
+  @State private var isPlayPreviewPopoverPresented = false
+  @State private var isPlayButtonHovered = false
+  @State private var isPlayPreviewPopoverHovered = false
+  @State private var playPreviewSkimmedSlideIndex: Int?
+  @State private var playPreviewHoverRequestID = UUID()
 
   private var selectedSlideID: Slide.ID? {
     get {
@@ -108,15 +115,31 @@ struct DocumentWindowView: View {
     .onAppear(perform: ensureSelection)
     .onAppear(perform: applyStoredAppAppearance)
     .onAppear(perform: registerLiveMCPDocument)
-    .onDisappear(perform: unregisterLiveMCPDocument)
+    .onDisappear {
+      unregisterLiveMCPDocument()
+      presentationPreviewPresenter.dismiss()
+    }
     .onChange(of: fileURL) { _, _ in
       registerLiveMCPDocument()
+      updateDetachedPresentationPreview()
     }
     .onChange(of: appAppearanceModeRawValue) { _, rawValue in
       applyAppAppearance(rawValue: rawValue)
     }
     .onChange(of: document.deck.slides) { _, _ in
       ensureSelection()
+      updateDetachedPresentationPreview()
+    }
+    .onChange(of: document.deck.settings) { _, _ in
+      updateDetachedPresentationPreview()
+    }
+    .onChange(of: selectedSlideIDString) { _, _ in
+      updateDetachedPresentationPreview()
+    }
+    .onChange(of: presentationPreviewPresenter.isPresented) { _, isPresented in
+      if isPresented {
+        hidePlayPreviewPopover()
+      }
     }
     .task {
       await modelCatalog.refresh()
@@ -139,6 +162,7 @@ struct DocumentWindowView: View {
 
   private var playToolbarButton: some View {
     Button {
+      hidePlayPreviewPopover()
       presentationPresenter.present(
         deck: document.deck,
         selectedSlideID: selectedSlideID,
@@ -150,6 +174,22 @@ struct DocumentWindowView: View {
     }
     .help("Start presentation")
     .codeckToolbarIconButtonStyle(prominent: true)
+    .onHover(perform: setPlayButtonPreviewHover)
+    .popover(isPresented: $isPlayPreviewPopoverPresented, arrowEdge: .bottom) {
+      playPreviewPopover
+    }
+  }
+
+  private var playPreviewPopover: some View {
+    PresentationSlidePreviewPopover(
+      deck: document.deck,
+      selectedSlideID: effectiveSelectedSlideID,
+      sessions: sessionStore,
+      baseURL: fileURL?.deletingLastPathComponent(),
+      skimmedSlideIndex: $playPreviewSkimmedSlideIndex,
+      onHoverChanged: setPlayPreviewPopoverHover,
+      onDetach: showDetachedPresentationPreview
+    )
   }
 
   private var rightUtilityToolbarButton: some View {
@@ -287,6 +327,88 @@ struct DocumentWindowView: View {
         sessionStore.runAll(blocks, settings: document.deck.settings.codex, workingDirectory: fileURL?.deletingLastPathComponent())
       }
     )
+  }
+
+  private func showDetachedPresentationPreview(startingAt slideIndex: Int?) {
+    hidePlayPreviewPopover()
+    presentationPreviewPresenter.present(
+      deck: document.deck,
+      selectedSlideID: effectiveSelectedSlideID,
+      fallbackSlideIndex: clampedSlideIndex(slideIndex),
+      baseURL: fileURL?.deletingLastPathComponent(),
+      sessions: sessionStore,
+      anchorScreenPoint: NSEvent.mouseLocation
+    )
+  }
+
+  private func setPlayButtonPreviewHover(_ isHovered: Bool) {
+    isPlayButtonHovered = isHovered
+    guard !presentationPreviewPresenter.isPresented else {
+      hidePlayPreviewPopover()
+      return
+    }
+
+    if isHovered {
+      schedulePlayPreviewPopoverPresentation()
+    } else {
+      schedulePlayPreviewPopoverDismiss()
+    }
+  }
+
+  private func setPlayPreviewPopoverHover(_ isHovered: Bool) {
+    isPlayPreviewPopoverHovered = isHovered
+    if isHovered {
+      showPlayPreviewPopover()
+    } else {
+      schedulePlayPreviewPopoverDismiss()
+    }
+  }
+
+  private func schedulePlayPreviewPopoverPresentation() {
+    guard !presentationPreviewPresenter.isPresented else { return }
+
+    let requestID = UUID()
+    playPreviewHoverRequestID = requestID
+
+    DispatchQueue.main.asyncAfter(deadline: .now() + 0.18) {
+      guard playPreviewHoverRequestID == requestID,
+            isPlayButtonHovered,
+            !presentationPreviewPresenter.isPresented else { return }
+      showPlayPreviewPopover()
+    }
+  }
+
+  private func showPlayPreviewPopover() {
+    guard !presentationPreviewPresenter.isPresented else { return }
+    isPlayPreviewPopoverPresented = true
+  }
+
+  private func schedulePlayPreviewPopoverDismiss() {
+    playPreviewHoverRequestID = UUID()
+    DispatchQueue.main.asyncAfter(deadline: .now() + 0.22) {
+      guard !isPlayButtonHovered, !isPlayPreviewPopoverHovered else { return }
+      hidePlayPreviewPopover()
+    }
+  }
+
+  private func hidePlayPreviewPopover() {
+    playPreviewHoverRequestID = UUID()
+    isPlayPreviewPopoverPresented = false
+    isPlayPreviewPopoverHovered = false
+    playPreviewSkimmedSlideIndex = nil
+  }
+
+  private func updateDetachedPresentationPreview() {
+    presentationPreviewPresenter.update(
+      deck: document.deck,
+      selectedSlideID: effectiveSelectedSlideID,
+      baseURL: fileURL?.deletingLastPathComponent()
+    )
+  }
+
+  private func clampedSlideIndex(_ index: Int?) -> Int? {
+    guard let index, document.deck.slides.indices.contains(index) else { return nil }
+    return index
   }
 
   private var selectedSlideBinding: Binding<Slide>? {

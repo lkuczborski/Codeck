@@ -6,6 +6,7 @@ struct PreviewPaneView: View {
   let theme: PresentationTheme
   @ObservedObject var sessions: CodexSessionStore
   let baseURL: URL?
+  var displayMode: PreviewPaneDisplayMode = .document
   let onRunBlock: (CodexBlock) -> Void
   let onRunAll: ([CodexBlock]) -> Void
 
@@ -14,11 +15,20 @@ struct PreviewPaneView: View {
   }
 
   private var html: String {
-    MarkdownRenderer.htmlDocument(
-      for: slide,
-      theme: theme,
-      codexOutputs: sessions.outputs
-    )
+    switch displayMode {
+    case .document:
+      MarkdownRenderer.htmlDocument(
+        for: slide,
+        theme: theme,
+        codexOutputs: sessions.outputs
+      )
+    case .scaledToFitWidth:
+      MarkdownRenderer.scaledPreviewHTMLDocument(
+        for: slide,
+        theme: theme,
+        codexOutputs: sessions.outputs
+      )
+    }
   }
 
   var body: some View {
@@ -38,4 +48,9 @@ struct PreviewPaneView: View {
       onRunAll(codexBlocks)
     }
   }
+}
+
+enum PreviewPaneDisplayMode {
+  case document
+  case scaledToFitWidth
 }

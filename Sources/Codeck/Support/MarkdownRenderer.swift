@@ -26,6 +26,20 @@ enum MarkdownRenderer {
     )
   }
 
+  static func scaledPreviewHTMLDocument(
+    for slide: Slide,
+    theme: PresentationTheme,
+    codexOutputs: [String: CodexSessionOutput]
+  ) -> String {
+    htmlDocument(
+      for: slide,
+      theme: theme,
+      codexOutputs: codexOutputs,
+      extraCSS: scaledPreviewCSS,
+      extraScript: scaledPreviewScript
+    )
+  }
+
   static func templatePreviewHTMLDocument(
     for slide: Slide,
     theme: PresentationTheme
@@ -42,7 +56,8 @@ enum MarkdownRenderer {
     for slide: Slide,
     theme: PresentationTheme,
     codexOutputs: [String: CodexSessionOutput],
-    extraCSS: String
+    extraCSS: String = "",
+    extraScript: String = ""
   ) -> String {
     let codexBlocks = slide.codexBlocks
     let body = renderBlocks(from: slide.markdown, codexOutputs: codexOutputs)
@@ -70,6 +85,7 @@ enum MarkdownRenderer {
           window.webkit?.messageHandlers?.codeck?.postMessage({ action: "runAllCodex" });
         }
       };
+      \(extraScript)
       </script>
       </head>
       <body>
@@ -878,5 +894,63 @@ enum MarkdownRenderer {
     .codex-action {
       display: none;
     }
+    """
+
+  private static let scaledPreviewCSS =
+    """
+    html, body {
+      width: 100%;
+      height: 100%;
+      min-height: 100%;
+      overflow: hidden;
+      background: var(--bg);
+    }
+    body {
+      display: block;
+      justify-content: flex-start;
+    }
+    .slide {
+      width: 1600px;
+      height: 900px;
+      min-height: 900px;
+      max-height: 900px;
+      padding: 88px;
+      overflow: hidden;
+      transform: scale(var(--codeck-preview-scale, 1));
+      transform-origin: top left;
+    }
+    .slide-actions,
+    .codex-action {
+      display: none;
+    }
+    @media (max-width: 820px), (max-height: 620px) {
+      html, body {
+        font-size: 24px;
+      }
+      .slide {
+        padding: 88px;
+      }
+      h1 { font-size: 82px; }
+      h2 { font-size: 60px; }
+      h3 { font-size: 44px; }
+      pre {
+        font-size: 0.74em;
+      }
+    }
+    """
+
+  private static let scaledPreviewScript =
+    """
+      (function() {
+        function fitPreviewToWidth() {
+          document.documentElement.style.setProperty(
+            '--codeck-preview-scale',
+            String(window.innerWidth / 1600)
+          );
+        }
+        window.addEventListener('resize', fitPreviewToWidth);
+        document.addEventListener('DOMContentLoaded', fitPreviewToWidth);
+        fitPreviewToWidth();
+      })();
     """
 }
