@@ -3,19 +3,19 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Codeck - Markdown decks with live Codex built in</title>
+    <title>Codeck - Markdown decks with live Codex and Deck Assistant</title>
     <meta
       name="description"
-      content="Codeck is a native macOS Markdown presentation maker for teaching Codex prompting workflows."
+      content="Codeck is a native macOS Markdown presentation maker with live Codex cards and a Deck Assistant that proposes slide edits."
     />
     <link rel="canonical" href="https://codeck-app.com/" />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Codeck" />
     <meta property="og:url" content="https://codeck-app.com/" />
-    <meta property="og:title" content="Codeck - Markdown decks with live Codex built in" />
+    <meta property="og:title" content="Codeck - Markdown decks with live Codex and Deck Assistant" />
     <meta
       property="og:description"
-      content="Codeck is a native macOS Markdown presentation maker for teaching Codex prompting workflows."
+      content="Codeck is a native macOS Markdown presentation maker with live Codex cards and a Deck Assistant that proposes slide edits."
     />
     <meta property="og:image" content="https://codeck-app.com/assets/codeck-social-card.png" />
     <meta property="og:image:secure_url" content="https://codeck-app.com/assets/codeck-social-card.png" />
@@ -24,18 +24,18 @@
     <meta property="og:image:height" content="630" />
     <meta
       property="og:image:alt"
-      content="Codeck branding beside a screenshot of the Markdown deck editor and live Codex slide preview."
+      content="Codeck branding beside a screenshot of the Markdown deck editor and Deck Assistant."
     />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Codeck - Markdown decks with live Codex built in" />
+    <meta name="twitter:title" content="Codeck - Markdown decks with live Codex and Deck Assistant" />
     <meta
       name="twitter:description"
-      content="Codeck is a native macOS Markdown presentation maker for teaching Codex prompting workflows."
+      content="Codeck is a native macOS Markdown presentation maker with live Codex cards and a Deck Assistant that proposes slide edits."
     />
     <meta name="twitter:image" content="https://codeck-app.com/assets/codeck-social-card.png" />
     <meta
       name="twitter:image:alt"
-      content="Codeck branding beside a screenshot of the Markdown deck editor and live Codex slide preview."
+      content="Codeck branding beside a screenshot of the Markdown deck editor and Deck Assistant."
     />
     <link rel="icon" href="assets/codeck-icon.png" type="image/png" />
     <link rel="apple-touch-icon" href="assets/codeck-icon.png" />
@@ -53,6 +53,7 @@
       <nav class="nav-links" aria-label="Primary navigation">
         <a href="#workflow">Workflow</a>
         <a href="#codex">Live Codex</a>
+        <a href="#assistant">Assistant</a>
         <a href="#format">Format</a>
         <a href="#themes">Themes</a>
       </nav>
@@ -66,8 +67,8 @@
           <h1 id="hero-title">Codeck</h1>
           <p class="hero-subtitle">Markdown decks with live Codex built in</p>
           <p>
-            Create teaching decks from plain Markdown, run Codex prompts directly on slides,
-            and present the whole workflow from one native Mac app.
+            Create Markdown teaching decks, run Codex prompts on slides, ask the Deck Assistant
+            for edits, and present from one native Mac app.
           </p>
 
           <div class="hero-actions" aria-label="Primary actions">
@@ -96,8 +97,8 @@
               <dd>Run fenced Codex blocks from the slide itself.</dd>
             </div>
             <div>
-              <dt>Present</dt>
-              <dd>Switch from editing to full-screen teaching.</dd>
+              <dt>Assistant</dt>
+              <dd>Turn slide critique into selectable Markdown edits.</dd>
             </div>
           </dl>
         </div>
@@ -106,7 +107,7 @@
           <div class="screen-shell">
             <img
               src="assets/codeck-screenshot.png"
-              alt="Codeck showing a Markdown editor, slide preview, and a live Codex card"
+              alt="Codeck showing a Markdown editor and the Deck Assistant proposing slide changes"
             />
           </div>
         </div>
@@ -217,6 +218,100 @@ a prompt more testable.
         </div>
       </section>
 
+      <section class="assistant-section" id="assistant" aria-labelledby="assistant-title">
+        <div class="assistant-copy">
+          <span class="eyebrow">Deck Assistant</span>
+          <h2 id="assistant-title">Turn a rough deck into proposed edits.</h2>
+          <p>
+            The Deck Assistant sits beside the editor, reads the selected slide or the whole
+            deck, and asks Codex for focused changes. You keep control: review replacements
+            and insertions, select the ones that fit, then apply them back to the Markdown.
+          </p>
+
+          <ul class="feature-list">
+            <li>Choose Slide for a local pass or Deck for a full presentation audit.</li>
+            <li>Run quick actions for gaps, shortening, polish, research, and data-backed evidence.</li>
+            <li>Enable web research when current facts, benchmarks, or citations matter.</li>
+          </ul>
+        </div>
+
+        <div class="assistant-panel" aria-label="Deck Assistant proposal preview">
+          <div class="assistant-panel-head">
+            <div>
+              <span class="spark-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                  <path d="m12 3 1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z" />
+                  <path d="m18 15 .8 2.2L21 18l-2.2.8L18 21l-.8-2.2L15 18l2.2-.8z" />
+                </svg>
+              </span>
+            </div>
+            <div>
+              <strong>Deck Assistant</strong>
+              <span>Slide 1: What's new in GPT-5.5</span>
+            </div>
+          </div>
+
+          <div class="assistant-request">
+            <div class="assistant-scope" role="group" aria-label="Assistant scope">
+              <span class="active">Slide</span>
+              <span>Deck</span>
+            </div>
+
+            <p class="assistant-prompt">
+              Add useful data, benchmarks, comparisons, or evidence that would strengthen the
+              argument. Cite sources when external facts are used.
+            </p>
+
+            <div class="assistant-actions" aria-label="Assistant quick actions">
+              <span>Find Gaps</span>
+              <span>Shorten</span>
+              <span>Polish</span>
+              <span>Research</span>
+              <span>Add Data</span>
+            </div>
+
+            <div class="assistant-run-row">
+              <span class="web-chip">Use web</span>
+              <span class="ask-chip">Ask Codex</span>
+            </div>
+          </div>
+
+          <div class="assistant-proposal">
+            <div class="proposal-heading">
+              <strong>Add benchmark evidence</strong>
+              <span>2 selected</span>
+            </div>
+
+            <article class="assistant-change selected">
+              <div>
+                <strong>Add benchmark proof points</strong>
+                <span>Slide 1</span>
+              </div>
+              <p>
+                Replace broad positioning with concrete signals so the opening claim is easier
+                to trust.
+              </p>
+            </article>
+
+            <article class="assistant-change">
+              <div>
+                <strong>Add one comparison slide</strong>
+                <span>Insert at 2</span>
+              </div>
+              <p>
+                Insert a focused slide that separates the biggest improvements from the smaller
+                ones.
+              </p>
+            </article>
+
+            <div class="assistant-footer">
+              <span>Review each change before it touches the deck.</span>
+              <span class="apply-chip">Apply</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <section class="format-section" id="format" aria-labelledby="format-title">
         <div class="format-code" aria-label="mdeck front matter example">
           <pre><code>---
@@ -297,8 +392,9 @@ let prompt = "Make this change testable"
       <section class="final-section" aria-labelledby="final-title">
         <h2 id="final-title">Build lessons that can run in front of the room.</h2>
         <p>
-          Codeck gives Markdown presentations a native editing loop and gives Codex prompts a
-          stage where the result is part of the slide.
+          Codeck gives Markdown presentations a native editing loop, gives Codex prompts a
+          stage where the result is part of the slide, and gives rough drafts an assistant
+          that can propose the next useful edit.
         </p>
         <a class="button primary" href="https://github.com/lkuczborski/Codeck">
           <svg viewBox="0 0 24 24" aria-hidden="true">
