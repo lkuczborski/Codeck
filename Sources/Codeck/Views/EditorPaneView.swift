@@ -21,8 +21,9 @@ struct EditorPaneView: View {
         focusesInitially: initialEditorSelection != nil
       )
         .id(editorIdentity)
-        .background(.ultraThinMaterial)
+        .background(editorBackground)
     }
+    .background(editorBackground)
   }
 
   private var initialEditorSelection: NSRange? {
@@ -64,9 +65,21 @@ struct EditorPaneView: View {
       }
     }
     .padding(10)
-    .codeckGlassSurface(cornerRadius: 16, interactive: true)
+    .background(editorToolbarBackground, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+    .overlay {
+      RoundedRectangle(cornerRadius: 16, style: .continuous)
+        .strokeBorder(Color.secondary.opacity(0.16), lineWidth: 1)
+    }
     .padding(.horizontal, 10)
     .padding(.vertical, 8)
+  }
+
+  private var editorBackground: Color {
+    Color(nsColor: .textBackgroundColor)
+  }
+
+  private var editorToolbarBackground: Color {
+    Color(nsColor: .controlBackgroundColor)
   }
 
   private func themePicker(width: CGFloat) -> some View {
@@ -127,7 +140,7 @@ struct EditorPaneView: View {
     } label: {
       Label("Deck Settings", systemImage: "slider.horizontal.3")
     }
-    .codeckGlassButtonStyle()
+    .buttonStyle(.bordered)
     .help("Edit deck-level Codex settings")
     .popover(isPresented: $showsDeckSettings, arrowEdge: .bottom) {
       DeckSettingsPopover(settings: $settings, modelCatalog: modelCatalog)
@@ -160,7 +173,7 @@ struct EditorPaneView: View {
     } label: {
       Label("Insert", systemImage: "plus")
     }
-    .codeckGlassButtonStyle(prominent: true)
+    .buttonStyle(.borderedProminent)
     .help("Insert Markdown element")
   }
 
@@ -271,7 +284,7 @@ private struct DeckSettingsPopover: View {
     .formStyle(.grouped)
     .padding(16)
     .frame(width: 340)
-    .background(.thinMaterial)
+    .background(Color(nsColor: .windowBackgroundColor))
     .task {
       await modelCatalog.refresh()
       applyLiveModelDefaultsIfNeeded()

@@ -45,7 +45,7 @@ struct MarkdownTextEditorView: NSViewRepresentable {
 
   func makeNSView(context: Context) -> NSScrollView {
     let scrollView = NSScrollView()
-    scrollView.drawsBackground = false
+    scrollView.drawsBackground = true
     scrollView.hasVerticalScroller = true
     scrollView.hasHorizontalScroller = false
     scrollView.autohidesScrollers = true
@@ -55,7 +55,8 @@ struct MarkdownTextEditorView: NSViewRepresentable {
     textView.delegate = context.coordinator
     textView.font = .monospacedSystemFont(ofSize: 15, weight: .regular)
     textView.textColor = .labelColor
-    textView.backgroundColor = .clear
+    textView.drawsBackground = true
+    textView.backgroundColor = .textBackgroundColor
     textView.insertionPointColor = .controlAccentColor
     textView.isRichText = false
     textView.importsGraphics = false
@@ -129,9 +130,14 @@ struct MarkdownTextEditorView: NSViewRepresentable {
     textView.appearance = nil
     textView.textColor = .labelColor
     textView.insertionPointColor = .controlAccentColor
-    textView.backgroundColor = .clear
+    textView.backgroundColor = .textBackgroundColor
     textView.typingAttributes[.foregroundColor] = NSColor.labelColor
     textView.typingAttributes[.font] = textView.font
+    scrollView.drawsBackground = true
+    scrollView.backgroundColor = .textBackgroundColor
+    scrollView.contentView.drawsBackground = true
+    scrollView.contentView.backgroundColor = .textBackgroundColor
+    textView.drawsBackground = true
     let textRange = NSRange(location: 0, length: (textView.string as NSString).length)
     if textRange.length > 0 {
       textView.textStorage?.addAttribute(.foregroundColor, value: NSColor.labelColor, range: textRange)
