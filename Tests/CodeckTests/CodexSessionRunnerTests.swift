@@ -10,12 +10,13 @@ final class CodexSessionRunnerTests: XCTestCase {
       sandbox: "read-only",
       title: "Demo"
     )
+    let workingDirectory = CodexSessionRunner.sessionWorkingDirectory(from: nil)
 
-    let arguments = CodexSessionRunner.makeProcess(for: block, workingDirectory: nil).arguments ?? []
+    let arguments = CodexSessionRunner.appServerArguments(for: block, workingDirectory: workingDirectory)
 
-    XCTAssertEqual(Array(arguments.prefix(5)), ["codex", "--sandbox", "read-only", "--ask-for-approval", "never"])
-    XCTAssertEqual(arguments[5], "--cd")
-    XCTAssertFalse(arguments[6].isEmpty)
+    XCTAssertEqual(Array(arguments.prefix(4)), ["--sandbox", "read-only", "--ask-for-approval", "never"])
+    XCTAssertEqual(arguments[4], "--cd")
+    XCTAssertFalse(arguments[5].isEmpty)
     XCTAssertEqual(Array(arguments.suffix(3)), ["app-server", "--listen", "stdio://"])
   }
 
@@ -26,10 +27,11 @@ final class CodexSessionRunnerTests: XCTestCase {
       profile: "teaching",
       title: "Demo"
     )
+    let workingDirectory = CodexSessionRunner.sessionWorkingDirectory(from: nil)
 
-    let arguments = CodexSessionRunner.makeProcess(for: block, workingDirectory: nil).arguments ?? []
+    let arguments = CodexSessionRunner.appServerArguments(for: block, workingDirectory: workingDirectory)
 
-    XCTAssertEqual(Array(arguments[0...2]), ["codex", "--profile", "teaching"])
+    XCTAssertEqual(Array(arguments[0...1]), ["--profile", "teaching"])
     XCTAssertEqual(Array(arguments.suffix(3)), ["app-server", "--listen", "stdio://"])
   }
 
@@ -44,7 +46,23 @@ final class CodexSessionRunnerTests: XCTestCase {
     let process = CodexSessionRunner.makeProcess(for: block, workingDirectory: url)
 
     XCTAssertEqual(process.currentDirectoryURL?.path, url.path)
-    XCTAssertEqual(process.arguments?[6], url.path)
+    XCTAssertEqual(argument(after: "--cd", in: process.arguments ?? []), url.path)
+  }
+
+  func testRunnerAddsCommonCodexInstallLocationsToPATH() {
+    let path = CodexSessionRunner.augmentedPath(from: "/usr/bin:/bin")
+
+    XCTAssertTrue(path.contains("/opt/homebrew/bin"))
+    XCTAssertTrue(path.contains("/usr/local/bin"))
+    XCTAssertTrue(path.contains("/Applications/Codex.app/Contents/Resources"))
+  }
+
+  func testRunnerUsesExecutableOverrideWhenAvailable() {
+    let environment = ["CODECK_CODEX_EXECUTABLE": "/bin/sh", "PATH": "/usr/bin:/bin"]
+
+    let executable = CodexSessionRunner.codexExecutableURL(environment: environment)
+
+    XCTAssertEqual(executable?.path, "/bin/sh")
   }
 
   func testRunnerUsesTemporaryWorkingDirectoryWhenDeckIsUnsaved() {
@@ -66,10 +84,11 @@ final class CodexSessionRunnerTests: XCTestCase {
       sandbox: "surprise-me",
       title: "Demo"
     )
+    let workingDirectory = CodexSessionRunner.sessionWorkingDirectory(from: nil)
 
-    let arguments = CodexSessionRunner.makeProcess(for: block, workingDirectory: nil).arguments ?? []
+    let arguments = CodexSessionRunner.appServerArguments(for: block, workingDirectory: workingDirectory)
 
-    XCTAssertEqual(arguments[2], "read-only")
+    XCTAssertEqual(argument(after: "--sandbox", in: arguments), "read-only")
   }
 
   func testRunnerUsesBlockSandboxOverride() {
@@ -85,9 +104,10 @@ final class CodexSessionRunnerTests: XCTestCase {
       sandbox: "read-only"
     )
 
-    let arguments = CodexSessionRunner.makeProcess(for: block, settings: settings, workingDirectory: nil).arguments ?? []
+    let workingDirectory = CodexSessionRunner.sessionWorkingDirectory(from: nil)
+    let arguments = CodexSessionRunner.appServerArguments(for: block, settings: settings, workingDirectory: workingDirectory)
 
-    XCTAssertEqual(arguments[2], "workspace-write")
+    XCTAssertEqual(argument(after: "--sandbox", in: arguments), "workspace-write")
   }
 
   func testReadOnlyTurnPolicyDisablesNetwork() {
@@ -144,5 +164,12 @@ final class CodexSessionRunnerTests: XCTestCase {
     )
 
     XCTAssertEqual(policy["type"] as? String, "dangerFullAccess")
+  }
+
+  private func argument(after flag: String, in arguments: [String]) -> String? {
+    guard let index = arguments.firstIndex(of: flag) else { return nil }
+    let valueIndex = arguments.index(after: index)
+    guard valueIndex < arguments.endIndex else { return nil }
+    return arguments[valueIndex]
   }
 }
