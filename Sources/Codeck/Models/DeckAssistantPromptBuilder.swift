@@ -28,7 +28,7 @@ enum DeckAssistantPromptBuilder {
     You are Codeck's interactive presentation assistant. You are running inside a Markdown slide editor.
 
     Your job:
-    - Read the deck outline, selected slide, and any included supporting slide markdown.
+    - Read the deck outline and provided slide markdown.
     - Decide what is missing, weak, too long, unsupported, or unclear.
     - Propose concrete slide edits that improve the presentation.
     - Keep the user's intent and existing voice unless the user asks for a different tone.
@@ -40,7 +40,7 @@ enum DeckAssistantPromptBuilder {
     \(scope.promptInstruction)
 
     Response mode:
-    Run a targeted pass. Prefer the selected slide, deck outline, and nearby slide context over broad deck rewrites.
+    \(responseMode(for: scope))
 
     Current date:
     \(currentDateString)
@@ -49,14 +49,7 @@ enum DeckAssistantPromptBuilder {
     \(allowsWebResearch ? "Enabled. Use current web context when it materially improves factual quality. Cite URLs in the slide markdown for external facts. Do not invent sources." : "Disabled. Use only the deck context below. Do not browse, search, fetch URLs, or claim that you checked the web.")
 
     Editing rules:
-    - Return 1 to 5 changes.
-    - Use "replace" to rewrite an existing slide.
-    - Use "insert" to add a new slide.
-    - Each afterMarkdown value must be the complete Markdown for exactly one slide.
-    - Preserve runnable ```codex fences when they remain useful.
-    - Do not return YAML front matter.
-    - Do not delete slides directly. If a slide should go away, replace it with a tighter version or explain it in detail.
-    - Prefer fewer, stronger edits over broad churn.
+    \(editingRules(for: scope))
 
     Return only JSON. No prose before or after the JSON. Use this exact schema:
     {
@@ -86,8 +79,7 @@ enum DeckAssistantPromptBuilder {
     - slideIndex is zero-based.
     - insertPosition is zero-based and means "insert before this slide index". Use \(deck.slides.count) to append.
 
-    Selected slide:
-    \(selectedSlideDescription(in: deck, selectedIndex: selectedIndex))
+    \(selectedSlideSection(in: deck, scope: scope, selectedIndex: selectedIndex))
 
     Deck outline:
     \(deckOutline)
@@ -95,6 +87,45 @@ enum DeckAssistantPromptBuilder {
     \(context.title):
     \(context.body)
     """
+  }
+
+  private static func responseMode(for scope: DeckAssistantScope) -> String {
+    switch scope {
+    case .currentSlide:
+      "Run a targeted pass. Prefer the selected slide, deck outline, and nearby slide context over broad deck rewrites."
+    case .wholeDeck:
+      "Run a deck-level pass. Use the full deck context to find missing story beats, weak transitions, unsupported claims, and structure gaps. Do not focus on the selected slide unless it is the highest-impact issue."
+    }
+  }
+
+  private static func editingRules(for scope: DeckAssistantScope) -> String {
+    var rules: [String]
+
+    switch scope {
+    case .currentSlide:
+      rules = [
+        #"Return 1 to 5 changes."#,
+        #"Use "replace" to rewrite an existing slide."#,
+        #"Use "insert" to add a new supporting slide only if it is clearly needed."#
+      ]
+    case .wholeDeck:
+      rules = [
+        #"Return 2 to 5 changes when the deck has multiple meaningful gaps; return 1 only when one change is clearly enough."#,
+        #"Use "replace" to rewrite existing slides."#,
+        #"Use "insert" to add missing context, evidence, transition, example, agenda, or closing slides."#,
+        #"Do not limit proposals to rewriting slide 1 when deck-level issues exist elsewhere."#
+      ]
+    }
+
+    rules += [
+      "Each afterMarkdown value must be the complete Markdown for exactly one slide.",
+      "Preserve runnable ```codex fences when they remain useful.",
+      "Do not return YAML front matter.",
+      "Do not delete slides directly. If a slide should go away, replace it with a tighter version or explain it in detail.",
+      "Prefer fewer, stronger edits over broad churn."
+    ]
+
+    return rules.map { "- \($0)" }.joined(separator: "\n")
   }
 
   private static func resolvedSelectedIndex(in deck: PresentationDeck, selectedSlideIndex: Int?) -> Int? {
@@ -117,6 +148,22 @@ enum DeckAssistantPromptBuilder {
     \(slide.markdown)
     ~~~~
     """
+  }
+
+  private static func selectedSlideSection(
+    in deck: PresentationDeck,
+    scope: DeckAssistantScope,
+    selectedIndex: Int?
+  ) -> String {
+    switch scope {
+    case .currentSlide:
+      """
+      Selected slide:
+      \(selectedSlideDescription(in: deck, selectedIndex: selectedIndex))
+      """
+    case .wholeDeck:
+      "Selected slide: Not prioritized in Deck scope. Use the full deck context below."
+    }
   }
 
   private static func deckContext(

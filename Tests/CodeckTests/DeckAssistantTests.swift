@@ -74,6 +74,36 @@ final class DeckAssistantTests: XCTestCase {
     XCTAssertTrue(prompt.contains("Do not browse, search, fetch URLs"))
   }
 
+  func testWholeDeckPromptDoesNotPrioritizeSelectedSlide() {
+    let deck = PresentationDeck(
+      settings: .default,
+      slides: [
+        Slide(markdown: "# Intro\n\nOpening."),
+        Slide(markdown: "# Evidence\n\nNeeds support."),
+        Slide(markdown: "# Close\n\nMissing next steps.")
+      ]
+    )
+
+    let prompt = DeckAssistantPromptBuilder.prompt(
+      goal: "Improve the deck.",
+      scope: .wholeDeck,
+      allowsWebResearch: false,
+      deck: deck,
+      selectedSlideIndex: 0,
+      currentDate: Date(timeIntervalSince1970: 0)
+    )
+
+    XCTAssertTrue(prompt.contains("Selected slide: Not prioritized in Deck scope."))
+    XCTAssertTrue(prompt.contains("Full deck:"))
+    XCTAssertTrue(prompt.contains("<slide index=\"0\" title=\"Intro\">"))
+    XCTAssertTrue(prompt.contains("<slide index=\"1\" title=\"Evidence\">"))
+    XCTAssertTrue(prompt.contains("<slide index=\"2\" title=\"Close\">"))
+    XCTAssertTrue(prompt.contains("Use \"insert\" to add missing context, evidence, transition, example, agenda, or closing slides."))
+    XCTAssertTrue(prompt.contains("Do not limit proposals to rewriting slide 1"))
+    XCTAssertFalse(prompt.contains("Prefer the selected slide"))
+    XCTAssertFalse(prompt.contains("Nearby slide context:"))
+  }
+
   func testWebOnlyQuickActionsRequireWebResearch() {
     XCTAssertFalse(DeckAssistantQuickAction.diagnose.requiresWebResearch)
     XCTAssertFalse(DeckAssistantQuickAction.shorten.requiresWebResearch)
