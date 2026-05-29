@@ -28,13 +28,20 @@ struct DeckAssistantPanelView: View {
 
       Divider()
 
-      ScrollView {
-        VStack(alignment: .leading, spacing: 14) {
-          requestSection
-          statusSection
-          proposalSection
+      GeometryReader { proxy in
+        ScrollView {
+          VStack(alignment: .leading, spacing: 14) {
+            requestSection
+            statusSection
+            proposalSection
+              .frame(
+                maxHeight: proposal.changes.isEmpty ? .infinity : nil,
+                alignment: proposal.changes.isEmpty ? .center : .top
+              )
+          }
+          .padding(14)
+          .frame(minHeight: proxy.size.height, alignment: .top)
         }
-        .padding(14)
       }
 
       Divider()
@@ -185,6 +192,7 @@ struct DeckAssistantPanelView: View {
   private var proposalSection: some View {
     if proposal.changes.isEmpty {
       emptyProposalState
+        .frame(maxHeight: .infinity, alignment: .center)
     } else {
       VStack(alignment: .leading, spacing: 10) {
         VStack(alignment: .leading, spacing: 3) {
@@ -234,8 +242,7 @@ struct DeckAssistantPanelView: View {
       }
     }
     .frame(maxWidth: .infinity)
-    .frame(minHeight: 300)
-    .padding(.vertical, 28)
+    .padding(.vertical, 18)
   }
 
   private var footer: some View {
