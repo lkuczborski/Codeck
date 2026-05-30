@@ -56,7 +56,7 @@ struct MarkdownTextEditorView: NSViewRepresentable {
     textView.font = MarkdownEditorHighlighter.baseFont
     textView.textColor = .labelColor
     textView.drawsBackground = true
-    textView.backgroundColor = .textBackgroundColor
+    textView.backgroundColor = CodeckPalette.editorNSColor
     textView.insertionPointColor = .controlAccentColor
     textView.isRichText = false
     textView.importsGraphics = false
@@ -134,12 +134,12 @@ struct MarkdownTextEditorView: NSViewRepresentable {
     textView.appearance = nil
     textView.textColor = .labelColor
     textView.insertionPointColor = .controlAccentColor
-    textView.backgroundColor = .textBackgroundColor
+    textView.backgroundColor = CodeckPalette.editorNSColor
     textView.typingAttributes = MarkdownEditorHighlighter.baseTypingAttributes
     scrollView.drawsBackground = true
-    scrollView.backgroundColor = .textBackgroundColor
+    scrollView.backgroundColor = CodeckPalette.editorNSColor
     scrollView.contentView.drawsBackground = true
-    scrollView.contentView.backgroundColor = .textBackgroundColor
+    scrollView.contentView.backgroundColor = CodeckPalette.editorNSColor
     textView.drawsBackground = true
     let textRange = NSRange(location: 0, length: (textView.string as NSString).length)
     textView.needsDisplay = true

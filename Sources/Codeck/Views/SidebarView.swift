@@ -52,16 +52,9 @@ struct SidebarView: View {
 
   @ViewBuilder
   private var sidebarFooter: some View {
-    if #available(macOS 26.0, *) {
-      GlassEffectContainer {
-        slideActionButtons
-          .buttonStyle(.glass)
-      }
-    } else {
-      slideActionButtons
-        .buttonStyle(.borderless)
-        .codeckGlassSurface(cornerRadius: 22)
-    }
+    slideActionButtons
+      .buttonStyle(.borderless)
+      .codeckGlassSurface(cornerRadius: 22)
   }
 
   private var slideActionButtons: some View {

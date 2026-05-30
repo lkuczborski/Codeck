@@ -238,6 +238,7 @@ struct DocumentWindowView: View {
 
       rightUtilityPane(slide)
     }
+    .codeckWorkspaceBackground()
   }
 
   private var rightUtilityModeSelector: some View {
@@ -256,6 +257,7 @@ struct DocumentWindowView: View {
     .padding(10)
     .padding(.horizontal, 10)
     .padding(.vertical, 8)
+    .codeckWorkspaceBackground()
   }
 
   @ViewBuilder
@@ -303,6 +305,7 @@ struct DocumentWindowView: View {
         deckAssistantPane
       }
     }
+    .codeckWorkspaceBackground()
   }
 
   private func editorPane(_ slide: Binding<Slide>) -> some View {

@@ -65,21 +65,13 @@ struct EditorPaneView: View {
       }
     }
     .padding(10)
-    .background(editorToolbarBackground, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-    .overlay {
-      RoundedRectangle(cornerRadius: 16, style: .continuous)
-        .strokeBorder(Color.secondary.opacity(0.16), lineWidth: 1)
-    }
+    .codeckGlassSurface(cornerRadius: 16, interactive: true)
     .padding(.horizontal, 10)
     .padding(.vertical, 8)
   }
 
   private var editorBackground: Color {
-    Color(nsColor: .textBackgroundColor)
-  }
-
-  private var editorToolbarBackground: Color {
-    Color(nsColor: .controlBackgroundColor)
+    CodeckPalette.editor
   }
 
   private func themePicker(width: CGFloat) -> some View {
@@ -128,7 +120,7 @@ struct EditorPaneView: View {
 
   private var toolbarSeparator: some View {
     Rectangle()
-      .fill(Color.secondary.opacity(0.28))
+      .fill(CodeckPalette.separator)
       .frame(width: 1, height: 24)
       .padding(.horizontal, 2)
       .accessibilityHidden(true)
@@ -140,7 +132,7 @@ struct EditorPaneView: View {
     } label: {
       Label("Deck Settings", systemImage: "slider.horizontal.3")
     }
-    .buttonStyle(.bordered)
+    .codeckGlassButtonStyle()
     .help("Edit deck-level Codex settings")
     .popover(isPresented: $showsDeckSettings, arrowEdge: .bottom) {
       DeckSettingsPopover(settings: $settings, modelCatalog: modelCatalog)
@@ -173,7 +165,7 @@ struct EditorPaneView: View {
     } label: {
       Label("Insert", systemImage: "plus")
     }
-    .buttonStyle(.borderedProminent)
+    .codeckGlassButtonStyle(prominent: true)
     .help("Insert Markdown element")
   }
 
@@ -200,14 +192,7 @@ private struct MarkdownStyleButton: View {
     Button(action: action) {
       styledLabel
         .frame(width: 26, height: 24)
-        .background(
-          isActive ? Color.accentColor.opacity(0.24) : Color.clear,
-          in: RoundedRectangle(cornerRadius: 7, style: .continuous)
-        )
-        .overlay {
-          RoundedRectangle(cornerRadius: 7, style: .continuous)
-            .stroke(isActive ? Color.accentColor.opacity(0.75) : Color.secondary.opacity(0.2), lineWidth: 1)
-        }
+        .codeckControlSurface(isActive: isActive)
     }
     .buttonStyle(.plain)
     .help(style.help)
@@ -228,7 +213,7 @@ private struct MarkdownStyleButton: View {
       base
         .font(.system(size: 14, design: .monospaced))
         .padding(.horizontal, 3)
-        .background(Color.secondary.opacity(0.16), in: RoundedRectangle(cornerRadius: 4, style: .continuous))
+        .background(CodeckPalette.elevatedSurface, in: RoundedRectangle(cornerRadius: 4, style: .continuous))
     case .strikethrough:
       base.strikethrough()
     case .link:
@@ -284,7 +269,7 @@ private struct DeckSettingsPopover: View {
     .formStyle(.grouped)
     .padding(16)
     .frame(width: 340)
-    .background(Color(nsColor: .windowBackgroundColor))
+    .codeckWorkspaceBackground()
     .task {
       await modelCatalog.refresh()
       applyLiveModelDefaultsIfNeeded()

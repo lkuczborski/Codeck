@@ -27,6 +27,7 @@ struct DeckAssistantPanelView: View {
       header
 
       Divider()
+        .codeckDivider()
 
       GeometryReader { proxy in
         ScrollView {
@@ -45,11 +46,12 @@ struct DeckAssistantPanelView: View {
       }
 
       Divider()
+        .codeckDivider()
 
       footer
     }
     .frame(minWidth: 340, idealWidth: 420, maxWidth: .infinity)
-    .background(.thinMaterial)
+    .codeckWorkspaceBackground()
     .onChange(of: assistantOutput) { _, output in
       handleAssistantOutput(output)
     }
@@ -96,8 +98,10 @@ struct DeckAssistantPanelView: View {
       .labelsHidden()
 
       TextField(DeckAssistantQuickAction.diagnose.prompt, text: $goal, axis: .vertical)
-        .textFieldStyle(.roundedBorder)
+        .textFieldStyle(.plain)
         .lineLimit(3...7)
+        .padding(10)
+        .codeckElevatedSurface(cornerRadius: 8)
         .disabled(isRunning)
 
       LazyVGrid(columns: [GridItem(.adaptive(minimum: 108), spacing: 8)], alignment: .leading, spacing: 8) {
@@ -478,10 +482,10 @@ private struct DeckAssistantChangeRow: View {
       }
     }
     .padding(10)
-    .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+    .codeckElevatedSurface(cornerRadius: 8)
     .overlay {
       RoundedRectangle(cornerRadius: 8, style: .continuous)
-        .strokeBorder(isSelected ? Color.accentColor.opacity(0.55) : Color.secondary.opacity(0.16), lineWidth: 1)
+        .strokeBorder(isSelected ? Color.accentColor.opacity(0.55) : CodeckPalette.border, lineWidth: 1)
     }
   }
 }
@@ -504,7 +508,7 @@ private struct MarkdownSnippetView: View {
         .fixedSize(horizontal: false, vertical: true)
         .frame(maxWidth: .infinity, alignment: .topLeading)
         .padding(8)
-      .background(Color.secondary.opacity(0.08), in: RoundedRectangle(cornerRadius: 6, style: .continuous))
+        .background(CodeckPalette.surface, in: RoundedRectangle(cornerRadius: 6, style: .continuous))
     }
     .frame(maxWidth: .infinity, alignment: .leading)
   }

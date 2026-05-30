@@ -21,6 +21,7 @@ struct SlideTemplatePickerView: View {
       header
 
       Divider()
+        .codeckDivider()
 
       ScrollView {
         LazyVStack(alignment: .leading, spacing: 22) {
@@ -32,10 +33,12 @@ struct SlideTemplatePickerView: View {
       }
 
       Divider()
+        .codeckDivider()
 
       footer
     }
     .frame(minWidth: 720, idealWidth: 820, minHeight: 540, idealHeight: 640)
+    .codeckWorkspaceBackground()
   }
 
   private var header: some View {
@@ -154,11 +157,10 @@ private struct SlideTemplateCard: View {
       }
     }
     .padding(8)
-    .background(.regularMaterial)
-    .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+    .codeckElevatedSurface(cornerRadius: 8)
     .overlay {
       RoundedRectangle(cornerRadius: 8, style: .continuous)
-        .strokeBorder(isSelected ? Color.accentColor.opacity(0.45) : Color.secondary.opacity(0.16), lineWidth: 1)
+        .strokeBorder(isSelected ? Color.accentColor.opacity(0.45) : CodeckPalette.border, lineWidth: 1)
     }
   }
 }

@@ -33,7 +33,7 @@ struct PreviewPaneView: View {
 
   var body: some View {
     MarkdownWebView(html: html, baseURL: baseURL, onAction: handleWebAction)
-    .background(.ultraThinMaterial)
+      .codeckWorkspaceBackground()
   }
 
   private func handleWebAction(_ action: MarkdownWebAction) {

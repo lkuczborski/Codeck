@@ -297,7 +297,7 @@ enum MarkdownEditorHighlighter {
     addAttributes([
       .font: NSFont.monospacedSystemFont(ofSize: 14, weight: .regular),
       .foregroundColor: NSColor.systemPink,
-      .backgroundColor: NSColor.textColor.withAlphaComponent(0.05)
+      .backgroundColor: CodeckPalette.inlineCodeBackgroundNSColor
     ], to: textStorage, range: lineRange)
   }
 
@@ -436,7 +436,7 @@ enum MarkdownEditorHighlighter {
   private static let codeAttributes: [NSAttributedString.Key: Any] = [
     .font: NSFont.monospacedSystemFont(ofSize: 14, weight: .regular),
     .foregroundColor: NSColor.systemPink,
-    .backgroundColor: NSColor.textColor.withAlphaComponent(0.06)
+    .backgroundColor: CodeckPalette.inlineCodeBackgroundNSColor
   ]
 
   private struct CodeBlockState {
