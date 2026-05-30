@@ -53,7 +53,7 @@ struct MarkdownTextEditorView: NSViewRepresentable {
     let textView = NSTextView()
     textView.string = text
     textView.delegate = context.coordinator
-    textView.font = .monospacedSystemFont(ofSize: 15, weight: .regular)
+    textView.font = MarkdownEditorHighlighter.baseFont
     textView.textColor = .labelColor
     textView.drawsBackground = true
     textView.backgroundColor = .textBackgroundColor
@@ -79,6 +79,7 @@ struct MarkdownTextEditorView: NSViewRepresentable {
     scrollView.documentView = textView
     context.coordinator.attach(textView)
     applyAppearance(to: scrollView, textView: textView)
+    context.coordinator.applyHighlighting(to: textView)
     context.coordinator.applyInitialSelectionIfNeeded(to: textView)
     context.coordinator.publishState(for: textView)
     return scrollView
@@ -96,7 +97,10 @@ struct MarkdownTextEditorView: NSViewRepresentable {
       let selection = textView.selectedRange()
       textView.string = text
       textView.setSelectedRange(MarkdownTextEditorView.clamped(selection, length: (text as NSString).length))
+      context.coordinator.applyHighlighting(to: textView)
       context.coordinator.publishState(for: textView)
+    } else {
+      context.coordinator.applyHighlighting(to: textView)
     }
 
     context.coordinator.applyInitialSelectionIfNeeded(to: textView)
@@ -131,17 +135,13 @@ struct MarkdownTextEditorView: NSViewRepresentable {
     textView.textColor = .labelColor
     textView.insertionPointColor = .controlAccentColor
     textView.backgroundColor = .textBackgroundColor
-    textView.typingAttributes[.foregroundColor] = NSColor.labelColor
-    textView.typingAttributes[.font] = textView.font
+    textView.typingAttributes = MarkdownEditorHighlighter.baseTypingAttributes
     scrollView.drawsBackground = true
     scrollView.backgroundColor = .textBackgroundColor
     scrollView.contentView.drawsBackground = true
     scrollView.contentView.backgroundColor = .textBackgroundColor
     textView.drawsBackground = true
     let textRange = NSRange(location: 0, length: (textView.string as NSString).length)
-    if textRange.length > 0 {
-      textView.textStorage?.addAttribute(.foregroundColor, value: NSColor.labelColor, range: textRange)
-    }
     textView.needsDisplay = true
     textView.layoutManager?.invalidateDisplay(forCharacterRange: textRange)
     scrollView.needsDisplay = true
@@ -178,6 +178,7 @@ struct MarkdownTextEditorView: NSViewRepresentable {
     func textDidChange(_ notification: Notification) {
       guard let textView = notification.object as? NSTextView else { return }
       text.wrappedValue = textView.string
+      applyHighlighting(to: textView)
       publishState(for: textView)
     }
 
@@ -209,6 +210,7 @@ struct MarkdownTextEditorView: NSViewRepresentable {
 
       textView.string = result.text
       textView.setSelectedRange(result.selection)
+      applyHighlighting(to: textView)
       text.wrappedValue = result.text
       publishState(for: textView)
       textView.window?.makeFirstResponder(textView)
@@ -257,6 +259,10 @@ struct MarkdownTextEditorView: NSViewRepresentable {
           controller.activeStyles = activeStyles
         }
       }
+    }
+
+    func applyHighlighting(to textView: NSTextView) {
+      MarkdownEditorHighlighter.apply(to: textView)
     }
   }
 }

@@ -619,6 +619,26 @@ enum MarkdownRenderer {
     pre code .syntax-deletion {
       color: #ffa198;
     }
+    pre code .syntax-strong {
+      color: #f2cc60;
+      font-weight: 700;
+    }
+    pre code .syntax-strong-emphasis {
+      color: #f2cc60;
+      font-style: italic;
+      font-weight: 700;
+    }
+    pre code .syntax-emphasis {
+      color: #d2a8ff;
+      font-style: italic;
+    }
+    pre code .syntax-inline-code {
+      color: #ffa657;
+    }
+    pre code .syntax-link {
+      color: #79c0ff;
+      text-decoration: underline;
+    }
     p code, li code, td code {
       padding: 0.08em 0.28em;
       background: var(--panel-strong);
