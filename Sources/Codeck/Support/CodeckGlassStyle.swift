@@ -52,24 +52,23 @@ extension View {
   }
 
   func codeckToolbarIconButtonStyle(prominent: Bool = false) -> some View {
-    let buttonWidth: CGFloat = 48
-    let buttonHeight: CGFloat = 36
+    let buttonWidth: CGFloat = 30
+    let buttonHeight: CGFloat = 28
+    let cornerRadius: CGFloat = 8
     return self
       .labelStyle(.iconOnly)
-      .font(.system(size: 19, weight: .medium))
-      .imageScale(.large)
+      .font(.system(size: 14, weight: .semibold))
+      .imageScale(.medium)
       .frame(width: buttonWidth, height: buttonHeight)
-      .contentShape(.rect(cornerRadius: 18))
-      .controlSize(.large)
-      .buttonBorderShape(.capsule)
+      .contentShape(.rect(cornerRadius: cornerRadius))
       .buttonStyle(.plain)
       .foregroundStyle(prominent ? Color.white : Color.primary)
       .background(
         prominent ? Color.accentColor : CodeckPalette.surface,
-        in: Capsule(style: .continuous)
+        in: RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
       )
       .overlay {
-        Capsule(style: .continuous)
+        RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
           .strokeBorder(prominent ? Color.accentColor.opacity(0.9) : CodeckPalette.border, lineWidth: 1)
       }
       .frame(width: buttonWidth, height: buttonHeight)
