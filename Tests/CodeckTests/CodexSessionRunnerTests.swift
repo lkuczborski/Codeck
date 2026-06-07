@@ -1,6 +1,6 @@
-import XCTest
-@testable import CodeckCore
 @testable import Codeck
+@testable import CodeckCore
+import XCTest
 
 final class CodexSessionRunnerTests: XCTestCase {
   func testRunnerStartsCodexAppServerOverStdio() {
@@ -31,7 +31,7 @@ final class CodexSessionRunnerTests: XCTestCase {
 
     let arguments = CodexSessionRunner.appServerArguments(for: block, workingDirectory: workingDirectory)
 
-    XCTAssertEqual(Array(arguments[0...1]), ["--profile", "teaching"])
+    XCTAssertEqual(Array(arguments[0 ... 1]), ["--profile", "teaching"])
     XCTAssertEqual(Array(arguments.suffix(3)), ["app-server", "--listen", "stdio://"])
   }
 

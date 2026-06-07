@@ -1,18 +1,18 @@
-import XCTest
-@testable import CodeckCore
 @testable import Codeck
+@testable import CodeckCore
+import XCTest
 
 final class SlideTests: XCTestCase {
   func testTitleUsesFirstNonEmptyHeading() {
     let slide = Slide(
       markdown:
-        """
-        Intro text
+      """
+      Intro text
 
-        ###
+      ###
 
-        ## Actual Title
-        """
+      ## Actual Title
+      """
     )
 
     XCTAssertEqual(slide.title, "Actual Title")
@@ -21,11 +21,11 @@ final class SlideTests: XCTestCase {
   func testTitleFallsBackWhenSlideHasNoHeadingText() {
     let slide = Slide(
       markdown:
-        """
-        ###
+      """
+      ###
 
-        Plain content
-        """
+      Plain content
+      """
     )
 
     XCTAssertEqual(slide.title, "Untitled Slide")
@@ -34,13 +34,13 @@ final class SlideTests: XCTestCase {
   func testSummaryUsesFirstNonHeadingContentLine() {
     let slide = Slide(
       markdown:
-        """
-        # Demo
+      """
+      # Demo
 
-        First useful summary line.
+      First useful summary line.
 
-        - More detail
-        """
+      - More detail
+      """
     )
 
     XCTAssertEqual(slide.summary, "First useful summary line.")

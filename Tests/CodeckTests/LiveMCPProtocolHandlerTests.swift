@@ -1,6 +1,6 @@
+@testable import Codeck
 import CodeckCore
 import XCTest
-@testable import Codeck
 
 @MainActor
 final class LiveMCPProtocolHandlerTests: XCTestCase {
@@ -11,7 +11,7 @@ final class LiveMCPProtocolHandlerTests: XCTestCase {
       theme: .studio,
       slides: [
         Slide(markdown: "# Intro\n\nFirst slide"),
-        Slide(markdown: "# Agenda\n\n- One\n- Two")
+        Slide(markdown: "# Agenda\n\n- One\n- Two"),
       ]
     )
     var selectedIndex: Int? = 0
@@ -45,12 +45,12 @@ final class LiveMCPProtocolHandlerTests: XCTestCase {
       Self.toolCall(9, "set_slide_markdown", [
         "document_id": documentID.uuidString,
         "index": 0,
-        "markdown": "# Intro Updated\n\nFirst slide updated"
+        "markdown": "# Intro Updated\n\nFirst slide updated",
       ]),
       Self.toolCall(10, "insert_slide", [
         "document_id": documentID.uuidString,
         "position": 1,
-        "markdown": "# Inserted\n\nInserted slide"
+        "markdown": "# Inserted\n\nInserted slide",
       ]),
       Self.toolCall(11, "duplicate_slide", ["document_id": documentID.uuidString, "index": 1]),
       Self.toolCall(12, "move_slide", ["document_id": documentID.uuidString, "from_index": 3, "to_index": 1]),
@@ -60,7 +60,7 @@ final class LiveMCPProtocolHandlerTests: XCTestCase {
         "theme": "chalk",
         "model": "gpt-5.4",
         "reasoning": "high",
-        "sandbox": "workspace-write"
+        "sandbox": "workspace-write",
       ]),
       Self.toolCall(15, "insert_codex_block", [
         "document_id": documentID.uuidString,
@@ -70,7 +70,7 @@ final class LiveMCPProtocolHandlerTests: XCTestCase {
         "prompt": "Explain this bridge.",
         "model": "gpt-5.4",
         "reasoning": "high",
-        "sandbox": "read-only"
+        "sandbox": "read-only",
       ]),
       Self.toolCall(16, "select_slide", ["document_id": documentID.uuidString, "index": 1]),
       Self.toolCall(17, "get_selection", ["document_id": documentID.uuidString]),
@@ -78,14 +78,14 @@ final class LiveMCPProtocolHandlerTests: XCTestCase {
       Self.toolCall(19, "stop_presentation", ["document_id": documentID.uuidString]),
       Self.toolCall(20, "validate_deck", ["document_id": documentID.uuidString]),
       Self.request(21, "resources/read", params: [
-        "uri": "codeck://live/deck/\(documentID.uuidString)?view=document"
+        "uri": "codeck://live/deck/\(documentID.uuidString)?view=document",
       ]),
       Self.request(22, "resources/read", params: [
-        "uri": "codeck://live/deck/\(documentID.uuidString)?view=outline"
+        "uri": "codeck://live/deck/\(documentID.uuidString)?view=outline",
       ]),
       Self.request(23, "resources/read", params: [
-        "uri": "codeck://live/deck/\(documentID.uuidString)?view=slide&index=0"
-      ])
+        "uri": "codeck://live/deck/\(documentID.uuidString)?view=slide&index=0",
+      ]),
     ].map { try handle($0, with: handler) }
 
     try assertNoProtocolOrToolErrors(in: responses)
@@ -189,7 +189,7 @@ final class LiveMCPProtocolHandlerTests: XCTestCase {
       Self.toolCall(1, "insert_slide", [
         "document_id": documentID.uuidString,
         "position": 1,
-        "markdown": "# Appended"
+        "markdown": "# Appended",
       ]),
       with: handler
     )
@@ -204,7 +204,7 @@ final class LiveMCPProtocolHandlerTests: XCTestCase {
       Self.toolCall(2, "set_slide_markdown", [
         "document_id": documentID.uuidString,
         "index": 0,
-        "markdown": "# First\n\n---\n\n# Split"
+        "markdown": "# First\n\n---\n\n# Split",
       ]),
       with: handler
     )
@@ -218,7 +218,7 @@ final class LiveMCPProtocolHandlerTests: XCTestCase {
 
     let notificationData = try JSONSerialization.data(withJSONObject: [
       "jsonrpc": "2.0",
-      "method": "tools/list"
+      "method": "tools/list",
     ])
     XCTAssertNil(handler.handleJSONData(notificationData))
 
@@ -226,7 +226,7 @@ final class LiveMCPProtocolHandlerTests: XCTestCase {
       let data = try JSONSerialization.data(withJSONObject: [
         "jsonrpc": "2.0",
         "id": invalidID,
-        "method": "tools/list"
+        "method": "tools/list",
       ])
       let response = try XCTUnwrap(handler.handleJSONData(data) as? [String: Any])
       XCTAssertNil(response["id"])
@@ -237,7 +237,7 @@ final class LiveMCPProtocolHandlerTests: XCTestCase {
     let validData = try JSONSerialization.data(withJSONObject: [
       "jsonrpc": "2.0",
       "id": "valid-id",
-      "method": "tools/list"
+      "method": "tools/list",
     ])
     let validResponse = try XCTUnwrap(handler.handleJSONData(validData) as? [String: Any])
     XCTAssertEqual(validResponse["id"] as? String, "valid-id")
@@ -245,12 +245,12 @@ final class LiveMCPProtocolHandlerTests: XCTestCase {
   }
 
   func testLiveMCPHTTPServerRespondsOverLocalhost() async throws {
-    let port = UInt16.random(in: 51000...55000)
+    let port = UInt16.random(in: 51000 ... 55000)
     let server = LiveMCPHTTPServer(port: port, handler: LiveMCPProtocolHandler())
     try server.start()
     defer { server.stop() }
 
-    var request = URLRequest(url: URL(string: "http://127.0.0.1:\(port)/mcp")!)
+    var request = try URLRequest(url: XCTUnwrap(URL(string: "http://127.0.0.1:\(port)/mcp")))
     request.httpMethod = "POST"
     request.setValue("application/json", forHTTPHeaderField: "Content-Type")
     request.setValue("tools/list", forHTTPHeaderField: "Mcp-Method")
@@ -266,12 +266,12 @@ final class LiveMCPProtocolHandlerTests: XCTestCase {
   }
 
   func testLiveMCPHTTPServerEchoesAllowedLocalhostOrigin() async throws {
-    let port = UInt16.random(in: 51000...55000)
+    let port = UInt16.random(in: 51000 ... 55000)
     let server = LiveMCPHTTPServer(port: port, handler: LiveMCPProtocolHandler())
     try server.start()
     defer { server.stop() }
 
-    var request = URLRequest(url: URL(string: "http://127.0.0.1:\(port)/mcp")!)
+    var request = try URLRequest(url: XCTUnwrap(URL(string: "http://127.0.0.1:\(port)/mcp")))
     request.httpMethod = "OPTIONS"
     request.setValue("http://localhost:3000", forHTTPHeaderField: "Origin")
     request.setValue("POST", forHTTPHeaderField: "Access-Control-Request-Method")
@@ -283,12 +283,12 @@ final class LiveMCPProtocolHandlerTests: XCTestCase {
   }
 
   func testLiveMCPHTTPServerRejectsNonLocalOrigins() async throws {
-    let port = UInt16.random(in: 51000...55000)
+    let port = UInt16.random(in: 51000 ... 55000)
     let server = LiveMCPHTTPServer(port: port, handler: LiveMCPProtocolHandler())
     try server.start()
     defer { server.stop() }
 
-    var request = URLRequest(url: URL(string: "http://127.0.0.1:\(port)/mcp")!)
+    var request = try URLRequest(url: XCTUnwrap(URL(string: "http://127.0.0.1:\(port)/mcp")))
     request.httpMethod = "POST"
     request.setValue("application/json", forHTTPHeaderField: "Content-Type")
     request.setValue("https://example.com", forHTTPHeaderField: "Origin")
@@ -358,14 +358,14 @@ final class LiveMCPProtocolHandlerTests: XCTestCase {
       "jsonrpc": "2.0",
       "id": id,
       "method": method,
-      "params": params
+      "params": params,
     ]
   }
 
   private static func toolCall(_ id: Int, _ name: String, _ arguments: [String: Any]) -> [String: Any] {
-    Self.request(id, "tools/call", params: [
+    request(id, "tools/call", params: [
       "name": name,
-      "arguments": arguments
+      "arguments": arguments,
     ])
   }
 }

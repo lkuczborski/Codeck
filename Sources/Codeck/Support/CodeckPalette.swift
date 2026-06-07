@@ -2,12 +2,29 @@ import AppKit
 import SwiftUI
 
 enum CodeckPalette {
-  static var workspace: Color { Color(nsColor: workspaceNSColor) }
-  static var editor: Color { Color(nsColor: editorNSColor) }
-  static var surface: Color { Color(nsColor: surfaceNSColor) }
-  static var elevatedSurface: Color { Color(nsColor: elevatedSurfaceNSColor) }
-  static var border: Color { Color(nsColor: borderNSColor) }
-  static var separator: Color { Color(nsColor: separatorNSColor) }
+  static var workspace: Color {
+    Color(nsColor: workspaceNSColor)
+  }
+
+  static var editor: Color {
+    Color(nsColor: editorNSColor)
+  }
+
+  static var surface: Color {
+    Color(nsColor: surfaceNSColor)
+  }
+
+  static var elevatedSurface: Color {
+    Color(nsColor: elevatedSurfaceNSColor)
+  }
+
+  static var border: Color {
+    Color(nsColor: borderNSColor)
+  }
+
+  static var separator: Color {
+    Color(nsColor: separatorNSColor)
+  }
 
   static let workspaceNSColor = adaptiveColor(
     light: NSColor(red: 0.949, green: 0.957, blue: 0.965, alpha: 1),

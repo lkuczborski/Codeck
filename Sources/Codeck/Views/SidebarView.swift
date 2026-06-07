@@ -50,7 +50,6 @@ struct SidebarView: View {
     }
   }
 
-  @ViewBuilder
   private var sidebarFooter: some View {
     slideActionButtons
       .buttonStyle(.borderless)
@@ -131,30 +130,5 @@ struct SidebarView: View {
         proxy.scrollTo(selection, anchor: .center)
       }
     }
-  }
-}
-
-private struct SidebarSlideRow: View {
-  let index: Int
-  let slide: Slide
-
-  var body: some View {
-    HStack(spacing: 10) {
-      Text("\(index)")
-        .font(.caption.monospacedDigit())
-        .foregroundStyle(.secondary)
-        .frame(width: 24, alignment: .trailing)
-
-      VStack(alignment: .leading, spacing: 2) {
-        Text(slide.title)
-          .lineLimit(1)
-
-        Text(slide.summary)
-          .font(.caption)
-          .foregroundStyle(.secondary)
-          .lineLimit(1)
-      }
-    }
-    .padding(.vertical, 3)
   }
 }

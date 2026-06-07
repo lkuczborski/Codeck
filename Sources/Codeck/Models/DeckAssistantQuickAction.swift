@@ -5,7 +5,9 @@ enum DeckAssistantQuickAction: String, CaseIterable, Identifiable, Hashable {
   case addResearch
   case addData
 
-  var id: String { rawValue }
+  var id: String {
+    rawValue
+  }
 
   var title: String {
     switch self {

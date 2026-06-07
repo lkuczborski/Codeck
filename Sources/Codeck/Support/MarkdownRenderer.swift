@@ -132,7 +132,8 @@ enum MarkdownRenderer {
         let code = codeLines.joined(separator: "\n")
         if renderCodexFences,
            info.hasPrefix("codex"),
-           let block = CodexBlock.extract(from: "\(fence)\(info)\n\(code)\n\(fence)").first {
+           let block = CodexBlock.extract(from: "\(fence)\(info)\n\(code)\n\(fence)").first
+        {
           html.append(renderCodexBlock(block, output: codexOutputs[block.id]))
         } else {
           html.append(renderCodeBlock(code, language: info))
@@ -203,7 +204,7 @@ enum MarkdownRenderer {
 
   private static func headingHTML(for line: String) -> String? {
     let level = line.prefix(while: { $0 == "#" }).count
-    guard (1...6).contains(level), line.dropFirst(level).first == " " else {
+    guard (1 ... 6).contains(level), line.dropFirst(level).first == " " else {
       return nil
     }
 
@@ -409,7 +410,10 @@ enum MarkdownRenderer {
             <div class="codex-title">\(renderInline(block.title))</div>
             <div class="codex-status">\(escapeHTML(state.rawValue))</div>
           </div>
-          <button type="button" class="\(actionClass)" aria-label="\(actionTitle) Codex session" title="\(actionTitle) Codex session" onclick="Codeck.\(action)('\(escapeJavaScript(block.id))')">
+          <button type="button" class="\(actionClass)" aria-label="\(actionTitle) Codex session" title="\(actionTitle) Codex session" onclick="Codeck.\(
+            action
+          )('\(escapeJavaScript(block
+          .id))')">
             <span class="\(iconClass)" aria-hidden="true"></span>
             <span class="visually-hidden">\(actionTitle)</span>
           </button>
@@ -461,7 +465,7 @@ enum MarkdownRenderer {
     var result = text
 
     for match in matches {
-      let groups = (0..<match.numberOfRanges).map { index in
+      let groups = (0 ..< match.numberOfRanges).map { index in
         match.range(at: index).location == NSNotFound ? "" : nsText.substring(with: match.range(at: index))
       }
       if let range = Range(match.range, in: result) {

@@ -1,6 +1,6 @@
-import XCTest
 @testable import Codeck
 @testable import CodeckCore
+import XCTest
 
 final class DeckAssistantTests: XCTestCase {
   func testPromptIncludesDeckContextSelectedSlideAndWebMode() {
@@ -8,7 +8,7 @@ final class DeckAssistantTests: XCTestCase {
       settings: .default,
       slides: [
         Slide(markdown: "# Intro\n\nOld framing."),
-        Slide(markdown: "# Evidence\n\nNeeds data.")
+        Slide(markdown: "# Evidence\n\nNeeds data."),
       ]
     )
 
@@ -38,7 +38,7 @@ final class DeckAssistantTests: XCTestCase {
         Slide(markdown: "# Intro\n\nOpening summary.\n\nOpening private detail."),
         Slide(markdown: "# Evidence\n\nSelected summary.\n\nSelected private detail."),
         Slide(markdown: "# Nearby\n\nNeighbor summary.\n\nNeighbor private detail."),
-        Slide(markdown: "# Appendix\n\nFar summary.\n\nFar private detail.")
+        Slide(markdown: "# Appendix\n\nFar summary.\n\nFar private detail."),
       ]
     )
 
@@ -80,7 +80,7 @@ final class DeckAssistantTests: XCTestCase {
       slides: [
         Slide(markdown: "# Intro\n\nOpening."),
         Slide(markdown: "# Evidence\n\nNeeds support."),
-        Slide(markdown: "# Close\n\nMissing next steps.")
+        Slide(markdown: "# Close\n\nMissing next steps."),
       ]
     )
 
@@ -130,13 +130,13 @@ final class DeckAssistantTests: XCTestCase {
     )
   }
 
-  func testDeckFingerprintChangesForContentAndOrder() {
-    let firstSlide = Slide(
-      id: UUID(uuidString: "00000000-0000-0000-0000-000000000001")!,
+  func testDeckFingerprintChangesForContentAndOrder() throws {
+    let firstSlide = try Slide(
+      id: XCTUnwrap(UUID(uuidString: "00000000-0000-0000-0000-000000000001")),
       markdown: "# Intro\n\nOpening."
     )
-    let secondSlide = Slide(
-      id: UUID(uuidString: "00000000-0000-0000-0000-000000000002")!,
+    let secondSlide = try Slide(
+      id: XCTUnwrap(UUID(uuidString: "00000000-0000-0000-0000-000000000002")),
       markdown: "# Evidence\n\nProof."
     )
     let deck = PresentationDeck(settings: .default, slides: [firstSlide, secondSlide])
@@ -146,7 +146,7 @@ final class DeckAssistantTests: XCTestCase {
       settings: .default,
       slides: [
         Slide(id: firstSlide.id, markdown: "# Intro\n\nEdited."),
-        secondSlide
+        secondSlide,
       ]
     )
     let reorderedDeck = PresentationDeck(settings: .default, slides: [secondSlide, firstSlide])
@@ -160,7 +160,7 @@ final class DeckAssistantTests: XCTestCase {
       settings: .default,
       slides: [
         Slide(markdown: "# Intro\n\nOld framing."),
-        Slide(markdown: "# Evidence\n\nNeeds data.")
+        Slide(markdown: "# Evidence\n\nNeeds data."),
       ]
     )
     let response =

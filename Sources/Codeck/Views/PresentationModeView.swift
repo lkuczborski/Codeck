@@ -44,11 +44,11 @@ struct PresentationModeView: View {
     let blocks = playbackState.currentSlide?.codexBlocks ?? []
 
     switch action {
-    case .runCodex(let id):
+    case let .runCodex(id):
       if let block = blocks.first(where: { $0.id == id }) {
         sessions.run(block, settings: playbackState.deck.settings.codex, workingDirectory: baseURL)
       }
-    case .stopCodex(let id):
+    case let .stopCodex(id):
       sessions.stop(id)
     case .runAllCodex:
       sessions.runAll(blocks, settings: playbackState.deck.settings.codex, workingDirectory: baseURL)

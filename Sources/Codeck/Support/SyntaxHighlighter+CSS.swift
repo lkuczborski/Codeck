@@ -3,7 +3,7 @@ extension SyntaxHighlighter {
     family: .css,
     keywords: [
       "after", "before", "calc", "currentColor", "flex", "grid", "hover", "important", "inherit", "initial",
-      "none", "not", "root", "var"
+      "none", "not", "root", "var",
     ],
     types: [],
     literals: [],

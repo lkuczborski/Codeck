@@ -119,6 +119,22 @@ client should work elsewhere:
 CODECK_MCP_ALLOWED_ROOTS="$HOME/Documents:/tmp" swift run codeck-mcp
 ```
 
+## Development
+
+Install local development tools with Homebrew:
+
+```bash
+brew bundle
+```
+
+Useful checks:
+
+```bash
+swift test
+script/format.sh
+script/lint.sh
+```
+
 The server speaks MCP over stdio and exposes tools for deck and slide mutation:
 
 - `create_deck`

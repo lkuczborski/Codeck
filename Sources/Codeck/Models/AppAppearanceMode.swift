@@ -5,7 +5,9 @@ enum AppAppearanceMode: String, CaseIterable, Identifiable {
 
   static let storageKey = "appAppearanceMode"
 
-  var id: String { rawValue }
+  var id: String {
+    rawValue
+  }
 
   var title: String {
     switch self {

@@ -12,7 +12,7 @@ struct PresentationSlidePreviewView: View {
   var isChromeVisible = false
   var handlesScrubbing = true
   var showsShadow = true
-  var onClose: (() -> Void)? = nil
+  var onClose: (() -> Void)?
 
   private var selectedSlideIndex: Int? {
     guard let selectedSlideID else { return nil }
@@ -99,7 +99,7 @@ struct PresentationSlidePreviewView: View {
       .contentShape(Rectangle())
       .onContinuousHover(coordinateSpace: .local) { phase in
         switch phase {
-        case .active(let point):
+        case let .active(point):
           updateSkimmedSlideIndex(point: point, size: size)
         case .ended:
           skimmedSlideIndex = nil
@@ -126,66 +126,6 @@ struct PresentationSlidePreviewView: View {
     let clampedX = min(max(point.x, 0), size.width)
     let rawIndex = Int((clampedX / size.width) * CGFloat(deck.slides.count))
     skimmedSlideIndex = min(max(rawIndex, 0), deck.slides.count - 1)
-  }
-
-  private func clampedSlideIndex(_ index: Int?) -> Int? {
-    guard let index, deck.slides.indices.contains(index) else { return nil }
-    return index
-  }
-}
-
-struct PresentationSlidePreviewPopover: View {
-  let deck: PresentationDeck
-  let selectedSlideID: Slide.ID?
-  @ObservedObject var sessions: CodexSessionStore
-  let baseURL: URL?
-  @Binding var skimmedSlideIndex: Int?
-  let onHoverChanged: (Bool) -> Void
-  let onDetach: (Int?) -> Void
-
-  private var selectedSlideIndex: Int? {
-    guard let selectedSlideID else { return nil }
-    return deck.slides.firstIndex(where: { $0.id == selectedSlideID })
-  }
-
-  private var displayedSlideIndex: Int? {
-    clampedSlideIndex(skimmedSlideIndex)
-      ?? clampedSlideIndex(selectedSlideIndex)
-      ?? deck.slides.indices.first
-  }
-
-  var body: some View {
-    ZStack(alignment: .topLeading) {
-      PresentationSlidePreviewView(
-        deck: deck,
-        selectedSlideID: selectedSlideID,
-        sessions: sessions,
-        baseURL: baseURL,
-        fallbackSlideIndex: nil,
-        skimmedSlideIndex: $skimmedSlideIndex,
-        isChromeVisible: true
-      )
-
-      Button {
-        onDetach(displayedSlideIndex)
-      } label: {
-        Image(systemName: "pin.fill")
-          .font(.system(size: 12, weight: .bold))
-          .foregroundStyle(.white)
-          .frame(width: 26, height: 26)
-          .background(.black.opacity(0.62), in: Circle())
-      }
-      .buttonStyle(.plain)
-      .help("Pin preview")
-      .padding(8)
-    }
-    .frame(width: 380)
-    .padding(10)
-    .onHover(perform: onHoverChanged)
-    .onDisappear {
-      onHoverChanged(false)
-      skimmedSlideIndex = nil
-    }
   }
 
   private func clampedSlideIndex(_ index: Int?) -> Int? {

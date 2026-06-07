@@ -1,0 +1,43 @@
+included:
+  - Package.swift
+  - Sources
+  - Tests
+
+excluded:
+  - .build
+  - dist
+  - docs
+
+disabled_rules:
+  - todo
+  - trailing_comma
+
+opt_in_rules:
+  - closure_spacing
+  - contains_over_first_not_nil
+  - empty_count
+  - first_where
+  - sorted_imports
+
+line_length:
+  warning: 160
+  error: 220
+  ignores_comments: true
+  ignores_interpolated_strings: true
+  ignores_urls: true
+
+file_length:
+  warning: 700
+  error: 1100
+
+type_body_length:
+  warning: 500
+  error: 1000
+
+function_body_length:
+  warning: 90
+  error: 160
+
+identifier_name:
+  excluded:
+    - id

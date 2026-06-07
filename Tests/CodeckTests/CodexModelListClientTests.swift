@@ -1,6 +1,6 @@
-import XCTest
-@testable import CodeckCore
 @testable import Codeck
+@testable import CodeckCore
+import XCTest
 
 final class CodexModelListClientTests: XCTestCase {
   func testModelListProcessUsesSandboxedTemporaryDirectory() {
@@ -27,12 +27,12 @@ final class CodexModelListClientTests: XCTestCase {
             "supportedReasoningEfforts": [
               ["reasoningEffort": "low"],
               ["reasoningEffort": "medium"],
-              ["reasoningEffort": "ultra"]
+              ["reasoningEffort": "ultra"],
             ],
-            "defaultReasoningEffort": "ultra"
-          ]
-        ]
-      ]
+            "defaultReasoningEffort": "ultra",
+          ],
+        ],
+      ],
     ]
 
     let models = CodexModelListClient.models(from: object)
@@ -55,12 +55,12 @@ final class CodexModelListClientTests: XCTestCase {
           "description": "Uses snake_case fields.",
           "is_default": true,
           "supported_reasoning_efforts": ["low", "high"],
-          "default_reasoning_effort": "high"
+          "default_reasoning_effort": "high",
         ],
         [
-          "display_name": "Missing identifier"
-        ]
-      ]
+          "display_name": "Missing identifier",
+        ],
+      ],
     ]
 
     let models = CodexModelListClient.models(from: object, requestID: "42")
@@ -80,10 +80,10 @@ final class CodexModelListClientTests: XCTestCase {
       "result": [
         "models": [
           [
-            "id": "gpt-plain"
-          ]
-        ]
-      ]
+            "id": "gpt-plain",
+          ],
+        ],
+      ],
     ]
 
     let model = CodexModelListClient.models(from: object)?.first
@@ -102,10 +102,10 @@ final class CodexModelListClientTests: XCTestCase {
       "result": [
         "models": [
           [
-            "id": "gpt-next"
-          ]
-        ]
-      ]
+            "id": "gpt-next",
+          ],
+        ],
+      ],
     ]
 
     XCTAssertNil(CodexModelListClient.models(from: object))

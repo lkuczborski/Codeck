@@ -475,7 +475,7 @@ struct DocumentWindowView: View {
 
     for change in changes {
       switch change.operation {
-      case .replace(let index):
+      case let .replace(index):
         guard deck.slides.indices.contains(index) else { continue }
         deck.slides[index].markdown = change.afterMarkdown
         selectedIndexAfterApply = index
@@ -485,7 +485,7 @@ struct DocumentWindowView: View {
     }
 
     let insertions = changes.compactMap { change -> (position: Int, markdown: String)? in
-      guard case .insert(let position) = change.operation else { return nil }
+      guard case let .insert(position) = change.operation else { return nil }
       return (position, change.afterMarkdown)
     }
     .sorted { $0.position < $1.position }
@@ -555,7 +555,8 @@ struct DocumentWindowView: View {
   private func applyLiveModelDefaultsIfNeeded() {
     let liveDefaultModelID = modelCatalog.defaultModelID()
     if document.deck.settings.codex.model == CodexModelOption.defaultModelID,
-       liveDefaultModelID != document.deck.settings.codex.model {
+       liveDefaultModelID != document.deck.settings.codex.model
+    {
       document.deck.settings.codex.model = liveDefaultModelID
     }
 
@@ -689,35 +690,5 @@ struct DocumentWindowView: View {
 
   private func hideRightUtility() {
     isRightUtilityVisible = false
-  }
-}
-
-private enum CompactDetailPane: String, CaseIterable, Identifiable {
-  case editor
-  case preview
-  case assistant
-
-  var id: String { rawValue }
-
-  var title: String {
-    switch self {
-    case .editor:
-      "Editor"
-    case .preview:
-      "Preview"
-    case .assistant:
-      "Assistant"
-    }
-  }
-
-  var systemImage: String {
-    switch self {
-    case .editor:
-      "pencil"
-    case .preview:
-      "play.rectangle"
-    case .assistant:
-      "sparkles"
-    }
   }
 }

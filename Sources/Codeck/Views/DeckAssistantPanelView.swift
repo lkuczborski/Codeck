@@ -99,7 +99,7 @@ struct DeckAssistantPanelView: View {
 
       TextField(DeckAssistantQuickAction.diagnose.prompt, text: $goal, axis: .vertical)
         .textFieldStyle(.plain)
-        .lineLimit(3...7)
+        .lineLimit(3 ... 7)
         .padding(10)
         .codeckElevatedSurface(cornerRadius: 8)
         .disabled(isRunning)
@@ -315,7 +315,7 @@ struct DeckAssistantPanelView: View {
   }
 
   private func helpText(for action: DeckAssistantQuickAction) -> String {
-    if action.requiresWebResearch && !allowsWebResearch {
+    if action.requiresWebResearch, !allowsWebResearch {
       return "Turn on Use web to enable \(action.title)."
     }
 
@@ -434,82 +434,5 @@ struct DeckAssistantPanelView: View {
     parsedOutputText = ""
     activeRunDeck = nil
     activeRunFingerprint = nil
-  }
-}
-
-private struct DeckAssistantChangeRow: View {
-  let change: DeckAssistantChange
-  @Binding var isSelected: Bool
-  @State private var isExpanded = false
-
-  var body: some View {
-    VStack(alignment: .leading, spacing: 8) {
-      Toggle(isOn: $isSelected) {
-        VStack(alignment: .leading, spacing: 3) {
-          HStack(spacing: 6) {
-            Text(change.title)
-              .font(.subheadline.weight(.semibold))
-              .lineLimit(1)
-
-            Spacer(minLength: 8)
-
-            Text(change.locationLabel)
-              .font(.caption.monospacedDigit())
-              .foregroundStyle(.secondary)
-              .lineLimit(1)
-          }
-
-          Text(change.detail)
-            .font(.caption)
-            .foregroundStyle(.secondary)
-            .lineLimit(2)
-        }
-      }
-      .toggleStyle(.checkbox)
-
-      DisclosureGroup(isExpanded: $isExpanded) {
-        VStack(alignment: .leading, spacing: 8) {
-          if let beforeMarkdown = change.beforeMarkdown {
-            MarkdownSnippetView(title: "Before", markdown: beforeMarkdown)
-          }
-
-          MarkdownSnippetView(title: "After", markdown: change.afterMarkdown)
-        }
-        .padding(.top, 6)
-      } label: {
-        Label(isExpanded ? "Hide Preview" : "Show Preview", systemImage: "doc.text.magnifyingglass")
-          .font(.caption)
-      }
-    }
-    .padding(10)
-    .codeckElevatedSurface(cornerRadius: 8)
-    .overlay {
-      RoundedRectangle(cornerRadius: 8, style: .continuous)
-        .strokeBorder(isSelected ? Color.accentColor.opacity(0.55) : CodeckPalette.border, lineWidth: 1)
-    }
-  }
-}
-
-private struct MarkdownSnippetView: View {
-  let title: String
-  let markdown: String
-
-  var body: some View {
-    VStack(alignment: .leading, spacing: 6) {
-      Text(title)
-        .font(.caption2.weight(.semibold))
-        .foregroundStyle(.secondary)
-
-      Text(markdown)
-        .font(.system(size: 11, design: .monospaced))
-        .textSelection(.enabled)
-        .multilineTextAlignment(.leading)
-        .lineLimit(nil)
-        .fixedSize(horizontal: false, vertical: true)
-        .frame(maxWidth: .infinity, alignment: .topLeading)
-        .padding(8)
-        .background(CodeckPalette.surface, in: RoundedRectangle(cornerRadius: 6, style: .continuous))
-    }
-    .frame(maxWidth: .infinity, alignment: .leading)
   }
 }

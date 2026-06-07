@@ -7,12 +7,12 @@ extension SyntaxHighlighter {
       "for", "func", "get", "guard", "if", "import", "in", "indirect", "infix", "init", "inout", "internal", "is",
       "let", "mutating", "nonisolated", "open", "operator", "override", "postfix", "precedencegroup", "prefix",
       "private", "protocol", "public", "rethrows", "return", "set", "some", "static", "struct", "subscript",
-      "super", "switch", "throw", "throws", "try", "typealias", "var", "where", "while"
+      "super", "switch", "throw", "throws", "try", "typealias", "var", "where", "while",
     ],
     types: [
       "Array", "Binding", "Bool", "CGFloat", "CGPoint", "CGRect", "CGSize", "Character", "Color", "Data", "Date",
       "Dictionary", "Double", "Float", "Int", "MainActor", "Never", "Optional", "Result", "Set", "State",
-      "StateObject", "String", "Task", "URL", "View", "Void"
+      "StateObject", "String", "Task", "URL", "View", "Void",
     ],
     literals: ["false", "nil", "self", "true"],
     lineComments: ["//"],

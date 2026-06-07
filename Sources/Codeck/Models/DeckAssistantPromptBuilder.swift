@@ -46,7 +46,9 @@ enum DeckAssistantPromptBuilder {
     \(currentDateString)
 
     Web research:
-    \(allowsWebResearch ? "Enabled. Use current web context when it materially improves factual quality. Cite URLs in the slide markdown for external facts. Do not invent sources." : "Disabled. Use only the deck context below. Do not browse, search, fetch URLs, or claim that you checked the web.")
+    \(allowsWebResearch ?
+      "Enabled. Use current web context when it materially improves factual quality. Cite URLs in the slide markdown for external facts. Do not invent sources." :
+      "Disabled. Use only the deck context below. Do not browse, search, fetch URLs, or claim that you checked the web.")
 
     Editing rules:
     \(editingRules(for: scope))
@@ -99,21 +101,19 @@ enum DeckAssistantPromptBuilder {
   }
 
   private static func editingRules(for scope: DeckAssistantScope) -> String {
-    var rules: [String]
-
-    switch scope {
+    var rules: [String] = switch scope {
     case .currentSlide:
-      rules = [
+      [
         #"Return 1 to 5 changes."#,
         #"Use "replace" to rewrite an existing slide."#,
-        #"Use "insert" to add a new supporting slide only if it is clearly needed."#
+        #"Use "insert" to add a new supporting slide only if it is clearly needed."#,
       ]
     case .wholeDeck:
-      rules = [
+      [
         #"Return 2 to 5 changes when the deck has multiple meaningful gaps; return 1 only when one change is clearly enough."#,
         #"Use "replace" to rewrite existing slides."#,
         #"Use "insert" to add missing context, evidence, transition, example, agenda, or closing slides."#,
-        #"Do not limit proposals to rewriting slide 1 when deck-level issues exist elsewhere."#
+        #"Do not limit proposals to rewriting slide 1 when deck-level issues exist elsewhere."#,
       ]
     }
 
@@ -122,7 +122,7 @@ enum DeckAssistantPromptBuilder {
       "Preserve runnable ```codex fences when they remain useful.",
       "Do not return YAML front matter.",
       "Do not delete slides directly. If a slide should go away, replace it with a tighter version or explain it in detail.",
-      "Prefer fewer, stronger edits over broad churn."
+      "Prefer fewer, stronger edits over broad churn.",
     ]
 
     return rules.map { "- \($0)" }.joined(separator: "\n")
@@ -173,9 +173,9 @@ enum DeckAssistantPromptBuilder {
   ) -> (title: String, body: String) {
     switch scope {
     case .currentSlide:
-      return ("Nearby slide context", nearbySlideContext(deck, selectedIndex: selectedIndex))
+      ("Nearby slide context", nearbySlideContext(deck, selectedIndex: selectedIndex))
     case .wholeDeck:
-      return ("Full deck", fullDeckContext(deck))
+      ("Full deck", fullDeckContext(deck))
     }
   }
 

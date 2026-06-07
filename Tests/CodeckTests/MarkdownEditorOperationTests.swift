@@ -1,6 +1,6 @@
+@testable import Codeck
 import Foundation
 import XCTest
-@testable import Codeck
 
 final class MarkdownEditorOperationTests: XCTestCase {
   func testBoldToggleWrapsSelectionAndReportsActiveStyle() {

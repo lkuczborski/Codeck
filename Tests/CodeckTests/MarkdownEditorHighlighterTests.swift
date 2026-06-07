@@ -1,6 +1,6 @@
 import AppKit
-import XCTest
 @testable import Codeck
+import XCTest
 
 @MainActor
 final class MarkdownEditorHighlighterTests: XCTestCase {

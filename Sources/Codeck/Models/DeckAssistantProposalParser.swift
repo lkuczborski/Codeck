@@ -80,12 +80,12 @@ enum DeckAssistantProposalParser {
 
   private static func normalizedInsertPosition(_ value: Int?, in deck: PresentationDeck) -> Int {
     guard let value else { return deck.slides.count }
-    if (0...deck.slides.count).contains(value) {
+    if (0 ... deck.slides.count).contains(value) {
       return value
     }
 
     let oneBased = value - 1
-    if (0...deck.slides.count).contains(oneBased) {
+    if (0 ... deck.slides.count).contains(oneBased) {
       return oneBased
     }
 
@@ -96,7 +96,7 @@ enum DeckAssistantProposalParser {
     switch operation {
     case .insert:
       "Insert slide"
-    case .replace(let index):
+    case let .replace(index):
       "Rewrite slide \(index + 1)"
     }
   }
@@ -172,7 +172,7 @@ enum DeckAssistantProposalParser {
       } else if character == "}" {
         depth -= 1
         if depth == 0, let startIndex {
-          return String(text[startIndex...index])
+          return String(text[startIndex ... index])
         }
       }
     }

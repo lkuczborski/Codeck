@@ -10,7 +10,7 @@ final class CodeckMCPServerTests: XCTestCase {
       Self.request(1, "initialize", params: [
         "protocolVersion": "2025-11-25",
         "clientInfo": ["name": "codeck-tests", "version": "0"],
-        "capabilities": [:]
+        "capabilities": [:],
       ]),
       Self.request(2, "tools/list"),
       Self.request(3, "resources/list"),
@@ -19,7 +19,7 @@ final class CodeckMCPServerTests: XCTestCase {
         "path": deckPath,
         "slides": ["# Intro\n\nFirst slide", "# Agenda\n\n- One\n- Two"],
         "overwrite": true,
-        "theme": "studio"
+        "theme": "studio",
       ]),
       Self.toolCall(6, "read_deck", ["path": deckPath]),
       Self.toolCall(7, "list_slides", ["path": deckPath]),
@@ -27,12 +27,12 @@ final class CodeckMCPServerTests: XCTestCase {
       Self.toolCall(9, "set_slide_markdown", [
         "path": deckPath,
         "index": 0,
-        "markdown": "# Intro Updated\n\nFirst slide updated"
+        "markdown": "# Intro Updated\n\nFirst slide updated",
       ]),
       Self.toolCall(10, "insert_slide", [
         "path": deckPath,
         "position": 1,
-        "markdown": "# Inserted\n\nInserted slide"
+        "markdown": "# Inserted\n\nInserted slide",
       ]),
       Self.toolCall(11, "duplicate_slide", ["path": deckPath, "index": 1]),
       Self.toolCall(12, "move_slide", ["path": deckPath, "from_index": 3, "to_index": 1]),
@@ -42,7 +42,7 @@ final class CodeckMCPServerTests: XCTestCase {
         "theme": "chalk",
         "model": "gpt-5.4",
         "reasoning": "high",
-        "sandbox": "workspace-write"
+        "sandbox": "workspace-write",
       ]),
       Self.toolCall(15, "insert_codex_block", [
         "path": deckPath,
@@ -52,18 +52,18 @@ final class CodeckMCPServerTests: XCTestCase {
         "prompt": "Explain the smoke test result.",
         "model": "gpt-5.4",
         "reasoning": "high",
-        "sandbox": "read-only"
+        "sandbox": "read-only",
       ]),
       Self.toolCall(16, "validate_deck", ["path": deckPath]),
       Self.request(17, "resources/read", params: [
-        "uri": "codeck://file/deck?path=\(deckPath)&view=document"
+        "uri": "codeck://file/deck?path=\(deckPath)&view=document",
       ]),
       Self.request(18, "resources/read", params: [
-        "uri": "codeck://file/deck?path=\(deckPath)&view=outline"
+        "uri": "codeck://file/deck?path=\(deckPath)&view=outline",
       ]),
       Self.request(19, "resources/read", params: [
-        "uri": "codeck://file/deck?path=\(deckPath)&view=slide&index=0"
-      ])
+        "uri": "codeck://file/deck?path=\(deckPath)&view=slide&index=0",
+      ]),
     ]
 
     let responses = try runMCPServer(requests: requests, allowedRoots: "/private/tmp")
@@ -85,7 +85,7 @@ final class CodeckMCPServerTests: XCTestCase {
         "duplicate_slide",
         "set_deck_settings",
         "insert_codex_block",
-        "validate_deck"
+        "validate_deck",
       ])
     )
 
@@ -125,7 +125,7 @@ final class CodeckMCPServerTests: XCTestCase {
       ["jsonrpc": "2.0", "id": NSNull(), "method": "tools/list"],
       ["jsonrpc": "2.0", "id": true, "method": "tools/list"],
       ["jsonrpc": "2.0", "id": 1.5, "method": "tools/list"],
-      ["jsonrpc": "2.0", "id": "valid-id", "method": "tools/list"]
+      ["jsonrpc": "2.0", "id": "valid-id", "method": "tools/list"],
     ]
 
     let responses = try runMCPServer(requests: requests, allowedRoots: "/private/tmp")
@@ -252,14 +252,14 @@ final class CodeckMCPServerTests: XCTestCase {
       "jsonrpc": "2.0",
       "id": id,
       "method": method,
-      "params": params
+      "params": params,
     ]
   }
 
   private static func toolCall(_ id: Int, _ name: String, _ arguments: [String: Any]) -> [String: Any] {
-    Self.request(id, "tools/call", params: [
+    request(id, "tools/call", params: [
       "name": name,
-      "arguments": arguments
+      "arguments": arguments,
     ])
   }
 

@@ -40,7 +40,7 @@ final class LiveMCPProtocolHandler {
       return errorResponse(id: envelope.responseID, code: -32600, message: "Missing method.")
     }
 
-    guard case .valid(let id) = envelope.idState else {
+    guard case let .valid(id) = envelope.idState else {
       if case .invalid = envelope.idState {
         return errorResponse(id: nil, code: -32600, message: "Invalid JSON-RPC request id.")
       }
@@ -58,13 +58,13 @@ final class LiveMCPProtocolHandler {
       case "tools/list":
         return response(id: id, result: ["tools": tools])
       case "tools/call":
-        return response(id: id, result: callToolResult(params: try dictionaryParams(message["params"])))
+        return try response(id: id, result: callToolResult(params: dictionaryParams(message["params"])))
       case "resources/list":
         return response(id: id, result: ["resources": resourceList])
       case "resources/templates/list":
         return response(id: id, result: ["resourceTemplates": resourceTemplates])
       case "resources/read":
-        return response(id: id, result: try readResourceResult(params: try dictionaryParams(message["params"])))
+        return try response(id: id, result: readResourceResult(params: dictionaryParams(message["params"])))
       default:
         return errorResponse(id: id, code: -32601, message: "Unknown method: \(method)")
       }
@@ -81,15 +81,15 @@ final class LiveMCPProtocolHandler {
       "protocolVersion": protocolVersion,
       "capabilities": [
         "tools": ["listChanged": true],
-        "resources": ["listChanged": true]
+        "resources": ["listChanged": true],
       ],
       "serverInfo": [
         "name": "codeck",
-        "version": "0.1.0"
+        "version": "0.1.0",
       ],
       "instructions": """
       Edit open Codeck document windows. Use list_open_decks to find document_id values; if only one deck is open, document_id can be omitted.
-      """
+      """,
     ]
   }
 
@@ -108,6 +108,26 @@ final class LiveMCPProtocolHandler {
   }
 
   private func callTool(name: String, arguments: [String: Any]) throws -> String {
+    if let result = try callDeckReadTool(name: name, arguments: arguments) {
+      return result
+    }
+
+    if let result = try callSlideMutationTool(name: name, arguments: arguments) {
+      return result
+    }
+
+    if let result = try callDeckMutationTool(name: name, arguments: arguments) {
+      return result
+    }
+
+    if let result = try callPresentationTool(name: name, arguments: arguments) {
+      return result
+    }
+
+    throw LiveMCPError.invalidParams("Unknown tool: \(name)")
+  }
+
+  private func callDeckReadTool(name: String, arguments: [String: Any]) throws -> String? {
     switch name {
     case "list_open_decks":
       return try jsonText(OpenDecksResponse(documents: registry.listDocuments().map(OpenDocumentDescription.init)))
@@ -123,8 +143,21 @@ final class LiveMCPProtocolHandler {
       let deck = document.deck()
       let index = try requiredIndex(arguments, "index", in: deck.slides.indices)
       return try jsonText(LiveSlideResponse(document: document, index: index, slide: deck.slides[index]))
+    case "get_selection":
+      let document = try document(from: arguments)
+      return try jsonText(SelectionResponse(document: document))
+    case "validate_deck":
+      let document = try document(from: arguments)
+      return try jsonText(LiveValidationResponse(document: document, valid: true, warnings: [], deck: document.deck()))
+    default:
+      return nil
+    }
+  }
+
+  private func callSlideMutationTool(name: String, arguments: [String: Any]) throws -> String? {
+    switch name {
     case "set_slide_markdown":
-      return try mutateDeck(arguments, message: "Slide updated.") { deck, _ in
+      try mutateDeck(arguments, message: "Slide updated.") { deck, _ in
         let index = try requiredIndex(arguments, "index", in: deck.slides.indices)
         let markdown = try requiredString(arguments, "markdown")
         let slideID = deck.slides[index].id
@@ -134,14 +167,14 @@ final class LiveMCPProtocolHandler {
         }
       }
     case "insert_slide":
-      return try mutateDeck(arguments, message: "Slide inserted.") { deck, _ in
+      try mutateDeck(arguments, message: "Slide inserted.") { deck, _ in
         let markdown = optionalString(arguments, "markdown") ?? PresentationDeck.defaultSlideMarkdown
         let position = try optionalInt(arguments, "position").map { try boundedInsertionIndex($0, count: deck.slides.count) } ?? deck.slides.count
         deck.slides.insert(Slide(markdown: markdown), at: position)
         return position
       }
     case "delete_slide":
-      return try mutateDeck(arguments, message: "Slide deleted.") { deck, _ in
+      try mutateDeck(arguments, message: "Slide deleted.") { deck, _ in
         guard deck.slides.count > 1 else {
           throw LiveMCPError.operationFailed("A Codeck deck must keep at least one slide.")
         }
@@ -150,22 +183,29 @@ final class LiveMCPProtocolHandler {
         return min(index, deck.slides.count - 1)
       }
     case "move_slide":
-      return try mutateDeck(arguments, message: "Slide moved.") { deck, _ in
+      try mutateDeck(arguments, message: "Slide moved.") { deck, _ in
         let fromIndex = try requiredIndex(arguments, "from_index", in: deck.slides.indices)
-        let toIndex = try boundedInsertionIndex(try requiredInt(arguments, "to_index"), count: deck.slides.count)
+        let toIndex = try boundedInsertionIndex(requiredInt(arguments, "to_index"), count: deck.slides.count)
         let slide = deck.slides.remove(at: fromIndex)
         let adjustedDestination = min(toIndex, deck.slides.count)
         deck.slides.insert(slide, at: adjustedDestination)
         return adjustedDestination
       }
     case "duplicate_slide":
-      return try mutateDeck(arguments, message: "Slide duplicated.") { deck, _ in
+      try mutateDeck(arguments, message: "Slide duplicated.") { deck, _ in
         let index = try requiredIndex(arguments, "index", in: deck.slides.indices)
         deck.slides.insert(Slide(markdown: deck.slides[index].markdown), at: index + 1)
         return index + 1
       }
+    default:
+      nil
+    }
+  }
+
+  private func callDeckMutationTool(name: String, arguments: [String: Any]) throws -> String? {
+    switch name {
     case "set_deck_settings":
-      return try mutateDeck(arguments, message: "Deck settings updated.") { deck, _ in
+      try mutateDeck(arguments, message: "Deck settings updated.") { deck, _ in
         if let rawTheme = optionalString(arguments, "theme") {
           guard let theme = PresentationTheme(rawValue: rawTheme) else {
             throw LiveMCPError.invalidParams("Unsupported theme '\(rawTheme)'.")
@@ -184,7 +224,7 @@ final class LiveMCPProtocolHandler {
         return nil
       }
     case "insert_codex_block":
-      return try mutateDeck(arguments, message: "Codex block inserted.") { deck, _ in
+      try mutateDeck(arguments, message: "Codex block inserted.") { deck, _ in
         let index = try requiredIndex(arguments, "index", in: deck.slides.indices)
         let prompt = optionalString(arguments, "prompt") ?? "Explain this concept with one concrete example."
         let blockID = optionalString(arguments, "id") ?? "demo-\(deck.slides[index].codexBlocks.count + 1)"
@@ -205,15 +245,19 @@ final class LiveMCPProtocolHandler {
         deck.slides[index].markdown += "\n\n\(fence)codex id=\(blockID)\n\(body)\n\(fence)"
         return index
       }
+    default:
+      nil
+    }
+  }
+
+  private func callPresentationTool(name: String, arguments: [String: Any]) throws -> String? {
+    switch name {
     case "select_slide":
       let document = try document(from: arguments)
       let deck = document.deck()
       let index = try requiredIndex(arguments, "index", in: deck.slides.indices)
       document.selectSlide(index)
       return try jsonText(LiveMutationResponse(document: document, message: "Slide selected.", deck: deck))
-    case "get_selection":
-      let document = try document(from: arguments)
-      return try jsonText(SelectionResponse(document: document))
     case "start_presentation":
       let document = try document(from: arguments)
       document.present()
@@ -222,11 +266,8 @@ final class LiveMCPProtocolHandler {
       let document = try document(from: arguments)
       document.dismissPresentation()
       return try jsonText(LiveMutationResponse(document: document, message: "Presentation stopped.", deck: document.deck()))
-    case "validate_deck":
-      let document = try document(from: arguments)
-      return try jsonText(LiveValidationResponse(document: document, valid: true, warnings: [], deck: document.deck()))
     default:
-      throw LiveMCPError.invalidParams("Unknown tool: \(name)")
+      return nil
     }
   }
 
@@ -255,16 +296,17 @@ final class LiveMCPProtocolHandler {
         [
           "uri": uri,
           "mimeType": resource.mimeType,
-          "text": resource.text
-        ]
-      ]
+          "text": resource.text,
+        ],
+      ],
     ]
   }
 
   private func resourceContent(for uri: String) throws -> (mimeType: String, text: String) {
     guard let components = URLComponents(string: uri),
           components.scheme == "codeck",
-          components.host == "live" else {
+          components.host == "live"
+    else {
       throw LiveMCPError.invalidParams("Unsupported resource URI. Use codeck://live/deck/<document_id>?view=document|outline|slide.")
     }
 
@@ -285,12 +327,12 @@ final class LiveMCPProtocolHandler {
     case "document":
       return ("text/markdown", deck.deckDocument)
     case "outline":
-      return ("application/json", try jsonText(LiveDeckResponse(document: document, deck: deck, markdown: nil)))
+      return try ("application/json", jsonText(LiveDeckResponse(document: document, deck: deck, markdown: nil)))
     case "slide":
       guard let rawIndex = query["index"], let index = Int(rawIndex), deck.slides.indices.contains(index) else {
         throw LiveMCPError.invalidParams("Slide resources require a valid index query item.")
       }
-      return ("application/json", try jsonText(LiveSlideResponse(document: document, index: index, slide: deck.slides[index])))
+      return try ("application/json", jsonText(LiveSlideResponse(document: document, index: index, slide: deck.slides[index])))
     default:
       throw LiveMCPError.invalidParams("Unsupported resource view.")
     }
@@ -306,7 +348,7 @@ final class LiveMCPProtocolHandler {
         "uri": "codeck://live/deck/\(document.id.uuidString)?view=outline",
         "name": document.displayName,
         "mimeType": "application/json",
-        "description": "Open Codeck deck outline"
+        "description": "Open Codeck deck outline",
       ]
     }
   }
@@ -316,8 +358,8 @@ final class LiveMCPProtocolHandler {
       [
         "name": "Open Codeck deck",
         "description": "Read an open deck document, outline, or slide. Use view=document, view=outline, or view=slide with index.",
-        "uriTemplate": "codeck://live/deck/{document_id}{?view,index}"
-      ]
+        "uriTemplate": "codeck://live/deck/{document_id}{?view,index}",
+      ],
     ]
   }
 
@@ -337,7 +379,7 @@ final class LiveMCPProtocolHandler {
         "Replace one slide's Markdown. If the Markdown contains slide separators, Codeck splits it into slides.",
         properties: documentProperties.merging([
           "index": integerSchema("Zero-based slide index."),
-          "markdown": stringSchema("Replacement slide Markdown.")
+          "markdown": stringSchema("Replacement slide Markdown."),
         ]) { _, new in new },
         required: ["index", "markdown"]
       ),
@@ -346,7 +388,7 @@ final class LiveMCPProtocolHandler {
         "Insert a slide at position, or append when omitted.",
         properties: documentProperties.merging([
           "position": integerSchema("Zero-based insertion position from 0 through slide count."),
-          "markdown": stringSchema("New slide Markdown.")
+          "markdown": stringSchema("New slide Markdown."),
         ]) { _, new in new }
       ),
       tool("delete_slide", "Delete a slide by zero-based index.", properties: indexedDocumentProperties, required: ["index"]),
@@ -355,7 +397,7 @@ final class LiveMCPProtocolHandler {
         "Move a slide. to_index is the insertion index after removing the slide.",
         properties: documentProperties.merging([
           "from_index": integerSchema("Current zero-based slide index."),
-          "to_index": integerSchema("Destination insertion index.")
+          "to_index": integerSchema("Destination insertion index."),
         ]) { _, new in new },
         required: ["from_index", "to_index"]
       ),
@@ -367,7 +409,7 @@ final class LiveMCPProtocolHandler {
           "theme": enumSchema(PresentationTheme.allCases.map(\.rawValue)),
           "model": stringSchema("Deck-level Codex model."),
           "reasoning": stringSchema("Deck-level Codex reasoning effort."),
-          "sandbox": stringSchema("Deck-level Codex sandbox.")
+          "sandbox": stringSchema("Deck-level Codex sandbox."),
         ]) { _, new in new }
       ),
       tool(
@@ -379,7 +421,7 @@ final class LiveMCPProtocolHandler {
           "prompt": stringSchema("Prompt body for the Codex block."),
           "model": stringSchema("Optional block-level model override."),
           "reasoning": stringSchema("Optional block-level reasoning override."),
-          "sandbox": stringSchema("Optional block-level sandbox override.")
+          "sandbox": stringSchema("Optional block-level sandbox override."),
         ]) { _, new in new },
         required: ["index"]
       ),
@@ -387,7 +429,7 @@ final class LiveMCPProtocolHandler {
       tool("get_selection", "Read the selected slide index.", properties: documentProperties),
       tool("start_presentation", "Start presentation mode from the selected slide.", properties: documentProperties),
       tool("stop_presentation", "Stop presentation mode.", properties: documentProperties),
-      tool("validate_deck", "Parse the live deck and return validation status plus outline.", properties: documentProperties)
+      tool("validate_deck", "Parse the live deck and return validation status plus outline.", properties: documentProperties),
     ]
   }
 
@@ -415,8 +457,8 @@ final class LiveMCPProtocolHandler {
       "jsonrpc": "2.0",
       "error": [
         "code": code,
-        "message": message
-      ]
+        "message": message,
+      ],
     ]
     if let id {
       response["id"] = id.jsonValue
@@ -428,158 +470,12 @@ final class LiveMCPProtocolHandler {
     ["content": [["type": "text", "text": message]], "isError": true]
   }
 
-  private func jsonText<T: Encodable>(_ value: T) throws -> String {
+  private func jsonText(_ value: some Encodable) throws -> String {
     let data = try encoder.encode(value)
     guard let text = String(data: data, encoding: .utf8) else {
       throw LiveMCPError.operationFailed("Could not encode JSON response.")
     }
     return text
-  }
-}
-
-private struct OpenDecksResponse: Encodable {
-  let documents: [OpenDocumentDescription]
-}
-
-private struct OpenDocumentDescription: Encodable {
-  let documentID: String
-  let name: String
-  let path: String?
-  let selectedSlideIndex: Int?
-  let slideCount: Int
-
-  @MainActor
-  init(_ document: LiveMCPDocumentSession) {
-    documentID = document.id.uuidString
-    name = document.displayName
-    path = document.fileURL()?.path
-    selectedSlideIndex = document.selectedSlideIndex()
-    slideCount = document.deck().slides.count
-  }
-}
-
-private struct LiveDeckResponse: Encodable {
-  let document: OpenDocumentDescription
-  let deck: LiveDeckDescription
-  let markdown: String?
-
-  @MainActor
-  init(document: LiveMCPDocumentSession, deck: PresentationDeck, markdown: String?) {
-    self.document = OpenDocumentDescription(document)
-    self.deck = LiveDeckDescription(deck)
-    self.markdown = markdown
-  }
-}
-
-private struct LiveMutationResponse: Encodable {
-  let document: OpenDocumentDescription
-  let message: String
-  let deck: LiveDeckDescription
-
-  @MainActor
-  init(document: LiveMCPDocumentSession, message: String, deck: PresentationDeck) {
-    self.document = OpenDocumentDescription(document)
-    self.message = message
-    self.deck = LiveDeckDescription(deck)
-  }
-}
-
-private struct LiveValidationResponse: Encodable {
-  let document: OpenDocumentDescription
-  let valid: Bool
-  let warnings: [String]
-  let deck: LiveDeckDescription
-
-  @MainActor
-  init(document: LiveMCPDocumentSession, valid: Bool, warnings: [String], deck: PresentationDeck) {
-    self.document = OpenDocumentDescription(document)
-    self.valid = valid
-    self.warnings = warnings
-    self.deck = LiveDeckDescription(deck)
-  }
-}
-
-private struct SelectionResponse: Encodable {
-  let document: OpenDocumentDescription
-  let selectedSlideIndex: Int?
-
-  @MainActor
-  init(document: LiveMCPDocumentSession) {
-    self.document = OpenDocumentDescription(document)
-    selectedSlideIndex = document.selectedSlideIndex()
-  }
-}
-
-private struct LiveDeckDescription: Encodable {
-  let theme: String
-  let codex: LiveCodexSettingsDescription
-  let slideCount: Int
-  let slides: [LiveSlideDescription]
-
-  init(_ deck: PresentationDeck) {
-    theme = deck.settings.theme.rawValue
-    codex = LiveCodexSettingsDescription(deck.settings.codex)
-    slideCount = deck.slides.count
-    slides = deck.slides.enumerated().map { LiveSlideDescription(index: $0.offset, slide: $0.element, includeMarkdown: false) }
-  }
-}
-
-private struct LiveCodexSettingsDescription: Encodable {
-  let model: String
-  let reasoning: String
-  let sandbox: String
-
-  init(_ settings: DeckCodexSettings) {
-    model = settings.model
-    reasoning = settings.reasoning.rawValue
-    sandbox = settings.sandbox
-  }
-}
-
-private struct LiveSlideResponse: Encodable {
-  let document: OpenDocumentDescription
-  let index: Int
-  let slide: LiveSlideDescription
-
-  @MainActor
-  init(document: LiveMCPDocumentSession, index: Int, slide: Slide) {
-    self.document = OpenDocumentDescription(document)
-    self.index = index
-    self.slide = LiveSlideDescription(index: index, slide: slide, includeMarkdown: true)
-  }
-}
-
-private struct LiveSlideDescription: Encodable {
-  let index: Int
-  let title: String
-  let summary: String
-  let codexBlockCount: Int
-  let codexBlocks: [LiveCodexBlockDescription]
-  let markdown: String?
-
-  init(index: Int, slide: Slide, includeMarkdown: Bool) {
-    self.index = index
-    title = slide.title
-    summary = slide.summary
-    codexBlockCount = slide.codexBlocks.count
-    codexBlocks = slide.codexBlocks.map(LiveCodexBlockDescription.init)
-    markdown = includeMarkdown ? slide.markdown : nil
-  }
-}
-
-private struct LiveCodexBlockDescription: Encodable {
-  let id: String
-  let title: String
-  let model: String?
-  let reasoning: String?
-  let sandbox: String?
-
-  init(_ block: CodexBlock) {
-    id = block.id
-    title = block.title
-    model = block.model
-    reasoning = block.reasoning?.rawValue
-    sandbox = block.sandbox
   }
 }
 
@@ -623,7 +519,7 @@ private func requiredIndex(_ arguments: [String: Any], _ key: String, in range: 
 }
 
 private func boundedInsertionIndex(_ index: Int, count: Int) throws -> Int {
-  guard (0...count).contains(index) else {
+  guard (0 ... count).contains(index) else {
     throw LiveMCPError.invalidParams("Insertion index \(index) must be between 0 and \(count).")
   }
   return index
@@ -657,8 +553,8 @@ private func tool(_ name: String, _ description: String, properties: [String: An
     "inputSchema": [
       "type": "object",
       "properties": properties,
-      "required": required
-    ]
+      "required": required,
+    ],
   ]
 }
 
