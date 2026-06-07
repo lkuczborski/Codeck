@@ -4,7 +4,7 @@ import WebKit
 struct MarkdownWebView: NSViewRepresentable {
   let html: String
   let baseURL: URL?
-  var onAction: ((MarkdownWebAction) -> Void)? = nil
+  var onAction: ((MarkdownWebAction) -> Void)?
 
   func makeNSView(context: Context) -> WKWebView {
     let configuration = WKWebViewConfiguration()
@@ -32,7 +32,7 @@ struct MarkdownWebView: NSViewRepresentable {
     Coordinator(onAction: onAction)
   }
 
-  static func dismantleNSView(_ webView: WKWebView, coordinator: Coordinator) {
+  static func dismantleNSView(_ webView: WKWebView, coordinator _: Coordinator) {
     webView.configuration.userContentController.removeScriptMessageHandler(forName: "codeck")
   }
 
@@ -45,10 +45,11 @@ struct MarkdownWebView: NSViewRepresentable {
       self.onAction = onAction
     }
 
-    func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
+    func userContentController(_: WKUserContentController, didReceive message: WKScriptMessage) {
       guard message.name == "codeck",
             let body = message.body as? NSDictionary,
-            let action = body["action"] as? String else {
+            let action = body["action"] as? String
+      else {
         return
       }
 

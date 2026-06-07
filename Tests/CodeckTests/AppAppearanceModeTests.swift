@@ -1,6 +1,6 @@
+@testable import Codeck
 import UniformTypeIdentifiers
 import XCTest
-@testable import Codeck
 
 final class AppAppearanceModeTests: XCTestCase {
   func testAppearanceModeLabelsAndIconsMatchToolbarOptions() {

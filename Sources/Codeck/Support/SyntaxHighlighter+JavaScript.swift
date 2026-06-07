@@ -6,11 +6,11 @@ extension SyntaxHighlighter {
       "debugger", "declare", "default", "delete", "do", "else", "enum", "export", "extends", "finally", "for",
       "from", "function", "get", "if", "implements", "import", "in", "instanceof", "interface", "is", "keyof",
       "let", "module", "namespace", "new", "of", "private", "protected", "public", "readonly", "return", "set",
-      "static", "super", "switch", "throw", "try", "type", "typeof", "var", "void", "while", "with", "yield"
+      "static", "super", "switch", "throw", "try", "type", "typeof", "var", "void", "while", "with", "yield",
     ],
     types: [
       "Array", "Boolean", "Date", "Map", "Number", "Object", "Promise", "Record", "RegExp", "Set", "String",
-      "boolean", "never", "number", "string", "symbol", "unknown"
+      "boolean", "never", "number", "string", "symbol", "unknown",
     ],
     literals: ["false", "null", "true", "undefined"],
     lineComments: ["//"],

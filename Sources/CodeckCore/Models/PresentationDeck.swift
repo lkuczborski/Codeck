@@ -12,7 +12,7 @@ public struct PresentationDeck: Hashable, Sendable {
   }
 
   public init(theme: PresentationTheme = .studio, slides: [Slide] = []) {
-    self.settings = PresentationSettings(theme: theme, codex: .default)
+    settings = PresentationSettings(theme: theme, codex: .default)
     self.slides = slides.isEmpty ? [Slide(markdown: Self.defaultSlideMarkdown)] : slides
   }
 
@@ -41,49 +41,49 @@ public struct PresentationDeck: Hashable, Sendable {
       slides: [
         Slide(
           markdown:
-            """
-            # Prompting Codex Live
+          """
+          # Prompting Codex Live
 
-            Build lessons as Markdown slides. Use the preview to check tables, images, code, and live Codex sessions.
+          Build lessons as Markdown slides. Use the preview to check tables, images, code, and live Codex sessions.
 
-            | Slide part | Purpose |
-            | --- | --- |
-            | Markdown | Explain the concept |
-            | Codex block | Demonstrate the prompt |
-            | Theme | Match the classroom mood |
-            """
+          | Slide part | Purpose |
+          | --- | --- |
+          | Markdown | Explain the concept |
+          | Codex block | Demonstrate the prompt |
+          | Theme | Match the classroom mood |
+          """
         ),
         Slide(
           markdown:
-            """
-            # Live Codex Block
+          """
+          # Live Codex Block
 
-            Add a fenced `codex` block to run a prompt during the presentation.
+          Add a fenced `codex` block to run a prompt during the presentation.
 
-            ```codex id=first-demo
-            title: Show prompt-quality tactics
+          ```codex id=first-demo
+          title: Show prompt-quality tactics
 
-            Explain three practical ways to make a prompt more testable when asking Codex to change code.
-            ```
-            """
+          Explain three practical ways to make a prompt more testable when asking Codex to change code.
+          ```
+          """
         ),
         Slide(
           markdown:
-            """
-            # Rich Markdown
+          """
+          # Rich Markdown
 
-            Images and gifs work with normal Markdown syntax:
+          Images and gifs work with normal Markdown syntax:
 
-            ![Local image example](Images/example.png)
+          ![Local image example](Images/example.png)
 
-            ```swift
-            struct Lesson: Identifiable {
-              let title: String
-              let prompt: String
-            }
-            ```
-            """
-        )
+          ```swift
+          struct Lesson: Identifiable {
+            let title: String
+            let prompt: String
+          }
+          ```
+          """
+        ),
       ]
     )
   }
@@ -108,7 +108,7 @@ public struct PresentationDeck: Hashable, Sendable {
       "codex:",
       "  sandbox: \(settings.codex.sandbox)",
       "  model: \(Self.yamlValue(settings.codex.model))",
-      "  reasoning: \(settings.codex.reasoning.rawValue)"
+      "  reasoning: \(settings.codex.reasoning.rawValue)",
     ]
 
     lines.append("---")
@@ -169,7 +169,7 @@ public struct PresentationDeck: Hashable, Sendable {
       return Slide(markdown: slideMarkdown)
     }
 
-    slides.replaceSubrange(index...index, with: replacementSlides)
+    slides.replaceSubrange(index ... index, with: replacementSlides)
     let selectedSlideID = replacementSlides.dropFirst().first?.id ?? replacementSlides[0].id
     return SlideMarkdownReplacement(selectedSlideID: selectedSlideID, didSplit: true)
   }
@@ -287,7 +287,7 @@ public struct PresentationDeck: Hashable, Sendable {
         fenceMarker = marker
       }
 
-      if !insideFence && trimmed == "---" {
+      if !insideFence, trimmed == "---" {
         containsSeparator = true
         appendCurrentFragment()
       } else {
@@ -298,9 +298,4 @@ public struct PresentationDeck: Hashable, Sendable {
     appendCurrentFragment()
     return (fragments, containsSeparator)
   }
-}
-
-public struct SlideMarkdownReplacement: Hashable, Sendable {
-  public let selectedSlideID: Slide.ID
-  public let didSplit: Bool
 }

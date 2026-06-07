@@ -1,5 +1,5 @@
-import XCTest
 @testable import Codeck
+import XCTest
 
 final class SyntaxHighlighterTests: XCTestCase {
   func testLanguageIdentifierNormalizesAliasesAndFencedAttributeSyntax() {

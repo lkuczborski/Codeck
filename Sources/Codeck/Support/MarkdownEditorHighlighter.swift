@@ -8,7 +8,7 @@ enum MarkdownEditorHighlighter {
   static var baseTypingAttributes: [NSAttributedString.Key: Any] {
     [
       .font: baseFont,
-      .foregroundColor: NSColor.labelColor
+      .foregroundColor: NSColor.labelColor,
     ]
   }
 
@@ -78,7 +78,7 @@ enum MarkdownEditorHighlighter {
       addAttributes(markerAttributes, to: textStorage, range: markerRange)
       addAttributes([
         .foregroundColor: NSColor.controlAccentColor,
-        .font: NSFont.monospacedSystemFont(ofSize: headingFontSize(for: level), weight: .bold)
+        .font: NSFont.monospacedSystemFont(ofSize: headingFontSize(for: level), weight: .bold),
       ], to: textStorage, range: contentRange)
       return
     }
@@ -86,7 +86,7 @@ enum MarkdownEditorHighlighter {
     if horizontalRuleRegex.firstMatch(in: line, range: NSRange(location: 0, length: (line as NSString).length)) != nil {
       addAttributes([
         .foregroundColor: NSColor.controlAccentColor,
-        .font: NSFont.monospacedSystemFont(ofSize: 15, weight: .semibold)
+        .font: NSFont.monospacedSystemFont(ofSize: 15, weight: .semibold),
       ], to: textStorage, range: lineRange)
       return
     }
@@ -119,7 +119,7 @@ enum MarkdownEditorHighlighter {
     if let checkbox = match(taskCheckboxRegex, in: line) {
       addAttributes([
         .foregroundColor: NSColor.controlAccentColor,
-        .font: NSFont.monospacedSystemFont(ofSize: 15, weight: .semibold)
+        .font: NSFont.monospacedSystemFont(ofSize: 15, weight: .semibold),
       ], to: textStorage, range: absoluteRange(checkbox.range(at: 1), in: lineRange))
     }
 
@@ -161,7 +161,7 @@ enum MarkdownEditorHighlighter {
       addAttributes(markerAttributes, to: textStorage, range: NSRange(location: NSMaxRange(urlRange), length: 1))
       addAttributes([
         .foregroundColor: NSColor.linkColor,
-        .underlineStyle: NSUnderlineStyle.single.rawValue
+        .underlineStyle: NSUnderlineStyle.single.rawValue,
       ], to: textStorage, range: titleRange)
       protectedRanges.append(urlRange)
     }
@@ -177,7 +177,7 @@ enum MarkdownEditorHighlighter {
       addAttributes(markerAttributes, to: textStorage, range: NSRange(location: NSMaxRange(labelRange), length: 1))
       addAttributes([
         .foregroundColor: NSColor.linkColor,
-        .underlineStyle: NSUnderlineStyle.single.rawValue
+        .underlineStyle: NSUnderlineStyle.single.rawValue,
       ], to: textStorage, range: titleRange)
       addAttributes([.foregroundColor: NSColor.secondaryLabelColor], to: textStorage, range: labelRange)
       protectedRanges.append(labelRange)
@@ -194,7 +194,7 @@ enum MarkdownEditorHighlighter {
     for match in matches(htmlTagRegex, source: source, range: lineRange) where !intersects(match.range, protectedRanges) {
       addAttributes([
         .foregroundColor: NSColor.systemOrange,
-        .font: NSFont.monospacedSystemFont(ofSize: 14, weight: .regular)
+        .font: NSFont.monospacedSystemFont(ofSize: 14, weight: .regular),
       ], to: textStorage, range: match.range)
       protectedRanges.append(match.range)
     }
@@ -297,7 +297,7 @@ enum MarkdownEditorHighlighter {
     addAttributes([
       .font: NSFont.monospacedSystemFont(ofSize: 14, weight: .regular),
       .foregroundColor: NSColor.systemPink,
-      .backgroundColor: CodeckPalette.inlineCodeBackgroundNSColor
+      .backgroundColor: CodeckPalette.inlineCodeBackgroundNSColor,
     ], to: textStorage, range: lineRange)
   }
 
@@ -309,13 +309,13 @@ enum MarkdownEditorHighlighter {
     guard infoRange.length > 0 else { return }
     addAttributes([
       .foregroundColor: NSColor.systemTeal,
-      .font: NSFont.monospacedSystemFont(ofSize: 14, weight: .semibold)
+      .font: NSFont.monospacedSystemFont(ofSize: 14, weight: .semibold),
     ], to: textStorage, range: infoRange)
   }
 
   private static func highlightTablePipes(
     in textStorage: NSTextStorage,
-    source: NSString,
+    source _: NSString,
     lineRange: NSRange,
     line: String
   ) {
@@ -354,7 +354,8 @@ enum MarkdownEditorHighlighter {
   ) {
     guard range.location != NSNotFound,
           range.length > 0,
-          NSMaxRange(range) <= textStorage.length else {
+          NSMaxRange(range) <= textStorage.length
+    else {
       return
     }
     textStorage.addAttributes(attributes, range: range)
@@ -363,7 +364,8 @@ enum MarkdownEditorHighlighter {
   private static func addFontTrait(_ trait: NSFontTraitMask, to textStorage: NSTextStorage, range: NSRange) {
     guard range.location != NSNotFound,
           range.length > 0,
-          NSMaxRange(range) <= textStorage.length else {
+          NSMaxRange(range) <= textStorage.length
+    else {
       return
     }
 
@@ -430,46 +432,57 @@ enum MarkdownEditorHighlighter {
   }
 
   private static let markerAttributes: [NSAttributedString.Key: Any] = [
-    .foregroundColor: NSColor.tertiaryLabelColor
+    .foregroundColor: NSColor.tertiaryLabelColor,
   ]
 
   private static let codeAttributes: [NSAttributedString.Key: Any] = [
     .font: NSFont.monospacedSystemFont(ofSize: 14, weight: .regular),
     .foregroundColor: NSColor.systemPink,
-    .backgroundColor: CodeckPalette.inlineCodeBackgroundNSColor
+    .backgroundColor: CodeckPalette.inlineCodeBackgroundNSColor,
   ]
 
   private struct CodeBlockState {
     var marker: String
   }
 
-  private static let fenceRegex = try! NSRegularExpression(pattern: #"^(\s*)(`{3,}|~{3,})(.*)$"#)
-  private static let headingRegex = try! NSRegularExpression(pattern: #"^\s*(#{1,6})\s+(.+)$"#)
-  private static let horizontalRuleRegex = try! NSRegularExpression(pattern: #"^\s*(\*\s*){3,}$|^\s*(_\s*){3,}$|^\s*(-\s*){3,}$"#)
-  private static let referenceDefinitionRegex = try! NSRegularExpression(pattern: #"^\s{0,3}(\[[^\]\n]+\]:)\s*(\S+)"#)
-  private static let footnoteDefinitionRegex = try! NSRegularExpression(pattern: #"^\s{0,3}(\[\^[^\]\n]+\]:)"#)
-  private static let blockquoteRegex = try! NSRegularExpression(pattern: #"^\s*(>\s?)"#)
-  private static let listRegex = try! NSRegularExpression(pattern: #"^\s*((?:[-+*]|\d+\.)\s+)"#)
-  private static let taskCheckboxRegex = try! NSRegularExpression(pattern: #"^\s*(?:[-+*]|\d+\.)\s+(\[[ xX]\])\s+"#)
-  private static let inlineCodeRegex = try! NSRegularExpression(pattern: #"`([^`\n]+)`"#)
-  private static let autolinkRegex = try! NSRegularExpression(
+  private static let fenceRegex = regularExpression(pattern: #"^(\s*)(`{3,}|~{3,})(.*)$"#)
+  private static let headingRegex = regularExpression(pattern: #"^\s*(#{1,6})\s+(.+)$"#)
+  private static let horizontalRuleRegex = regularExpression(pattern: #"^\s*(\*\s*){3,}$|^\s*(_\s*){3,}$|^\s*(-\s*){3,}$"#)
+  private static let referenceDefinitionRegex = regularExpression(pattern: #"^\s{0,3}(\[[^\]\n]+\]:)\s*(\S+)"#)
+  private static let footnoteDefinitionRegex = regularExpression(pattern: #"^\s{0,3}(\[\^[^\]\n]+\]:)"#)
+  private static let blockquoteRegex = regularExpression(pattern: #"^\s*(>\s?)"#)
+  private static let listRegex = regularExpression(pattern: #"^\s*((?:[-+*]|\d+\.)\s+)"#)
+  private static let taskCheckboxRegex = regularExpression(pattern: #"^\s*(?:[-+*]|\d+\.)\s+(\[[ xX]\])\s+"#)
+  private static let inlineCodeRegex = regularExpression(pattern: #"`([^`\n]+)`"#)
+  private static let autolinkRegex = regularExpression(
     pattern: #"<((?:https?://|mailto:)[^>\s]+|[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,})>"#,
     options: [.caseInsensitive]
   )
-  private static let linkRegex = try! NSRegularExpression(pattern: #"(!?)\[([^\]\n]+)\]\(([^\)\n]+)\)"#)
-  private static let referenceLinkRegex = try! NSRegularExpression(pattern: #"(!?)\[([^\]\n]+)\]\[([^\]\n]*)\]"#)
-  private static let bareURLRegex = try! NSRegularExpression(pattern: #"\b(?:https?://|www\.)[^\s<>\[\]{}"']+"#, options: [.caseInsensitive])
-  private static let emailRegex = try! NSRegularExpression(
+  private static let linkRegex = regularExpression(pattern: #"(!?)\[([^\]\n]+)\]\(([^\)\n]+)\)"#)
+  private static let referenceLinkRegex = regularExpression(pattern: #"(!?)\[([^\]\n]+)\]\[([^\]\n]*)\]"#)
+  private static let bareURLRegex = regularExpression(pattern: #"\b(?:https?://|www\.)[^\s<>\[\]{}"']+"#, options: [.caseInsensitive])
+  private static let emailRegex = regularExpression(
     pattern: #"\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b"#,
     options: [.caseInsensitive]
   )
-  private static let htmlTagRegex = try! NSRegularExpression(pattern: #"<!--.*?-->|</?[A-Za-z][A-Za-z0-9-]*(?:\s+[^<>\n]*)?>"#)
-  private static let strongEmphasisAsteriskRegex = try! NSRegularExpression(pattern: #"(?<!\*)\*\*\*([^\*\n]+)\*\*\*(?!\*)"#)
-  private static let strongEmphasisUnderscoreRegex = try! NSRegularExpression(pattern: #"(?<!_)___([^_\n]+)___(?!_)"#)
-  private static let strongAsteriskRegex = try! NSRegularExpression(pattern: #"(?<!\*)\*\*([^\*\n]+)\*\*(?!\*)"#)
-  private static let strongUnderscoreRegex = try! NSRegularExpression(pattern: #"(?<!_)__([^_\n]+)__(?!_)"#)
-  private static let emphasisAsteriskRegex = try! NSRegularExpression(pattern: #"(?<!\*)\*([^\*\n]+)\*(?!\*)"#)
-  private static let emphasisUnderscoreRegex = try! NSRegularExpression(pattern: #"(?<!_)_([^_\n]+)_(?!_)"#)
-  private static let strikethroughRegex = try! NSRegularExpression(pattern: #"~~([^~\n]+)~~"#)
+  private static let htmlTagRegex = regularExpression(pattern: #"<!--.*?-->|</?[A-Za-z][A-Za-z0-9-]*(?:\s+[^<>\n]*)?>"#)
+  private static let strongEmphasisAsteriskRegex = regularExpression(pattern: #"(?<!\*)\*\*\*([^\*\n]+)\*\*\*(?!\*)"#)
+  private static let strongEmphasisUnderscoreRegex = regularExpression(pattern: #"(?<!_)___([^_\n]+)___(?!_)"#)
+  private static let strongAsteriskRegex = regularExpression(pattern: #"(?<!\*)\*\*([^\*\n]+)\*\*(?!\*)"#)
+  private static let strongUnderscoreRegex = regularExpression(pattern: #"(?<!_)__([^_\n]+)__(?!_)"#)
+  private static let emphasisAsteriskRegex = regularExpression(pattern: #"(?<!\*)\*([^\*\n]+)\*(?!\*)"#)
+  private static let emphasisUnderscoreRegex = regularExpression(pattern: #"(?<!_)_([^_\n]+)_(?!_)"#)
+  private static let strikethroughRegex = regularExpression(pattern: #"~~([^~\n]+)~~"#)
   private static let trailingURLPunctuation = Set([".", ",", ";", ":", "!", "?", ")", "]", "}"])
+
+  private static func regularExpression(
+    pattern: String,
+    options: NSRegularExpression.Options = []
+  ) -> NSRegularExpression {
+    do {
+      return try NSRegularExpression(pattern: pattern, options: options)
+    } catch {
+      preconditionFailure("Invalid Markdown editor regex pattern: \(pattern)")
+    }
+  }
 }

@@ -9,7 +9,7 @@ enum DeckAssistantProposalParseError: LocalizedError, Equatable {
     switch self {
     case .missingJSONObject:
       "Codex did not return a JSON proposal."
-    case .invalidJSON(let message):
+    case let .invalidJSON(message):
       "Codex returned JSON that could not be parsed: \(message)"
     case .noValidChanges:
       "Codex returned a proposal, but none of the changes matched the current deck."

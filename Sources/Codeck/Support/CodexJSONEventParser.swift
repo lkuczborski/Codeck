@@ -12,12 +12,14 @@ enum CodexJSONEventParser {
     }
 
     if let payload = root["payload"] as? [String: Any],
-       let delta = assistantDelta(from: payload) {
+       let delta = assistantDelta(from: payload)
+    {
       return delta
     }
 
     if let message = root["msg"] as? [String: Any],
-       let delta = assistantDelta(from: message) {
+       let delta = assistantDelta(from: message)
+    {
       return delta
     }
 
@@ -60,7 +62,8 @@ enum CodexJSONEventParser {
   static func threadID(fromThreadStartResponse root: [String: Any], requestID: String) -> String? {
     guard requestIDMatches(root["id"], requestID: requestID),
           let result = root["result"] as? [String: Any],
-          let thread = result["thread"] as? [String: Any] else {
+          let thread = result["thread"] as? [String: Any]
+    else {
       return nil
     }
 
@@ -70,7 +73,8 @@ enum CodexJSONEventParser {
   static func turnID(fromTurnStartResponse root: [String: Any], requestID: String) -> String? {
     guard requestIDMatches(root["id"], requestID: requestID),
           let result = root["result"] as? [String: Any],
-          let turn = result["turn"] as? [String: Any] else {
+          let turn = result["turn"] as? [String: Any]
+    else {
       return nil
     }
 
@@ -81,7 +85,8 @@ enum CodexJSONEventParser {
     guard root["method"] as? String == "turn/completed",
           let params = root["params"] as? [String: Any],
           let turn = params["turn"] as? [String: Any],
-          let status = turn["status"] as? String else {
+          let status = turn["status"] as? String
+    else {
       return nil
     }
 
@@ -95,7 +100,8 @@ enum CodexJSONEventParser {
     }
 
     guard root["method"] as? String == "error",
-          let params = root["params"] else {
+          let params = root["params"]
+    else {
       return nil
     }
 

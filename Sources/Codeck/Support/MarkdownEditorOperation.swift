@@ -1,205 +1,5 @@
 import Foundation
 
-struct MarkdownEditResult: Equatable {
-  var text: String
-  var selection: NSRange
-}
-
-enum MarkdownTextStyle: String, CaseIterable, Identifiable, Hashable {
-  case bold
-  case italic
-  case inlineCode
-  case strikethrough
-  case link
-
-  var id: String { rawValue }
-
-  var title: String {
-    switch self {
-    case .bold:
-      "Bold"
-    case .italic:
-      "Italic"
-    case .inlineCode:
-      "Inline Code"
-    case .strikethrough:
-      "Strikethrough"
-    case .link:
-      "Link"
-    }
-  }
-
-  var help: String {
-    switch self {
-    case .bold:
-      "Bold selected text"
-    case .italic:
-      "Italicize selected text"
-    case .inlineCode:
-      "Format selected text as inline code"
-    case .strikethrough:
-      "Strike through selected text"
-    case .link:
-      "Turn selected text into a link"
-    }
-  }
-
-  var marker: String? {
-    switch self {
-    case .bold:
-      "**"
-    case .italic:
-      "*"
-    case .inlineCode:
-      "`"
-    case .strikethrough:
-      "~~"
-    case .link:
-      nil
-    }
-  }
-
-  var placeholder: String {
-    switch self {
-    case .inlineCode:
-      "code"
-    case .link:
-      "Link text"
-    default:
-      "text"
-    }
-  }
-}
-
-enum MarkdownInsertion: String, CaseIterable, Identifiable {
-  case heading1
-  case heading2
-  case heading3
-  case paragraph
-  case bulletedList
-  case numberedList
-  case blockquote
-  case link
-  case image
-  case codeBlock
-  case table
-  case horizontalRule
-  case codexSession
-
-  var id: String { rawValue }
-
-  var title: String {
-    switch self {
-    case .heading1:
-      "Heading 1"
-    case .heading2:
-      "Heading 2"
-    case .heading3:
-      "Heading 3"
-    case .paragraph:
-      "Paragraph"
-    case .bulletedList:
-      "Bulleted List"
-    case .numberedList:
-      "Numbered List"
-    case .blockquote:
-      "Quote"
-    case .link:
-      "Link"
-    case .image:
-      "Image"
-    case .codeBlock:
-      "Code Block"
-    case .table:
-      "Table"
-    case .horizontalRule:
-      "Divider"
-    case .codexSession:
-      "Codex Session"
-    }
-  }
-
-  var systemImage: String {
-    switch self {
-    case .heading1, .heading2, .heading3:
-      "textformat.size"
-    case .paragraph:
-      "paragraphsign"
-    case .bulletedList:
-      "list.bullet"
-    case .numberedList:
-      "list.number"
-    case .blockquote:
-      "quote.opening"
-    case .link:
-      "link"
-    case .image:
-      "photo"
-    case .codeBlock:
-      "chevron.left.forwardslash.chevron.right"
-    case .table:
-      "tablecells"
-    case .horizontalRule:
-      "minus"
-    case .codexSession:
-      "terminal"
-    }
-  }
-
-  var isBlock: Bool {
-    self != .link
-  }
-
-  func template(codexBlockNumber: Int) -> MarkdownInsertionTemplate {
-    switch self {
-    case .heading1:
-      MarkdownInsertionTemplate(text: "# Heading", selectedText: "Heading")
-    case .heading2:
-      MarkdownInsertionTemplate(text: "## Heading", selectedText: "Heading")
-    case .heading3:
-      MarkdownInsertionTemplate(text: "### Heading", selectedText: "Heading")
-    case .paragraph:
-      MarkdownInsertionTemplate(text: "Paragraph text", selectedText: "Paragraph text")
-    case .bulletedList:
-      MarkdownInsertionTemplate(text: "- First item\n- Second item", selectedText: "First item")
-    case .numberedList:
-      MarkdownInsertionTemplate(text: "1. First item\n2. Second item", selectedText: "First item")
-    case .blockquote:
-      MarkdownInsertionTemplate(text: "> Quote text", selectedText: "Quote text")
-    case .link:
-      MarkdownInsertionTemplate(text: "[Link text](https://example.com)", selectedText: "Link text")
-    case .image:
-      MarkdownInsertionTemplate(text: "![Alt text](Images/example.png)", selectedText: "Alt text")
-    case .codeBlock:
-      MarkdownInsertionTemplate(text: "```swift\nlet value = \"Hello\"\n```", selectedText: "let value = \"Hello\"")
-    case .table:
-      MarkdownInsertionTemplate(
-        text: "| Header | Header |\n| --- | --- |\n| Cell | Cell |",
-        selectedText: "Header"
-      )
-    case .horizontalRule:
-      MarkdownInsertionTemplate(text: "***", selectedText: nil)
-    case .codexSession:
-      MarkdownInsertionTemplate(
-        text:
-          """
-          ```codex id=demo-\(codexBlockNumber)
-          title: Describe the goal for this prompt
-
-          Explain this concept with one concrete example.
-          ```
-          """,
-        selectedText: "Describe the goal for this prompt"
-      )
-    }
-  }
-}
-
-struct MarkdownInsertionTemplate {
-  var text: String
-  var selectedText: String?
-}
-
 enum MarkdownEditorOperation {
   static func insert(
     _ insertion: MarkdownInsertion,
@@ -218,7 +18,8 @@ enum MarkdownEditorOperation {
     let templateOffset = range.location + boundary.prefix.utf16.count
 
     if let selectedText = template.selectedText,
-       let placeholderRange = (template.text as NSString).rangeOfFirstOccurrence(of: selectedText) {
+       let placeholderRange = (template.text as NSString).rangeOfFirstOccurrence(of: selectedText)
+    {
       return MarkdownEditResult(
         text: result,
         selection: NSRange(
@@ -251,7 +52,8 @@ enum MarkdownEditorOperation {
     let range = clamped(selection, length: source.length)
 
     if range.length == 0,
-       let markedSpan = markedSpan(containingCursorAt: range.location, in: source, marker: marker) {
+       let markedSpan = markedSpan(containingCursorAt: range.location, in: source, marker: marker)
+    {
       let innerText = source.substring(with: markedSpan.innerRange)
       let result = source.replacingCharacters(in: markedSpan.fullRange, with: innerText)
       return MarkdownEditResult(
@@ -320,22 +122,20 @@ enum MarkdownEditorOperation {
     let before = source.substring(to: range.location)
     let after = source.substring(from: range.location + range.length)
 
-    let prefix: String
-    if before.isEmpty || before.hasSuffix("\n\n") {
-      prefix = ""
+    let prefix = if before.isEmpty || before.hasSuffix("\n\n") {
+      ""
     } else if before.hasSuffix("\n") {
-      prefix = "\n"
+      "\n"
     } else {
-      prefix = "\n\n"
+      "\n\n"
     }
 
-    let suffix: String
-    if after.isEmpty || after.hasPrefix("\n\n") {
-      suffix = ""
+    let suffix = if after.isEmpty || after.hasPrefix("\n\n") {
+      ""
     } else if after.hasPrefix("\n") {
-      suffix = "\n"
+      "\n"
     } else {
-      suffix = "\n\n"
+      "\n\n"
     }
 
     return (prefix, suffix)
@@ -374,7 +174,8 @@ enum MarkdownEditorOperation {
           source.substring(with: beforeRange) == marker,
           source.substring(with: afterRange) == marker,
           markerIsUnambiguous(source: source, range: beforeRange, marker: marker),
-          markerIsUnambiguous(source: source, range: afterRange, marker: marker) else {
+          markerIsUnambiguous(source: source, range: afterRange, marker: marker)
+    else {
       return nil
     }
 
@@ -452,7 +253,8 @@ enum MarkdownEditorOperation {
       if cursorLocation >= innerRange.location,
          cursorLocation <= NSMaxRange(innerRange),
          markerIsUnambiguous(source: source, range: openingRange, marker: marker),
-         markerIsUnambiguous(source: source, range: closingRange, marker: marker) {
+         markerIsUnambiguous(source: source, range: closingRange, marker: marker)
+      {
         return (fullRange, innerRange)
       }
 
@@ -514,7 +316,8 @@ enum MarkdownEditorOperation {
       let titleEnd = selected.range(of: "](")
       if selected.hasPrefix("["),
          selected.hasSuffix(")"),
-         titleEnd.location != NSNotFound {
+         titleEnd.location != NSNotFound
+      {
         let titleRange = NSRange(location: 1, length: titleEnd.location - 1)
         if titleRange.length >= 0 {
           return (range, selected.substring(with: titleRange))

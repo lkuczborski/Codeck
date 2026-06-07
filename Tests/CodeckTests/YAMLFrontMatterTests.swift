@@ -1,24 +1,24 @@
-import XCTest
-@testable import CodeckCore
 @testable import Codeck
+@testable import CodeckCore
+import XCTest
 
 final class YAMLFrontMatterTests: XCTestCase {
   func testParsesNestedSectionValuesAndUnquotesStrings() throws {
     let parsed = try XCTUnwrap(
       YAMLFrontMatter.parse(
         from:
-          """
+        """
 
-          ---
-          # Deck metadata
-          theme: 'solar'
-          codex:
-            model: "gpt-5.5"
-            reasoning: high
-            sandbox: workspace-write
-          ---
-          # Slide
-          """
+        ---
+        # Deck metadata
+        theme: 'solar'
+        codex:
+          model: "gpt-5.5"
+          reasoning: high
+          sandbox: workspace-write
+        ---
+        # Slide
+        """
       )
     )
 
@@ -34,11 +34,11 @@ final class YAMLFrontMatterTests: XCTestCase {
     XCTAssertNil(
       YAMLFrontMatter.parse(
         from:
-          """
-          ---
-          theme: studio
-          # Slide
-          """
+        """
+        ---
+        theme: studio
+        # Slide
+        """
       )
     )
   }

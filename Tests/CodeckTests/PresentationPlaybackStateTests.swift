@@ -1,6 +1,6 @@
-import XCTest
-@testable import CodeckCore
 @testable import Codeck
+@testable import CodeckCore
+import XCTest
 
 @MainActor
 final class PresentationPlaybackStateTests: XCTestCase {

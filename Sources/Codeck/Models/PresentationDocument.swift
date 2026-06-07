@@ -1,5 +1,5 @@
-import Foundation
 import CodeckCore
+import Foundation
 import SwiftUI
 import UniformTypeIdentifiers
 
@@ -27,7 +27,7 @@ struct PresentationDocument: FileDocument {
     deck = PresentationDeck(markdownDocument: text)
   }
 
-  func fileWrapper(configuration: WriteConfiguration) throws -> FileWrapper {
+  func fileWrapper(configuration _: WriteConfiguration) throws -> FileWrapper {
     guard let data = deck.deckDocument.data(using: .utf8) else {
       throw CocoaError(.fileWriteInapplicableStringEncoding)
     }

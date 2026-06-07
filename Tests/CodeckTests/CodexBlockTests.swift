@@ -1,21 +1,21 @@
-import XCTest
-@testable import CodeckCore
 @testable import Codeck
+@testable import CodeckCore
+import XCTest
 
 final class CodexBlockTests: XCTestCase {
   func testExtractsCodexBlockMetadataAndPrompt() {
     let blocks = CodexBlock.extract(
       from:
-        """
-        # Demo
+      """
+      # Demo
 
-        ```codex id=demo-one
-        sandbox: read-only
-        model: gpt-5.2
+      ```codex id=demo-one
+      sandbox: read-only
+      model: gpt-5.2
 
-        Explain this code.
-        ```
-        """
+      Explain this code.
+      ```
+      """
     )
 
     XCTAssertEqual(blocks.count, 1)
@@ -30,13 +30,13 @@ final class CodexBlockTests: XCTestCase {
   func testCodexTitleIsSeparateFromPrompt() {
     let blocks = CodexBlock.extract(
       from:
-        """
-        ```codex id=session
-        title: Explain the refactor goal
+      """
+      ```codex id=session
+      title: Explain the refactor goal
 
-        Rewrite this view into smaller SwiftUI subviews.
-        ```
-        """
+      Rewrite this view into smaller SwiftUI subviews.
+      ```
+      """
     )
 
     XCTAssertEqual(blocks.first?.title, "Explain the refactor goal")
@@ -46,13 +46,13 @@ final class CodexBlockTests: XCTestCase {
   func testCodexBlockIgnoresLegacyVerboseFlag() {
     let blocks = CodexBlock.extract(
       from:
-        """
-        ```codex id=session
-        verbose: true
+      """
+      ```codex id=session
+      verbose: true
 
-        Show the raw session transcript.
-        ```
-        """
+      Show the raw session transcript.
+      ```
+      """
     )
 
     XCTAssertEqual(blocks.first?.prompt, "Show the raw session transcript.")
@@ -61,19 +61,19 @@ final class CodexBlockTests: XCTestCase {
   func testCodexFenceRequiresPlainClosingFence() {
     let blocks = CodexBlock.extract(
       from:
-        """
-        ```codex id=first
-        title: First
+      """
+      ```codex id=first
+      title: First
 
-        First prompt
-        ``d`
+      First prompt
+      ``d`
 
-        ```codex id=second
-        title: This is code content
+      ```codex id=second
+      title: This is code content
 
-        Second prompt text
-        ```
-        """
+      Second prompt text
+      ```
+      """
     )
 
     XCTAssertEqual(blocks.count, 1)
@@ -85,26 +85,26 @@ final class CodexBlockTests: XCTestCase {
   func testRendererIncludesTablesImagesAndCodexOutput() {
     let slide = Slide(
       markdown:
-        """
-        # Assets
+      """
+      # Assets
 
-        ![Alt](Images/example.gif)
+      ![Alt](Images/example.gif)
 
-        | A | B |
-        | --- | --- |
-        | One | Two |
+      | A | B |
+      | --- | --- |
+      | One | Two |
 
-        ```codex id=session
-        Prompt
-        ```
-        """
+      ```codex id=session
+      Prompt
+      ```
+      """
     )
 
     let html = MarkdownRenderer.htmlDocument(
       for: slide,
       theme: .studio,
       codexOutputs: [
-        "session": CodexSessionOutput(state: .completed, text: "Done")
+        "session": CodexSessionOutput(state: .completed, text: "Done"),
       ]
     )
 
@@ -116,13 +116,13 @@ final class CodexBlockTests: XCTestCase {
   func testRendererHighlightsFencedCodeByLanguage() {
     let slide = Slide(
       markdown:
-        #"""
-        ```swift
-        struct DemoView: View {
-          let title = "Hello"
-        }
-        ```
-        """#
+      #"""
+      ```swift
+      struct DemoView: View {
+        let title = "Hello"
+      }
+      ```
+      """#
     )
 
     let html = MarkdownRenderer.htmlDocument(for: slide, theme: .studio, codexOutputs: [:])
@@ -137,11 +137,11 @@ final class CodexBlockTests: XCTestCase {
   func testRendererUsesFirstFenceInfoTokenAsLanguage() {
     let slide = Slide(
       markdown:
-        #"""
-        ```swift title="Example"
-        let count = 3
-        ```
-        """#
+      #"""
+      ```swift title="Example"
+      let count = 3
+      ```
+      """#
     )
 
     let html = MarkdownRenderer.htmlDocument(for: slide, theme: .studio, codexOutputs: [:])
@@ -155,13 +155,13 @@ final class CodexBlockTests: XCTestCase {
   func testRendererRequiresPlainClosingFence() {
     let slide = Slide(
       markdown:
-        #"""
-        ```swift
-        let first = true
-        ```javascript
-        const second = true
-        ```
-        """#
+      #"""
+      ```swift
+      let first = true
+      ```javascript
+      const second = true
+      ```
+      """#
     )
 
     let html = MarkdownRenderer.htmlDocument(for: slide, theme: .studio, codexOutputs: [:])
@@ -175,15 +175,15 @@ final class CodexBlockTests: XCTestCase {
   func testRendererHighlightsDifferentFenceLanguagesAndEscapesCode() {
     let slide = Slide(
       markdown:
-        #"""
-        ```json
-        { "enabled": true, "count": 2 }
-        ```
+      #"""
+      ```json
+      { "enabled": true, "count": 2 }
+      ```
 
-        ```html
-        <script type="module">alert("nope")</script>
-        ```
-        """#
+      ```html
+      <script type="module">alert("nope")</script>
+      ```
+      """#
     )
 
     let html = MarkdownRenderer.htmlDocument(for: slide, theme: .studio, codexOutputs: [:])
@@ -199,13 +199,13 @@ final class CodexBlockTests: XCTestCase {
   func testRendererShowsOnlyCodexResponseByDefaultAndRendersMarkdown() {
     let slide = Slide(
       markdown:
-        """
-        ```codex id=session
-        title: Explain output
+      """
+      ```codex id=session
+      title: Explain output
 
-        Prompt
-        ```
-        """
+      Prompt
+      ```
+      """
     )
     let output =
       """
@@ -223,7 +223,7 @@ final class CodexBlockTests: XCTestCase {
       for: slide,
       theme: .studio,
       codexOutputs: [
-        "session": CodexSessionOutput(state: .completed, text: output)
+        "session": CodexSessionOutput(state: .completed, text: output),
       ]
     )
 
@@ -245,13 +245,13 @@ final class CodexBlockTests: XCTestCase {
   func testRendererStreamsRunningCodexTranscriptResponse() {
     let slide = Slide(
       markdown:
-        """
-        ```codex id=session
-        title: Explain output
+      """
+      ```codex id=session
+      title: Explain output
 
-        Prompt
-        ```
-        """
+      Prompt
+      ```
+      """
     )
     let output =
       """
@@ -268,7 +268,7 @@ final class CodexBlockTests: XCTestCase {
           state: .running,
           text: output,
           standardError: output
-        )
+        ),
       ]
     )
 
@@ -279,13 +279,13 @@ final class CodexBlockTests: XCTestCase {
   func testRendererStreamsRunningCodexStandardOutput() {
     let slide = Slide(
       markdown:
-        """
-        ```codex id=session
-        title: Explain output
+      """
+      ```codex id=session
+      title: Explain output
 
-        Prompt
-        ```
-        """
+      Prompt
+      ```
+      """
     )
 
     let html = MarkdownRenderer.htmlDocument(
@@ -296,7 +296,7 @@ final class CodexBlockTests: XCTestCase {
           state: .running,
           text: "",
           standardOutput: "Streaming **partial**"
-        )
+        ),
       ]
     )
 
@@ -307,20 +307,20 @@ final class CodexBlockTests: XCTestCase {
   func testRendererShowsThinkingPlaceholderForEmptyRunningCodexOutput() {
     let slide = Slide(
       markdown:
-        """
-        ```codex id=session
-        title: Explain output
+      """
+      ```codex id=session
+      title: Explain output
 
-        Prompt
-        ```
-        """
+      Prompt
+      ```
+      """
     )
 
     let html = MarkdownRenderer.htmlDocument(
       for: slide,
       theme: .studio,
       codexOutputs: [
-        "session": CodexSessionOutput(state: .running, text: "")
+        "session": CodexSessionOutput(state: .running, text: ""),
       ]
     )
 
@@ -331,13 +331,13 @@ final class CodexBlockTests: XCTestCase {
   func testCodexMarkdownOutputKeepsLooseOrderedListTogether() {
     let slide = Slide(
       markdown:
-        """
-        ```codex id=session
-        title: Prompt tactics
+      """
+      ```codex id=session
+      title: Prompt tactics
 
-        Prompt
-        ```
-        """
+      Prompt
+      ```
+      """
     )
     let output =
       """
@@ -363,7 +363,7 @@ final class CodexBlockTests: XCTestCase {
       for: slide,
       theme: .studio,
       codexOutputs: [
-        "session": CodexSessionOutput(state: .completed, text: output)
+        "session": CodexSessionOutput(state: .completed, text: output),
       ]
     )
 
@@ -376,13 +376,13 @@ final class CodexBlockTests: XCTestCase {
   func testRendererPrefersCleanFinalCodexOutputOverTranscriptCopy() {
     let slide = Slide(
       markdown:
-        """
-        ```codex id=session
-        title: Prompt tactics
+      """
+      ```codex id=session
+      title: Prompt tactics
 
-        Prompt
-        ```
-        """
+      Prompt
+      ```
+      """
     )
     let response =
       """
@@ -414,7 +414,7 @@ final class CodexBlockTests: XCTestCase {
           text: transcript + response,
           standardOutput: response,
           standardError: transcript
-        )
+        ),
       ]
     )
 
@@ -426,13 +426,13 @@ final class CodexBlockTests: XCTestCase {
   func testRendererTrimsCodexUsageFooterWhenOnlyTranscriptIsAvailable() {
     let slide = Slide(
       markdown:
-        """
-        ```codex id=session
-        title: Prompt tactics
+      """
+      ```codex id=session
+      title: Prompt tactics
 
-        Prompt
-        ```
-        """
+      Prompt
+      ```
+      """
     )
     let output =
       """
@@ -453,7 +453,7 @@ final class CodexBlockTests: XCTestCase {
       for: slide,
       theme: .studio,
       codexOutputs: [
-        "session": CodexSessionOutput(state: .completed, text: output)
+        "session": CodexSessionOutput(state: .completed, text: output),
       ]
     )
 
@@ -465,13 +465,13 @@ final class CodexBlockTests: XCTestCase {
     let prompt = "Rewrite this view into smaller SwiftUI subviews."
     let slide = Slide(
       markdown:
-        """
-        ```codex id=session
-        title: Explain the refactor goal
+      """
+      ```codex id=session
+      title: Explain the refactor goal
 
-        \(prompt)
-        ```
-        """
+      \(prompt)
+      ```
+      """
     )
 
     let html = MarkdownRenderer.htmlDocument(for: slide, theme: .studio, codexOutputs: [:])
@@ -491,19 +491,19 @@ final class CodexBlockTests: XCTestCase {
   func testRendererAddsRunAllForMultipleCodexBlocks() {
     let slide = Slide(
       markdown:
-        """
-        ```codex id=one
-        title: First
+      """
+      ```codex id=one
+      title: First
 
-        First prompt.
-        ```
+      First prompt.
+      ```
 
-        ```codex id=two
-        title: Second
+      ```codex id=two
+      title: Second
 
-        Second prompt.
-        ```
-        """
+      Second prompt.
+      ```
+      """
     )
 
     let html = MarkdownRenderer.htmlDocument(for: slide, theme: .studio, codexOutputs: [:])

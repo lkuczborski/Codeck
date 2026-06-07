@@ -1,29 +1,6 @@
 import AppKit
 import SwiftUI
 
-final class MarkdownEditorController: ObservableObject {
-  @Published var activeStyles: Set<MarkdownTextStyle> = []
-  @Published var selection = NSRange(location: 0, length: 0)
-  @Published private(set) var commandVersion = 0
-
-  fileprivate var pendingCommand: MarkdownEditorCommand?
-
-  func insert(_ insertion: MarkdownInsertion, codexBlockNumber: Int) {
-    pendingCommand = .insert(insertion, codexBlockNumber: codexBlockNumber)
-    commandVersion += 1
-  }
-
-  func toggle(_ style: MarkdownTextStyle) {
-    pendingCommand = .toggle(style)
-    commandVersion += 1
-  }
-}
-
-fileprivate enum MarkdownEditorCommand {
-  case insert(MarkdownInsertion, codexBlockNumber: Int)
-  case toggle(MarkdownTextStyle)
-}
-
 struct MarkdownTextEditorView: NSViewRepresentable {
   @Binding var text: String
   @ObservedObject var controller: MarkdownEditorController
@@ -37,7 +14,7 @@ struct MarkdownTextEditorView: NSViewRepresentable {
     initialSelection: NSRange? = nil,
     focusesInitially: Bool = false
   ) {
-    self._text = text
+    _text = text
     self.controller = controller
     self.initialSelection = initialSelection
     self.focusesInitially = focusesInitially
@@ -106,7 +83,8 @@ struct MarkdownTextEditorView: NSViewRepresentable {
     context.coordinator.applyInitialSelectionIfNeeded(to: textView)
 
     if context.coordinator.handledCommandVersion != controller.commandVersion,
-       let command = controller.pendingCommand {
+       let command = controller.pendingCommand
+    {
       context.coordinator.handledCommandVersion = controller.commandVersion
       context.coordinator.perform(command, in: textView)
     }
@@ -191,17 +169,16 @@ struct MarkdownTextEditorView: NSViewRepresentable {
       isApplyingCommand = true
       defer { isApplyingCommand = false }
 
-      let result: MarkdownEditResult
-      switch command {
+      let result: MarkdownEditResult = switch command {
       case let .insert(insertion, codexBlockNumber):
-        result = MarkdownEditorOperation.insert(
+        MarkdownEditorOperation.insert(
           insertion,
           into: textView.string,
           selection: textView.selectedRange(),
           codexBlockNumber: codexBlockNumber
         )
       case let .toggle(style):
-        result = MarkdownEditorOperation.toggle(
+        MarkdownEditorOperation.toggle(
           style,
           in: textView.string,
           selection: textView.selectedRange()
@@ -241,7 +218,7 @@ struct MarkdownTextEditorView: NSViewRepresentable {
           window.makeFirstResponder(textView)
           textView.scrollRangeToVisible(selection)
         } else if attemptsRemaining > 0 {
-          self.requestFocus(for: textView, selection: selection, attemptsRemaining: attemptsRemaining - 1)
+          requestFocus(for: textView, selection: selection, attemptsRemaining: attemptsRemaining - 1)
         }
       }
     }

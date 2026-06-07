@@ -2,7 +2,9 @@ enum DeckAssistantScope: String, CaseIterable, Identifiable, Hashable {
   case currentSlide
   case wholeDeck
 
-  var id: String { rawValue }
+  var id: String {
+    rawValue
+  }
 
   var title: String {
     switch self {

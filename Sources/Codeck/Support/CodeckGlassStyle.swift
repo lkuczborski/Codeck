@@ -2,8 +2,7 @@ import SwiftUI
 
 extension View {
   func codeckGlassSurface(cornerRadius: CGFloat = 16, interactive: Bool = false) -> some View {
-    self
-      .background(CodeckPalette.surface, in: RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
+    background(CodeckPalette.surface, in: RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
       .overlay {
         RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
           .strokeBorder(CodeckPalette.border, lineWidth: interactive ? 1 : 0.75)
@@ -11,8 +10,7 @@ extension View {
   }
 
   func codeckElevatedSurface(cornerRadius: CGFloat = 8) -> some View {
-    self
-      .background(CodeckPalette.elevatedSurface, in: RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
+    background(CodeckPalette.elevatedSurface, in: RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
       .overlay {
         RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
           .strokeBorder(CodeckPalette.border.opacity(0.8), lineWidth: 1)
@@ -20,25 +18,23 @@ extension View {
   }
 
   func codeckWorkspaceBackground() -> some View {
-    self.background(CodeckPalette.workspace)
+    background(CodeckPalette.workspace)
   }
 
   func codeckDivider() -> some View {
-    self.overlay(CodeckPalette.separator)
+    overlay(CodeckPalette.separator)
   }
 
   @ViewBuilder
   func codeckControlSurface(isActive: Bool = false, cornerRadius: CGFloat = 7) -> some View {
     if isActive {
-      self
-        .background(Color.accentColor.opacity(0.22), in: RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
+      background(Color.accentColor.opacity(0.22), in: RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
         .overlay {
           RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
             .strokeBorder(Color.accentColor.opacity(0.66), lineWidth: 1)
         }
     } else {
-      self
-        .background(CodeckPalette.surface, in: RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
+      background(CodeckPalette.surface, in: RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
         .overlay {
           RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
             .strokeBorder(CodeckPalette.border, lineWidth: 1)
@@ -46,17 +42,15 @@ extension View {
     }
   }
 
-  @ViewBuilder
   func codeckGlassButtonStyle(prominent: Bool = false) -> some View {
-    self.buttonStyle(CodeckPaletteButtonStyle(prominent: prominent))
+    buttonStyle(CodeckPaletteButtonStyle(prominent: prominent))
   }
 
   func codeckToolbarIconButtonStyle(prominent: Bool = false) -> some View {
     let buttonWidth: CGFloat = 30
     let buttonHeight: CGFloat = 28
     let cornerRadius: CGFloat = 8
-    return self
-      .labelStyle(.iconOnly)
+    return labelStyle(.iconOnly)
       .font(.system(size: 14, weight: .semibold))
       .imageScale(.medium)
       .frame(width: buttonWidth, height: buttonHeight)

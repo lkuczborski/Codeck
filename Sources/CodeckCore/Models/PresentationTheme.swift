@@ -7,7 +7,9 @@ public enum PresentationTheme: String, CaseIterable, Identifiable, Sendable {
   case solar
   case atelier
 
-  public var id: String { rawValue }
+  public var id: String {
+    rawValue
+  }
 
   public var displayName: String {
     switch self {

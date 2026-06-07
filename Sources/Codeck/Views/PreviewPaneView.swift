@@ -38,19 +38,14 @@ struct PreviewPaneView: View {
 
   private func handleWebAction(_ action: MarkdownWebAction) {
     switch action {
-    case .runCodex(let id):
+    case let .runCodex(id):
       if let block = codexBlocks.first(where: { $0.id == id }) {
         onRunBlock(block)
       }
-    case .stopCodex(let id):
+    case let .stopCodex(id):
       sessions.stop(id)
     case .runAllCodex:
       onRunAll(codexBlocks)
     }
   }
-}
-
-enum PreviewPaneDisplayMode {
-  case document
-  case scaledToFitWidth
 }

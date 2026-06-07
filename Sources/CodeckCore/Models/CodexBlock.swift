@@ -144,10 +144,10 @@ public struct CodexBlock: Identifiable, Hashable, Sendable {
   }
 
   private static func stableID(for seed: String) -> String {
-    var hash: UInt64 = 0xcbf29ce484222325
+    var hash: UInt64 = 0xCBF2_9CE4_8422_2325
     for byte in seed.utf8 {
       hash ^= UInt64(byte)
-      hash = hash &* 0x100000001b3
+      hash = hash &* 0x100_0000_01B3
     }
     return String(format: "codex-%016llx", hash)
   }

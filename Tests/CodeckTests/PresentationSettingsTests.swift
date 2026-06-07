@@ -1,6 +1,6 @@
-import XCTest
-@testable import CodeckCore
 @testable import Codeck
+@testable import CodeckCore
+import XCTest
 
 final class PresentationSettingsTests: XCTestCase {
   func testReasoningEffortDisplayNamesCoverKnownAndFutureValues() {
@@ -76,6 +76,6 @@ final class PresentationSettingsTests: XCTestCase {
     let options = catalog.modelOptions(including: CodexModelOption.defaultModelID)
 
     XCTAssertEqual(options.first?.id, CodexModelOption.defaultModelID)
-    XCTAssertEqual(options.filter { $0.id == CodexModelOption.defaultModelID }.count, 1)
+    XCTAssertEqual(options.count(where: { $0.id == CodexModelOption.defaultModelID }), 1)
   }
 }

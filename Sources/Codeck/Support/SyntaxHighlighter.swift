@@ -24,6 +24,13 @@ enum SyntaxHighlighter {
     var highlightsUppercaseIdentifiersAsTypes: Bool
   }
 
+  private struct YAMLKeyToken {
+    var indent: String
+    var text: String
+    var separator: String
+    var nextIndex: String.Index
+  }
+
   static func languageIdentifier(from info: String) -> String? {
     guard let token = languageToken(from: info) else { return nil }
     let lowercased = token.lowercased()
@@ -38,7 +45,8 @@ enum SyntaxHighlighter {
 
   static func html(for code: String, language: String?) -> String {
     guard let language,
-          !plainTextLanguages.contains(language) else {
+          !plainTextLanguages.contains(language)
+    else {
       return escapeHTML(code)
     }
 
@@ -245,15 +253,15 @@ enum SyntaxHighlighter {
 
     while index < code.endIndex {
       if code[index...].hasPrefix("<!--") {
-        let end = code.range(of: "-->", range: index..<code.endIndex)?.upperBound ?? code.endIndex
-        html += span("syntax-comment", String(code[index..<end]))
+        let end = code.range(of: "-->", range: index ..< code.endIndex)?.upperBound ?? code.endIndex
+        html += span("syntax-comment", String(code[index ..< end]))
         index = end
         continue
       }
 
       if code[index] == "<" {
         let end = code[index...].firstIndex(of: ">").map { code.index(after: $0) } ?? code.endIndex
-        html += highlightMarkupTag(String(code[index..<end]))
+        html += highlightMarkupTag(String(code[index ..< end]))
         index = end
         continue
       }
@@ -329,15 +337,14 @@ enum SyntaxHighlighter {
 
       if let identifier = consumeCSSIdentifier(in: code, at: index) {
         let next = nextNonWhitespaceIndex(after: identifier.nextIndex, in: code)
-        let style: String
-        if definition.keywords.contains(identifier.text.lowercased()) {
-          style = "syntax-keyword"
+        let style = if definition.keywords.contains(identifier.text.lowercased()) {
+          "syntax-keyword"
         } else if next.map({ code[$0] == ":" }) == true {
-          style = "syntax-property"
+          "syntax-property"
         } else if next.map({ code[$0] == "(" }) == true {
-          style = "syntax-function"
+          "syntax-function"
         } else {
-          style = "syntax-name"
+          "syntax-name"
         }
         html += span(style, identifier.text)
         index = identifier.nextIndex
@@ -496,12 +503,13 @@ enum SyntaxHighlighter {
 
     let contentStart = text.index(index, offsetBy: delimiter.count)
     guard contentStart < text.endIndex,
-          let closingRange = text.range(of: delimiter, range: contentStart..<text.endIndex),
-          closingRange.lowerBound > contentStart else {
+          let closingRange = text.range(of: delimiter, range: contentStart ..< text.endIndex),
+          closingRange.lowerBound > contentStart
+    else {
       return nil
     }
 
-    let content = String(text[contentStart..<closingRange.lowerBound])
+    let content = String(text[contentStart ..< closingRange.lowerBound])
     let renderedContent = recurse ? highlightMarkdownInline(content) : escapeHTML(content)
     let html = span("syntax-punctuation", delimiter)
       + spanHTML(className, renderedContent)
@@ -529,8 +537,8 @@ enum SyntaxHighlighter {
     let urlStart = text.index(after: parenStart)
     guard let urlEnd = text[urlStart...].firstIndex(of: ")") else { return nil }
 
-    let title = String(text[titleStart..<titleEnd])
-    let url = String(text[urlStart..<urlEnd])
+    let title = String(text[titleStart ..< titleEnd])
+    let url = String(text[urlStart ..< urlEnd])
     let html = span("syntax-punctuation", imagePrefix + "[")
       + spanHTML("syntax-link", highlightMarkdownInline(title))
       + span("syntax-punctuation", "](")
@@ -558,8 +566,8 @@ enum SyntaxHighlighter {
     let labelStart = text.index(after: labelOpen)
     guard let labelEnd = text[labelStart...].firstIndex(of: "]") else { return nil }
 
-    let title = String(text[titleStart..<titleEnd])
-    let label = String(text[labelStart..<labelEnd])
+    let title = String(text[titleStart ..< titleEnd])
+    let label = String(text[labelStart ..< labelEnd])
     let html = span("syntax-punctuation", imagePrefix + "[")
       + spanHTML("syntax-link", highlightMarkdownInline(title))
       + span("syntax-punctuation", "][")
@@ -570,12 +578,13 @@ enum SyntaxHighlighter {
 
   private static func markdownAutolinkSpan(in text: String, at index: String.Index) -> (html: String, nextIndex: String.Index)? {
     guard text[index] == "<",
-          let closing = text[text.index(after: index)...].firstIndex(of: ">") else {
+          let closing = text[text.index(after: index)...].firstIndex(of: ">")
+    else {
       return nil
     }
 
     let valueStart = text.index(after: index)
-    let value = String(text[valueStart..<closing])
+    let value = String(text[valueStart ..< closing])
     guard isMarkdownAutolinkValue(value) else { return nil }
 
     let html = span("syntax-punctuation", "<")
@@ -588,12 +597,13 @@ enum SyntaxHighlighter {
     guard text[index] == "<" else { return nil }
     let next = text.index(after: index)
     guard next < text.endIndex,
-          text[next].isLetter || text[next] == "/" || text[next] == "!" || text[next] == "?" else {
+          text[next].isLetter || text[next] == "/" || text[next] == "!" || text[next] == "?"
+    else {
       return nil
     }
     guard let closing = text[next...].firstIndex(of: ">") else { return nil }
     let end = text.index(after: closing)
-    return (span("syntax-tag", String(text[index..<end])), end)
+    return (span("syntax-tag", String(text[index ..< end])), end)
   }
 
   private static func markdownBareURLSpan(in text: String, at index: String.Index) -> (html: String, nextIndex: String.Index)? {
@@ -611,12 +621,12 @@ enum SyntaxHighlighter {
     }
 
     guard cursor > index else { return nil }
-    return (escapeHTML(String(text[index..<cursor])), cursor)
+    return (escapeHTML(String(text[index ..< cursor])), cursor)
   }
 
   private static func markdownHeading(in line: String) -> (marker: String, text: String)? {
     let marker = line.prefix(while: { $0 == "#" })
-    guard (1...6).contains(marker.count) else { return nil }
+    guard (1 ... 6).contains(marker.count) else { return nil }
 
     let markerEnd = line.index(line.startIndex, offsetBy: marker.count)
     guard markerEnd < line.endIndex, line[markerEnd] == " " else { return nil }
@@ -634,7 +644,7 @@ enum SyntaxHighlighter {
     guard colon < line.endIndex, line[colon] == ":" else { return nil }
 
     let markerEnd = line.index(after: colon)
-    return (String(line[line.startIndex..<markerEnd]), String(line[markerEnd...]))
+    return (String(line[line.startIndex ..< markerEnd]), String(line[markerEnd...]))
   }
 
   private static func markdownFenceMarker(in line: String) -> String? {
@@ -690,15 +700,14 @@ enum SyntaxHighlighter {
   private static func highlightDiff(_ code: String) -> String {
     code.split(separator: "\n", omittingEmptySubsequences: false).enumerated().map { index, line in
       let rawLine = String(line)
-      let style: String?
-      if rawLine.hasPrefix("+"), !rawLine.hasPrefix("+++") {
-        style = "syntax-addition"
+      let style: String? = if rawLine.hasPrefix("+"), !rawLine.hasPrefix("+++") {
+        "syntax-addition"
       } else if rawLine.hasPrefix("-"), !rawLine.hasPrefix("---") {
-        style = "syntax-deletion"
+        "syntax-deletion"
       } else if rawLine.hasPrefix("@@") {
-        style = "syntax-section"
+        "syntax-section"
       } else {
-        style = nil
+        nil
       }
 
       let rendered = style.map { span($0, rawLine) } ?? escapeHTML(rawLine)
@@ -743,13 +752,13 @@ enum SyntaxHighlighter {
   ) -> (text: String, nextIndex: String.Index)? {
     for comment in definition.blockComments where code[index...].hasPrefix(comment.start) {
       let searchStart = code.index(index, offsetBy: comment.start.count, limitedBy: code.endIndex) ?? code.endIndex
-      let end = code.range(of: comment.end, range: searchStart..<code.endIndex)?.upperBound ?? code.endIndex
-      return (String(code[index..<end]), end)
+      let end = code.range(of: comment.end, range: searchStart ..< code.endIndex)?.upperBound ?? code.endIndex
+      return (String(code[index ..< end]), end)
     }
 
     for comment in definition.lineComments where code[index...].hasPrefix(comment) {
       let end = code[index...].firstIndex(of: "\n") ?? code.endIndex
-      return (String(code[index..<end]), end)
+      return (String(code[index ..< end]), end)
     }
 
     return nil
@@ -766,10 +775,10 @@ enum SyntaxHighlighter {
     }
 
     if code[index...].hasPrefix("\"\"\"") || code[index...].hasPrefix("'''") {
-      let delimiter = String(code[index..<code.index(index, offsetBy: 3)])
+      let delimiter = String(code[index ..< code.index(index, offsetBy: 3)])
       let searchStart = code.index(index, offsetBy: 3)
-      let end = code.range(of: delimiter, range: searchStart..<code.endIndex)?.upperBound ?? code.endIndex
-      return (String(code[index..<end]), end, false)
+      let end = code.range(of: delimiter, range: searchStart ..< code.endIndex)?.upperBound ?? code.endIndex
+      return (String(code[index ..< end]), end, false)
     }
 
     let character = code[index]
@@ -798,12 +807,12 @@ enum SyntaxHighlighter {
         escaped = true
       } else if character == delimiter {
         let end = code.index(after: cursor)
-        return (String(code[index..<end]), end)
+        return (String(code[index ..< end]), end)
       }
       cursor = code.index(after: cursor)
     }
 
-    return (String(code[index..<code.endIndex]), code.endIndex)
+    return (String(code[index ..< code.endIndex]), code.endIndex)
   }
 
   private static func consumePrefixedIdentifier(
@@ -829,7 +838,7 @@ enum SyntaxHighlighter {
 
     if code[next] == "{" {
       let end = code[next...].firstIndex(of: "}").map { code.index(after: $0) } ?? code.index(after: next)
-      return (String(code[index..<end]), end)
+      return (String(code[index ..< end]), end)
     }
 
     guard isIdentifierStart(code[next]) else { return nil }
@@ -852,7 +861,7 @@ enum SyntaxHighlighter {
       cursor = code.index(after: cursor)
     }
 
-    return (String(code[index..<cursor]), cursor)
+    return (String(code[index ..< cursor]), cursor)
   }
 
   private static func consumeIdentifier(
@@ -864,7 +873,7 @@ enum SyntaxHighlighter {
     while cursor < code.endIndex, isIdentifierContinuation(code[cursor]) {
       cursor = code.index(after: cursor)
     }
-    return (String(code[index..<cursor]), cursor)
+    return (String(code[index ..< cursor]), cursor)
   }
 
   private static func consumeCSSIdentifier(
@@ -878,13 +887,13 @@ enum SyntaxHighlighter {
       guard isIdentifierContinuation(character) || character == "-" else { break }
       cursor = code.index(after: cursor)
     }
-    return (String(code[index..<cursor]), cursor)
+    return (String(code[index ..< cursor]), cursor)
   }
 
   private static func consumeYAMLKey(
     in code: String,
     at index: String.Index
-  ) -> (indent: String, text: String, separator: String, nextIndex: String.Index)? {
+  ) -> YAMLKeyToken? {
     var cursor = index
     while cursor < code.endIndex, code[cursor] == " " || code[cursor] == "\t" {
       cursor = code.index(after: cursor)
@@ -893,13 +902,13 @@ enum SyntaxHighlighter {
     while cursor < code.endIndex {
       let character = code[cursor]
       if character == ":" || character == "=" {
-        let key = String(code[keyStart..<cursor]).trimmingCharacters(in: .whitespaces)
+        let key = String(code[keyStart ..< cursor]).trimmingCharacters(in: .whitespaces)
         guard !key.isEmpty, !key.contains(" ") else { return nil }
         let separatorIndex = cursor
         let next = code.index(after: cursor)
-        return (
-          indent: String(code[index..<keyStart]),
-          text: String(code[keyStart..<separatorIndex]),
+        return YAMLKeyToken(
+          indent: String(code[index ..< keyStart]),
+          text: String(code[keyStart ..< separatorIndex]),
           separator: String(character),
           nextIndex: next
         )

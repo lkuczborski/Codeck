@@ -48,20 +48,3 @@ public struct CodeckDeckFileStore {
     try data.write(to: url, options: .atomic)
   }
 }
-
-public enum CodeckDeckFileError: LocalizedError, Equatable {
-  case fileAlreadyExists(String)
-  case fileNotFound(String)
-  case invalidUTF8
-
-  public var errorDescription: String? {
-    switch self {
-    case .fileAlreadyExists(let path):
-      "A deck already exists at \(path). Pass overwrite=true to replace it."
-    case .fileNotFound(let path):
-      "No deck exists at \(path)."
-    case .invalidUTF8:
-      "Could not encode the deck as UTF-8."
-    }
-  }
-}

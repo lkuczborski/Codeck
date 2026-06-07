@@ -16,7 +16,8 @@ enum CodexSessionOutputFormatter {
     }
 
     if output.state == .running,
-       let response = responseText(from: output.standardError) ?? responseText(from: rawText) {
+       let response = responseText(from: output.standardError) ?? responseText(from: rawText)
+    {
       return response
     }
 
@@ -72,9 +73,10 @@ enum CodexSessionOutputFormatter {
       return text
     }
 
-    let range = NSRange(text.startIndex..<text.endIndex, in: text)
+    let range = NSRange(text.startIndex ..< text.endIndex, in: text)
     guard let match = regex.firstMatch(in: text, range: range),
-          let matchRange = Range(match.range, in: text) else {
+          let matchRange = Range(match.range, in: text)
+    else {
       return text
     }
 
@@ -87,7 +89,7 @@ enum CodexSessionOutputFormatter {
       return text
     }
 
-    let range = NSRange(text.startIndex..<text.endIndex, in: text)
+    let range = NSRange(text.startIndex ..< text.endIndex, in: text)
     return regex.stringByReplacingMatches(in: text, range: range, withTemplate: "")
   }
 }

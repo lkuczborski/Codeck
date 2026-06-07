@@ -1,7 +1,7 @@
+@testable import Codeck
+@testable import CodeckCore
 import SwiftUI
 import XCTest
-@testable import CodeckCore
-@testable import Codeck
 
 final class PresentationDeckTests: XCTestCase {
   func testDefaultDeckStartsWithEditableTitlePlaceholder() {
@@ -22,27 +22,27 @@ final class PresentationDeckTests: XCTestCase {
   func testParsesThemeAndSlideSeparatorsOutsideFences() {
     let deck = PresentationDeck(
       markdownDocument:
-        """
-        ---
-        format: codeck.mdeck
-        version: 1
-        theme: chalk
-        codex:
-          model: gpt-5.2
-          reasoning: high
-          sandbox: workspace-write
-        ---
+      """
+      ---
+      format: codeck.mdeck
+      version: 1
+      theme: chalk
+      codex:
+        model: gpt-5.2
+        reasoning: high
+        sandbox: workspace-write
+      ---
 
-        # One
+      # One
 
-        ```swift
-        let separator = "---"
-        ```
+      ```swift
+      let separator = "---"
+      ```
 
-        ---
+      ---
 
-        # Two
-        """
+      # Two
+      """
     )
 
     XCTAssertEqual(deck.theme, .chalk)
@@ -57,54 +57,54 @@ final class PresentationDeckTests: XCTestCase {
   func testParsesSlideDelimitersAfterStrictClosingFence() {
     let deck = PresentationDeck(
       markdownDocument:
-        """
-        ---
-        format: codeck.mdeck
-        version: 1
-        theme: midnight
-        codex:
-          sandbox: read-only
-          model: "gpt-5.5"
-          reasoning: medium
-        ---
-        # Live Codex Blocks
+      """
+      ---
+      format: codeck.mdeck
+      version: 1
+      theme: midnight
+      codex:
+        sandbox: read-only
+        model: "gpt-5.5"
+        reasoning: medium
+      ---
+      # Live Codex Blocks
 
-        ```codex id=first-demo
-        title: First example
+      ```codex id=first-demo
+      title: First example
 
-        Explain three practical ways to make a prompt more testable.
-        ``d`
+      Explain three practical ways to make a prompt more testable.
+      ``d`
 
-        ```codex id=second-demo
-        title: Second example
+      ```codex id=second-demo
+      title: Second example
 
-        What is the best reasoning effort for GPT-5.5?
-        ```
+      What is the best reasoning effort for GPT-5.5?
+      ```
 
-        ---
+      ---
 
-        # Live Codex Block
+      # Live Codex Block
 
-        ```codex id=first-demo
-        title: First example
+      ```codex id=first-demo
+      title: First example
 
-        Explain three practical ways to make a prompt more testable.
-        ```
+      Explain three practical ways to make a prompt more testable.
+      ```
 
-        ---
+      ---
 
-        # Rich Markdown
+      # Rich Markdown
 
-        ```swift
-        struct Lesson {
-          let separator = "---"
-        }
-        ```
+      ```swift
+      struct Lesson {
+        let separator = "---"
+      }
+      ```
 
-        ---
+      ---
 
-        # New Slide
-        """
+      # New Slide
+      """
     )
 
     XCTAssertEqual(deck.theme, .midnight)
@@ -217,17 +217,17 @@ final class PresentationDeckTests: XCTestCase {
     let result = deck.replaceSlideMarkdown(
       for: firstID,
       with:
-        """
-        # One
+      """
+      # One
 
-        ---
+      ---
 
-        # Two
+      # Two
 
-        ---
+      ---
 
-        # Three
-        """
+      # Three
+      """
     )
 
     XCTAssertEqual(deck.slides.count, 3)
@@ -244,13 +244,13 @@ final class PresentationDeckTests: XCTestCase {
     let result = deck.replaceSlideMarkdown(
       for: firstID,
       with:
-        """
-        # Demo
+      """
+      # Demo
 
-        ```swift
-        let separator = "---"
-        ```
-        """
+      ```swift
+      let separator = "---"
+      ```
+      """
     )
 
     XCTAssertEqual(deck.slides.count, 1)
@@ -266,15 +266,15 @@ final class PresentationDeckTests: XCTestCase {
     let result = deck.replaceSlideMarkdown(
       for: firstID,
       with:
-        """
-        # Demo
+      """
+      # Demo
 
-        ```yaml
-        ---
-        name: fixture
-        ---
-        ```
-        """
+      ```yaml
+      ---
+      name: fixture
+      ---
+      ```
+      """
     )
 
     XCTAssertEqual(deck.slides.count, 1)
@@ -290,11 +290,11 @@ final class PresentationDeckTests: XCTestCase {
     let result = deck.replaceSlideMarkdown(
       for: firstID,
       with:
-        """
-        # One
+      """
+      # One
 
-        ---
-        """
+      ---
+      """
     )
 
     XCTAssertEqual(deck.slides.count, 2)
@@ -307,9 +307,9 @@ final class PresentationDeckTests: XCTestCase {
   func testUsesExplicitDefaultCodexSettingsWhenMetadataIsMissing() {
     let deck = PresentationDeck(
       markdownDocument:
-        """
-        # Defaults
-        """
+      """
+      # Defaults
+      """
     )
 
     XCTAssertEqual(deck.settings.codex.model, "gpt-5.5")
@@ -320,16 +320,16 @@ final class PresentationDeckTests: XCTestCase {
   func testReadsLegacyRootLevelCodexMetadataKeys() {
     let deck = PresentationDeck(
       markdownDocument:
-        """
-        ---
-        theme: solar
-        model: "future-model"
-        reasoning_effort: ultra
-        sandbox: workspace-write
-        ---
+      """
+      ---
+      theme: solar
+      model: "future-model"
+      reasoning_effort: ultra
+      sandbox: workspace-write
+      ---
 
-        # Defaults
-        """
+      # Defaults
+      """
     )
 
     XCTAssertEqual(deck.theme, .solar)
@@ -341,18 +341,18 @@ final class PresentationDeckTests: XCTestCase {
   func testPreservesFutureModelAndReasoningMetadata() {
     let deck = PresentationDeck(
       markdownDocument:
-        """
-        ---
-        format: codeck.mdeck
-        version: 1
-        theme: studio
-        codex:
-          model: old-model
-          reasoning: unexpected
-        ---
+      """
+      ---
+      format: codeck.mdeck
+      version: 1
+      theme: studio
+      codex:
+        model: old-model
+        reasoning: unexpected
+      ---
 
-        # Defaults
-        """
+      # Defaults
+      """
     )
 
     XCTAssertEqual(deck.settings.codex.model, "old-model")
@@ -362,11 +362,11 @@ final class PresentationDeckTests: XCTestCase {
   func testReadsLegacyMarkdownThemeComment() {
     let deck = PresentationDeck(
       markdownDocument:
-        """
-        <!-- codeck-theme: solar -->
+      """
+      <!-- codeck-theme: solar -->
 
-        # Legacy
-        """
+      # Legacy
+      """
     )
 
     XCTAssertEqual(deck.theme, .solar)
@@ -391,7 +391,7 @@ final class PresentationDeckTests: XCTestCase {
       [
         ["opening-promise", "problem-framing", "big-number", "customer-quote"],
         ["decision-matrix", "roadmap", "risk-radar", "before-after"],
-        ["demo-runbook", "code-walkthrough", "live-investigation", "workshop-exercise"]
+        ["demo-runbook", "code-walkthrough", "live-investigation", "workshop-exercise"],
       ]
     )
     XCTAssertEqual(SlideTemplateCatalog.defaultTemplate?.id, "opening-promise")
@@ -403,11 +403,11 @@ final class PresentationDeckTests: XCTestCase {
       name: "Opening Promise",
       description: "Start with the deck title and the value it promises.",
       markdown:
-        """
-        # Presentation Title
+      """
+      # Presentation Title
 
-        A compact promise for what the audience will understand, decide, or be able to do by the end.
-        """
+      A compact promise for what the audience will understand, decide, or be able to do by the end.
+      """
     )
   }
 
@@ -417,15 +417,15 @@ final class PresentationDeckTests: XCTestCase {
       name: "Problem Framing",
       description: "Name the tension before introducing the answer.",
       markdown:
-        """
-        # The Problem
+      """
+      # The Problem
 
-        > The current workflow forces the team to spend attention in the wrong place.
+      > The current workflow forces the team to spend attention in the wrong place.
 
-        - Who feels it most
-        - Where it appears in the work
-        - Why it matters now
-        """
+      - Who feels it most
+      - Where it appears in the work
+      - Why it matters now
+      """
     )
   }
 
@@ -435,13 +435,13 @@ final class PresentationDeckTests: XCTestCase {
       name: "Big Number",
       description: "Anchor a section around one metric and its implication.",
       markdown:
-        """
-        # One Number to Remember
+      """
+      # One Number to Remember
 
-        ## 42%
+      ## 42%
 
-        What changed, why it matters, and which decision this number should influence.
-        """
+      What changed, why it matters, and which decision this number should influence.
+      """
     )
   }
 
@@ -451,13 +451,13 @@ final class PresentationDeckTests: XCTestCase {
       name: "Customer Quote",
       description: "Use a direct voice or memorable observation as evidence.",
       markdown:
-        """
-        # Voice of the Customer
+      """
+      # Voice of the Customer
 
-        > "The moment it clicked was when the work stopped feeling like setup and started feeling like progress."
+      > "The moment it clicked was when the work stopped feeling like setup and started feeling like progress."
 
-        Segment, source, or interview context
-        """
+      Segment, source, or interview context
+      """
     )
   }
 
@@ -467,14 +467,14 @@ final class PresentationDeckTests: XCTestCase {
       name: "Decision Matrix",
       description: "Compare a few options against the criteria that matter.",
       markdown:
-        """
-        # Decision Matrix
+      """
+      # Decision Matrix
 
-        | Option | Best for | Risk | Recommendation |
-        | --- | --- | --- | --- |
-        | A | Fast learning | Manual follow-up | Short-term |
-        | B | Durable workflow | More implementation | Preferred |
-        """
+      | Option | Best for | Risk | Recommendation |
+      | --- | --- | --- | --- |
+      | A | Fast learning | Manual follow-up | Short-term |
+      | B | Durable workflow | More implementation | Preferred |
+      """
     )
   }
 
@@ -484,13 +484,13 @@ final class PresentationDeckTests: XCTestCase {
       name: "Roadmap",
       description: "Show a sequence of phases without turning it into a table.",
       markdown:
-        """
-        # Roadmap
+      """
+      # Roadmap
 
-        1. **Now:** Validate the core workflow with real content.
-        2. **Next:** Remove the largest source of manual cleanup.
-        3. **Later:** Automate the repeatable path and measure adoption.
-        """
+      1. **Now:** Validate the core workflow with real content.
+      2. **Next:** Remove the largest source of manual cleanup.
+      3. **Later:** Automate the repeatable path and measure adoption.
+      """
     )
   }
 
@@ -500,15 +500,15 @@ final class PresentationDeckTests: XCTestCase {
       name: "Risk Radar",
       description: "Separate risks, mitigations, and the ask.",
       markdown:
-        """
-        # Risk Radar
+      """
+      # Risk Radar
 
-        **Primary risk:** The team optimizes the wrong part of the workflow.
+      **Primary risk:** The team optimizes the wrong part of the workflow.
 
-        - Watch for: slow review cycles and repeated handoffs
-        - Mitigate with: one owner and one validation checkpoint
-        - Ask today: approve the next experiment
-        """
+      - Watch for: slow review cycles and repeated handoffs
+      - Mitigate with: one owner and one validation checkpoint
+      - Ask today: approve the next experiment
+      """
     )
   }
 
@@ -518,19 +518,19 @@ final class PresentationDeckTests: XCTestCase {
       name: "Before and After",
       description: "Make a process or product improvement easy to scan.",
       markdown:
-        """
-        # Before and After
+      """
+      # Before and After
 
-        ## Before
+      ## Before
 
-        The old path, constraint, or user experience.
+      The old path, constraint, or user experience.
 
-        ***
+      ***
 
-        ## After
+      ## After
 
-        The improved path and the reason it matters.
-        """
+      The improved path and the reason it matters.
+      """
     )
   }
 
@@ -540,14 +540,14 @@ final class PresentationDeckTests: XCTestCase {
       name: "Demo Runbook",
       description: "Keep a live demo focused on the beats that matter.",
       markdown:
-        """
-        # Demo Runbook
+      """
+      # Demo Runbook
 
-        1. **Setup:** Start from the smallest believable example.
-        2. **Show:** Perform the action the audience cares about.
-        3. **Prove:** Check the result or compare before and after.
-        4. **Fallback:** Know what to show if the live path fails.
-        """
+      1. **Setup:** Start from the smallest believable example.
+      2. **Show:** Perform the action the audience cares about.
+      3. **Prove:** Check the result or compare before and after.
+      4. **Fallback:** Know what to show if the live path fails.
+      """
     )
   }
 
@@ -557,18 +557,18 @@ final class PresentationDeckTests: XCTestCase {
       name: "Code Walkthrough",
       description: "Explain a small implementation detail with context.",
       markdown:
-        """
-        # Code Walkthrough
+      """
+      # Code Walkthrough
 
-        The important part is how the boundary stays explicit.
+      The important part is how the boundary stays explicit.
 
-        ```swift
-        struct SlideStep {
-          let goal: String
-          let evidence: String
-        }
-        ```
-        """
+      ```swift
+      struct SlideStep {
+        let goal: String
+        let evidence: String
+      }
+      ```
+      """
     )
   }
 
@@ -578,15 +578,15 @@ final class PresentationDeckTests: XCTestCase {
       name: "Live Investigation",
       description: "Ask Codex to inspect, explain, or test something live.",
       markdown:
-        """
-        # Live Investigation
+      """
+      # Live Investigation
 
-        ```codex id=investigate
-        title: Inspect the current state
+      ```codex id=investigate
+      title: Inspect the current state
 
-        Review the relevant files and explain what is happening, what is risky, and what should be verified next.
-        ```
-        """
+      Review the relevant files and explain what is happening, what is risky, and what should be verified next.
+      ```
+      """
     )
   }
 
@@ -596,15 +596,15 @@ final class PresentationDeckTests: XCTestCase {
       name: "Workshop Exercise",
       description: "Give the audience a clear task and success criteria.",
       markdown:
-        """
-        # Workshop Exercise
+      """
+      # Workshop Exercise
 
-        **Scenario:** A user needs to complete the workflow without reading documentation.
+      **Scenario:** A user needs to complete the workflow without reading documentation.
 
-        - Define the first action they should take
-        - Identify the feedback they need
-        - Share one improvement you would make
-        """
+      - Define the first action they should take
+      - Identify the feedback they need
+      - Share one improvement you would make
+      """
     )
   }
 

@@ -2,33 +2,6 @@ import CodeckCore
 import Foundation
 import SwiftUI
 
-enum CodexSessionState: String, Hashable {
-  case idle
-  case running
-  case completed
-  case failed
-  case stopped
-}
-
-struct CodexSessionOutput: Hashable {
-  var state: CodexSessionState
-  var text: String
-  var standardOutput: String
-  var standardError: String
-
-  init(
-    state: CodexSessionState,
-    text: String,
-    standardOutput: String = "",
-    standardError: String = ""
-  ) {
-    self.state = state
-    self.text = text
-    self.standardOutput = standardOutput
-    self.standardError = standardError
-  }
-}
-
 @MainActor
 final class CodexSessionStore: ObservableObject {
   @Published private(set) var outputs: [String: CodexSessionOutput] = [:]
@@ -181,14 +154,14 @@ final class CodexSessionStore: ObservableObject {
       self.block = block
       self.settings = settings
       self.workingDirectory = CodexSessionRunner.sessionWorkingDirectory(from: workingDirectory)
-      self.sandboxMode = CodexSandbox.mode(for: block, settings: settings)
+      sandboxMode = CodexSandbox.mode(for: block, settings: settings)
       self.allowsNetwork = allowsNetwork
       self.keepsSessionAlive = keepsSessionAlive
-      self.initializeRequestID = "\(block.id)-initialize"
-      self.threadSequence = 0
-      self.turnSequence = 0
-      self.threadStartRequestID = "\(block.id)-thread-start-0"
-      self.turnStartRequestID = "\(block.id)-turn-start-0"
+      initializeRequestID = "\(block.id)-initialize"
+      threadSequence = 0
+      turnSequence = 0
+      threadStartRequestID = "\(block.id)-thread-start-0"
+      turnStartRequestID = "\(block.id)-turn-start-0"
     }
 
     mutating func prepareForNextRequest(
@@ -200,14 +173,14 @@ final class CodexSessionStore: ObservableObject {
       self.block = block
       self.settings = settings
       self.workingDirectory = CodexSessionRunner.sessionWorkingDirectory(from: workingDirectory)
-      self.sandboxMode = CodexSandbox.mode(for: block, settings: settings)
+      sandboxMode = CodexSandbox.mode(for: block, settings: settings)
       self.allowsNetwork = allowsNetwork
-      self.threadID = nil
-      self.turnID = nil
-      self.threadSequence += 1
-      self.turnSequence += 1
-      self.threadStartRequestID = "\(block.id)-thread-start-\(threadSequence)"
-      self.turnStartRequestID = "\(block.id)-turn-start-\(turnSequence)"
+      threadID = nil
+      turnID = nil
+      threadSequence += 1
+      turnSequence += 1
+      threadStartRequestID = "\(block.id)-thread-start-\(threadSequence)"
+      turnStartRequestID = "\(block.id)-turn-start-\(turnSequence)"
     }
   }
 
@@ -221,7 +194,8 @@ final class CodexSessionStore: ObservableObject {
           context.keepsSessionAlive,
           processes[block.id] != nil,
           inputPipes[block.id] != nil,
-          output(for: block.id).state != .running else {
+          output(for: block.id).state != .running
+    else {
       return false
     }
 
@@ -413,11 +387,11 @@ final class CodexSessionStore: ObservableObject {
       params: [
         "clientInfo": [
           "name": "Codeck",
-          "version": "0.1"
+          "version": "0.1",
         ],
         "capabilities": [
-          "experimentalApi": true
-        ]
+          "experimentalApi": true,
+        ],
       ],
       to: blockID
     )
@@ -430,7 +404,7 @@ final class CodexSessionStore: ObservableObject {
       "approvalPolicy": "never",
       "ephemeral": true,
       "sandbox": context.sandboxMode,
-      "serviceName": "Codeck"
+      "serviceName": "Codeck",
     ]
 
     params["cwd"] = context.workingDirectory.path
@@ -448,10 +422,10 @@ final class CodexSessionStore: ObservableObject {
       "input": [
         [
           "type": "text",
-          "text": context.block.prompt
-        ]
+          "text": context.block.prompt,
+        ],
       ],
-      "threadId": threadID
+      "threadId": threadID,
     ]
 
     params["cwd"] = context.workingDirectory.path
@@ -472,11 +446,12 @@ final class CodexSessionStore: ObservableObject {
     let request: [String: Any] = [
       "id": id,
       "method": method,
-      "params": params
+      "params": params,
     ]
 
     guard let data = try? JSONSerialization.data(withJSONObject: request),
-          var payload = String(data: data, encoding: .utf8) else {
+          var payload = String(data: data, encoding: .utf8)
+    else {
       fail(blockID: blockID, message: "Could not encode Codex app-server request.")
       return
     }
@@ -484,7 +459,8 @@ final class CodexSessionStore: ObservableObject {
     payload += "\n"
 
     guard let inputPipe = inputPipes[blockID],
-          let data = payload.data(using: .utf8) else {
+          let data = payload.data(using: .utf8)
+    else {
       return
     }
 

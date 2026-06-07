@@ -1,5 +1,5 @@
-import XCTest
 @testable import Codeck
+import XCTest
 
 final class CodexJSONEventParserTests: XCTestCase {
   func testExtractsAgentMessageDelta() {
@@ -48,7 +48,8 @@ final class CodexJSONEventParserTests: XCTestCase {
 
   func testExtractsTurnCompletionStatusAndFailureMessage() throws {
     let completed = try XCTUnwrap(CodexJSONEventParser.object(from: #"{"method":"turn/completed","params":{"turn":{"status":"completed"}}}"#))
-    let failed = try XCTUnwrap(CodexJSONEventParser.object(from: #"{"method":"turn/completed","params":{"turn":{"status":"failed","error":{"message":"Sandbox denied"}}}}"#))
+    let failed = try XCTUnwrap(CodexJSONEventParser
+      .object(from: #"{"method":"turn/completed","params":{"turn":{"status":"failed","error":{"message":"Sandbox denied"}}}}"#))
 
     XCTAssertEqual(CodexJSONEventParser.turnCompletion(from: completed)?.completed, true)
     XCTAssertNil(CodexJSONEventParser.turnCompletion(from: completed)?.message)

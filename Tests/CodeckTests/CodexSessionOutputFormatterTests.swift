@@ -1,5 +1,5 @@
-import XCTest
 @testable import Codeck
+import XCTest
 
 final class CodexSessionOutputFormatterTests: XCTestCase {
   func testMarkdownDefaultsToReadyOrThinkingBasedOnState() {
@@ -12,12 +12,12 @@ final class CodexSessionOutputFormatterTests: XCTestCase {
     let output = CodexSessionOutput(
       state: .completed,
       text:
-        """
-        \u{001B}[32mcodex\u{001B}[0m
-        Final answer.
+      """
+      \u{001B}[32mcodex\u{001B}[0m
+      Final answer.
 
-        tokens used 1,234
-        """
+      tokens used 1,234
+      """
     )
 
     XCTAssertEqual(CodexSessionOutputFormatter.markdown(from: output), "Final answer.")

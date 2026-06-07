@@ -1,6 +1,6 @@
+@testable import CodeckCore
 import Foundation
 import XCTest
-@testable import CodeckCore
 
 final class CodeckDeckFileStoreTests: XCTestCase {
   func testCreatesAndLoadsDeckFile() throws {

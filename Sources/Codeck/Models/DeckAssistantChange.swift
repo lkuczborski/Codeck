@@ -8,9 +8,9 @@ struct DeckAssistantChange: Identifiable, Hashable {
 
   var locationLabel: String {
     switch operation {
-    case .insert(let position):
+    case let .insert(position):
       "Insert at \(position + 1)"
-    case .replace(let index):
+    case let .replace(index):
       "Slide \(index + 1)"
     }
   }

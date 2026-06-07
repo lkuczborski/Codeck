@@ -16,14 +16,14 @@ extension SyntaxHighlighter {
     "sh": "bash",
     "text": "plaintext",
     "ts": "typescript",
-    "yml": "yaml"
+    "yml": "yaml",
   ]
 
   static let plainTextLanguages: Set<String> = [
     "plain",
     "plaintext",
     "text",
-    "txt"
+    "txt",
   ]
 
   static let genericDefinition = LanguageDefinition(
@@ -42,41 +42,41 @@ extension SyntaxHighlighter {
   static func definition(for language: String) -> LanguageDefinition? {
     switch language {
     case "swift":
-      return swiftDefinition
+      swiftDefinition
     case "javascript", "typescript", "jsx", "tsx":
-      return javaScriptDefinition
+      javaScriptDefinition
     case "python":
-      return pythonDefinition
+      pythonDefinition
     case "bash", "shell", "zsh", "fish", "powershell":
-      return shellDefinition
+      shellDefinition
     case "json":
-      return jsonDefinition
+      jsonDefinition
     case "yaml", "toml":
-      return yamlDefinition
+      yamlDefinition
     case "html", "xml":
-      return markupDefinition
+      markupDefinition
     case "css", "scss", "less":
-      return cssDefinition
+      cssDefinition
     case "markdown":
-      return markdownDefinition
+      markdownDefinition
     case "diff", "patch":
-      return diffDefinition
+      diffDefinition
     case "sql":
-      return sqlDefinition
+      sqlDefinition
     case "rust":
-      return rustDefinition
+      rustDefinition
     case "go":
-      return goDefinition
+      goDefinition
     case "java", "kotlin":
-      return javaDefinition
+      javaDefinition
     case "c", "cpp", "objective-c", "csharp":
-      return cDefinition
+      cDefinition
     case "ruby":
-      return rubyDefinition
+      rubyDefinition
     case "php":
-      return phpDefinition
+      phpDefinition
     default:
-      return nil
+      nil
     }
   }
 }
