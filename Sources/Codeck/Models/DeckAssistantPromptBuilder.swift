@@ -2,221 +2,221 @@ import CodeckCore
 import Foundation
 
 enum DeckAssistantPromptBuilder {
-  static func prompt(
-    goal: String,
-    scope: DeckAssistantScope,
-    allowsWebResearch: Bool,
-    deck: PresentationDeck,
-    selectedSlideIndex: Int?,
-    deckOutline: String? = nil,
-    currentDate: Date = Date()
-  ) -> String {
-    let selectedIndex = resolvedSelectedIndex(in: deck, selectedSlideIndex: selectedSlideIndex)
-    let trimmedGoal = goal.trimmingCharacters(in: .whitespacesAndNewlines)
-    let effectiveGoal = trimmedGoal.isEmpty
-      ? DeckAssistantQuickAction.diagnose.prompt
-      : trimmedGoal
-    let currentDateString = ISO8601DateFormatter().string(from: currentDate)
-    let deckOutline = deckOutline ?? DeckAssistantDeckContextCache.makeOutline(for: deck)
-    let context = deckContext(
-      deck,
-      scope: scope,
-      selectedIndex: selectedIndex
-    )
+    static func prompt(
+        goal: String,
+        scope: DeckAssistantScope,
+        allowsWebResearch: Bool,
+        deck: PresentationDeck,
+        selectedSlideIndex: Int?,
+        deckOutline: String? = nil,
+        currentDate: Date = Date()
+    ) -> String {
+        let selectedIndex = resolvedSelectedIndex(in: deck, selectedSlideIndex: selectedSlideIndex)
+        let trimmedGoal = goal.trimmingCharacters(in: .whitespacesAndNewlines)
+        let effectiveGoal = trimmedGoal.isEmpty
+            ? DeckAssistantQuickAction.diagnose.prompt
+            : trimmedGoal
+        let currentDateString = ISO8601DateFormatter().string(from: currentDate)
+        let deckOutline = deckOutline ?? DeckAssistantDeckContextCache.makeOutline(for: deck)
+        let context = deckContext(
+            deck,
+            scope: scope,
+            selectedIndex: selectedIndex
+        )
 
-    return """
-    You are Codeck's interactive presentation assistant. You are running inside a Markdown slide editor.
+        return """
+        You are Codeck's interactive presentation assistant. You are running inside a Markdown slide editor.
 
-    Your job:
-    - Read the deck outline and provided slide markdown.
-    - Decide what is missing, weak, too long, unsupported, or unclear.
-    - Propose concrete slide edits that improve the presentation.
-    - Keep the user's intent and existing voice unless the user asks for a different tone.
+        Your job:
+        - Read the deck outline and provided slide markdown.
+        - Decide what is missing, weak, too long, unsupported, or unclear.
+        - Propose concrete slide edits that improve the presentation.
+        - Keep the user's intent and existing voice unless the user asks for a different tone.
 
-    User request:
-    \(effectiveGoal)
+        User request:
+        \(effectiveGoal)
 
-    Scope:
-    \(scope.promptInstruction)
+        Scope:
+        \(scope.promptInstruction)
 
-    Response mode:
-    \(responseMode(for: scope))
+        Response mode:
+        \(responseMode(for: scope))
 
-    Current date:
-    \(currentDateString)
+        Current date:
+        \(currentDateString)
 
-    Web research:
-    \(allowsWebResearch ?
-      "Enabled. Use current web context when it materially improves factual quality. Cite URLs in the slide markdown for external facts. Do not invent sources." :
-      "Disabled. Use only the deck context below. Do not browse, search, fetch URLs, or claim that you checked the web.")
+        Web research:
+        \(allowsWebResearch ?
+            "Enabled. Use current web context when it materially improves factual quality. Cite URLs in the slide markdown for external facts. Do not invent sources." :
+            "Disabled. Use only the deck context below. Do not browse, search, fetch URLs, or claim that you checked the web.")
 
-    Editing rules:
-    \(editingRules(for: scope))
+        Editing rules:
+        \(editingRules(for: scope))
 
-    Return only JSON. No prose before or after the JSON. Use this exact schema:
-    {
-      "title": "Short proposal title",
-      "summary": "One sentence explaining the improvement",
-      "changes": [
+        Return only JSON. No prose before or after the JSON. Use this exact schema:
         {
-          "id": "stable-kebab-id",
-          "title": "Change title",
-          "detail": "Why this change helps",
-          "operation": "replace",
-          "slideIndex": 0,
-          "afterMarkdown": "# Complete replacement slide markdown"
-        },
-        {
-          "id": "stable-kebab-id",
-          "title": "Change title",
-          "detail": "Why this change helps",
-          "operation": "insert",
-          "insertPosition": 1,
-          "afterMarkdown": "# Complete inserted slide markdown"
+          "title": "Short proposal title",
+          "summary": "One sentence explaining the improvement",
+          "changes": [
+            {
+              "id": "stable-kebab-id",
+              "title": "Change title",
+              "detail": "Why this change helps",
+              "operation": "replace",
+              "slideIndex": 0,
+              "afterMarkdown": "# Complete replacement slide markdown"
+            },
+            {
+              "id": "stable-kebab-id",
+              "title": "Change title",
+              "detail": "Why this change helps",
+              "operation": "insert",
+              "insertPosition": 1,
+              "afterMarkdown": "# Complete inserted slide markdown"
+            }
+          ]
         }
-      ]
+
+        Indexing:
+        - slideIndex is zero-based.
+        - insertPosition is zero-based and means "insert before this slide index". Use \(deck.slides.count) to append.
+
+        \(selectedSlideSection(in: deck, scope: scope, selectedIndex: selectedIndex))
+
+        Deck outline:
+        \(deckOutline)
+
+        \(context.title):
+        \(context.body)
+        """
     }
 
-    Indexing:
-    - slideIndex is zero-based.
-    - insertPosition is zero-based and means "insert before this slide index". Use \(deck.slides.count) to append.
-
-    \(selectedSlideSection(in: deck, scope: scope, selectedIndex: selectedIndex))
-
-    Deck outline:
-    \(deckOutline)
-
-    \(context.title):
-    \(context.body)
-    """
-  }
-
-  private static func responseMode(for scope: DeckAssistantScope) -> String {
-    switch scope {
-    case .currentSlide:
-      "Run a targeted pass. Prefer the selected slide, deck outline, and nearby slide context over broad deck rewrites."
-    case .wholeDeck:
-      "Run a deck-level pass. Use the full deck context to find missing story beats, weak transitions, unsupported claims, and structure gaps. Do not focus on the selected slide unless it is the highest-impact issue."
-    }
-  }
-
-  private static func editingRules(for scope: DeckAssistantScope) -> String {
-    var rules: [String] = switch scope {
-    case .currentSlide:
-      [
-        #"Return 1 to 5 changes."#,
-        #"Use "replace" to rewrite an existing slide."#,
-        #"Use "insert" to add a new supporting slide only if it is clearly needed."#,
-      ]
-    case .wholeDeck:
-      [
-        #"Return 2 to 5 changes when the deck has multiple meaningful gaps; return 1 only when one change is clearly enough."#,
-        #"Use "replace" to rewrite existing slides."#,
-        #"Use "insert" to add missing context, evidence, transition, example, agenda, or closing slides."#,
-        #"Do not limit proposals to rewriting slide 1 when deck-level issues exist elsewhere."#,
-      ]
+    private static func responseMode(for scope: DeckAssistantScope) -> String {
+        switch scope {
+        case .currentSlide:
+            "Run a targeted pass. Prefer the selected slide, deck outline, and nearby slide context over broad deck rewrites."
+        case .wholeDeck:
+            "Run a deck-level pass. Use the full deck context to find missing story beats, weak transitions, unsupported claims, and structure gaps. Do not focus on the selected slide unless it is the highest-impact issue."
+        }
     }
 
-    rules += [
-      "Each afterMarkdown value must be the complete Markdown for exactly one slide.",
-      "Preserve runnable ```codex fences when they remain useful.",
-      "Do not return YAML front matter.",
-      "Do not delete slides directly. If a slide should go away, replace it with a tighter version or explain it in detail.",
-      "Prefer fewer, stronger edits over broad churn.",
-    ]
+    private static func editingRules(for scope: DeckAssistantScope) -> String {
+        var rules: [String] = switch scope {
+        case .currentSlide:
+            [
+                #"Return 1 to 5 changes."#,
+                #"Use "replace" to rewrite an existing slide."#,
+                #"Use "insert" to add a new supporting slide only if it is clearly needed."#,
+            ]
+        case .wholeDeck:
+            [
+                #"Return 2 to 5 changes when the deck has multiple meaningful gaps; return 1 only when one change is clearly enough."#,
+                #"Use "replace" to rewrite existing slides."#,
+                #"Use "insert" to add missing context, evidence, transition, example, agenda, or closing slides."#,
+                #"Do not limit proposals to rewriting slide 1 when deck-level issues exist elsewhere."#,
+            ]
+        }
 
-    return rules.map { "- \($0)" }.joined(separator: "\n")
-  }
+        rules += [
+            "Each afterMarkdown value must be the complete Markdown for exactly one slide.",
+            "Preserve runnable ```codex fences when they remain useful.",
+            "Do not return YAML front matter.",
+            "Do not delete slides directly. If a slide should go away, replace it with a tighter version or explain it in detail.",
+            "Prefer fewer, stronger edits over broad churn.",
+        ]
 
-  private static func resolvedSelectedIndex(in deck: PresentationDeck, selectedSlideIndex: Int?) -> Int? {
-    guard !deck.slides.isEmpty else { return nil }
-    guard let selectedSlideIndex else { return deck.slides.startIndex }
-    return min(max(selectedSlideIndex, deck.slides.startIndex), deck.slides.count - 1)
-  }
-
-  private static func selectedSlideDescription(in deck: PresentationDeck, selectedIndex: Int?) -> String {
-    guard let selectedIndex, deck.slides.indices.contains(selectedIndex) else {
-      return "None"
+        return rules.map { "- \($0)" }.joined(separator: "\n")
     }
 
-    let slide = deck.slides[selectedIndex]
-    return """
-    index: \(selectedIndex)
-    title: \(slide.title)
-    markdown:
-    ~~~~markdown
-    \(slide.markdown)
-    ~~~~
-    """
-  }
-
-  private static func selectedSlideSection(
-    in deck: PresentationDeck,
-    scope: DeckAssistantScope,
-    selectedIndex: Int?
-  ) -> String {
-    switch scope {
-    case .currentSlide:
-      """
-      Selected slide:
-      \(selectedSlideDescription(in: deck, selectedIndex: selectedIndex))
-      """
-    case .wholeDeck:
-      "Selected slide: Not prioritized in Deck scope. Use the full deck context below."
-    }
-  }
-
-  private static func deckContext(
-    _ deck: PresentationDeck,
-    scope: DeckAssistantScope,
-    selectedIndex: Int?
-  ) -> (title: String, body: String) {
-    switch scope {
-    case .currentSlide:
-      ("Nearby slide context", nearbySlideContext(deck, selectedIndex: selectedIndex))
-    case .wholeDeck:
-      ("Full deck", fullDeckContext(deck))
-    }
-  }
-
-  private static func nearbySlideContext(_ deck: PresentationDeck, selectedIndex: Int?) -> String {
-    guard let selectedIndex else { return "None" }
-
-    let nearbyIndices = [selectedIndex - 1, selectedIndex + 1]
-      .filter { deck.slides.indices.contains($0) }
-
-    guard !nearbyIndices.isEmpty else {
-      return "No adjacent slides."
+    private static func resolvedSelectedIndex(in deck: PresentationDeck, selectedSlideIndex: Int?) -> Int? {
+        guard !deck.slides.isEmpty else { return nil }
+        guard let selectedSlideIndex else { return deck.slides.startIndex }
+        return min(max(selectedSlideIndex, deck.slides.startIndex), deck.slides.count - 1)
     }
 
-    return nearbyIndices.map { index in
-      slideContext(index: index, slide: deck.slides[index])
+    private static func selectedSlideDescription(in deck: PresentationDeck, selectedIndex: Int?) -> String {
+        guard let selectedIndex, deck.slides.indices.contains(selectedIndex) else {
+            return "None"
+        }
+
+        let slide = deck.slides[selectedIndex]
+        return """
+        index: \(selectedIndex)
+        title: \(slide.title)
+        markdown:
+        ~~~~markdown
+        \(slide.markdown)
+        ~~~~
+        """
     }
-    .joined(separator: "\n\n")
-  }
 
-  private static func fullDeckContext(_ deck: PresentationDeck) -> String {
-    deck.slides.enumerated().map { index, slide in
-      slideContext(index: index, slide: slide)
+    private static func selectedSlideSection(
+        in deck: PresentationDeck,
+        scope: DeckAssistantScope,
+        selectedIndex: Int?
+    ) -> String {
+        switch scope {
+        case .currentSlide:
+            """
+            Selected slide:
+            \(selectedSlideDescription(in: deck, selectedIndex: selectedIndex))
+            """
+        case .wholeDeck:
+            "Selected slide: Not prioritized in Deck scope. Use the full deck context below."
+        }
     }
-    .joined(separator: "\n\n")
-  }
 
-  private static func slideContext(index: Int, slide: Slide) -> String {
-    """
-    <slide index="\(index)" title="\(escapeAttribute(slide.title))">
-    ~~~~markdown
-    \(slide.markdown)
-    ~~~~
-    </slide>
-    """
-  }
+    private static func deckContext(
+        _ deck: PresentationDeck,
+        scope: DeckAssistantScope,
+        selectedIndex: Int?
+    ) -> (title: String, body: String) {
+        switch scope {
+        case .currentSlide:
+            ("Nearby slide context", nearbySlideContext(deck, selectedIndex: selectedIndex))
+        case .wholeDeck:
+            ("Full deck", fullDeckContext(deck))
+        }
+    }
 
-  private static func escapeAttribute(_ value: String) -> String {
-    value
-      .replacingOccurrences(of: "&", with: "&amp;")
-      .replacingOccurrences(of: "\"", with: "&quot;")
-      .replacingOccurrences(of: "<", with: "&lt;")
-      .replacingOccurrences(of: ">", with: "&gt;")
-  }
+    private static func nearbySlideContext(_ deck: PresentationDeck, selectedIndex: Int?) -> String {
+        guard let selectedIndex else { return "None" }
+
+        let nearbyIndices = [selectedIndex - 1, selectedIndex + 1]
+            .filter { deck.slides.indices.contains($0) }
+
+        guard !nearbyIndices.isEmpty else {
+            return "No adjacent slides."
+        }
+
+        return nearbyIndices.map { index in
+            slideContext(index: index, slide: deck.slides[index])
+        }
+        .joined(separator: "\n\n")
+    }
+
+    private static func fullDeckContext(_ deck: PresentationDeck) -> String {
+        deck.slides.enumerated().map { index, slide in
+            slideContext(index: index, slide: slide)
+        }
+        .joined(separator: "\n\n")
+    }
+
+    private static func slideContext(index: Int, slide: Slide) -> String {
+        """
+        <slide index="\(index)" title="\(escapeAttribute(slide.title))">
+        ~~~~markdown
+        \(slide.markdown)
+        ~~~~
+        </slide>
+        """
+    }
+
+    private static func escapeAttribute(_ value: String) -> String {
+        value
+            .replacingOccurrences(of: "&", with: "&amp;")
+            .replacingOccurrences(of: "\"", with: "&quot;")
+            .replacingOccurrences(of: "<", with: "&lt;")
+            .replacingOccurrences(of: ">", with: "&gt;")
+    }
 }

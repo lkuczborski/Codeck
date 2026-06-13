@@ -1,5 +1,5 @@
 --swiftversion 6.0
---indent 2
+--indent 4
 --maxwidth 160
 --wraparguments preserve
 --wrapcollections preserve

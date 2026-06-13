@@ -3,52 +3,52 @@
 import XCTest
 
 final class SlideTests: XCTestCase {
-  func testTitleUsesFirstNonEmptyHeading() {
-    let slide = Slide(
-      markdown:
-      """
-      Intro text
+    func testTitleUsesFirstNonEmptyHeading() {
+        let slide = Slide(
+            markdown:
+            """
+            Intro text
 
-      ###
+            ###
 
-      ## Actual Title
-      """
-    )
+            ## Actual Title
+            """
+        )
 
-    XCTAssertEqual(slide.title, "Actual Title")
-  }
+        XCTAssertEqual(slide.title, "Actual Title")
+    }
 
-  func testTitleFallsBackWhenSlideHasNoHeadingText() {
-    let slide = Slide(
-      markdown:
-      """
-      ###
+    func testTitleFallsBackWhenSlideHasNoHeadingText() {
+        let slide = Slide(
+            markdown:
+            """
+            ###
 
-      Plain content
-      """
-    )
+            Plain content
+            """
+        )
 
-    XCTAssertEqual(slide.title, "Untitled Slide")
-  }
+        XCTAssertEqual(slide.title, "Untitled Slide")
+    }
 
-  func testSummaryUsesFirstNonHeadingContentLine() {
-    let slide = Slide(
-      markdown:
-      """
-      # Demo
+    func testSummaryUsesFirstNonHeadingContentLine() {
+        let slide = Slide(
+            markdown:
+            """
+            # Demo
 
-      First useful summary line.
+            First useful summary line.
 
-      - More detail
-      """
-    )
+            - More detail
+            """
+        )
 
-    XCTAssertEqual(slide.summary, "First useful summary line.")
-  }
+        XCTAssertEqual(slide.summary, "First useful summary line.")
+    }
 
-  func testSummaryFallsBackForPlainMarkdownWithoutBodyText() {
-    let slide = Slide(markdown: "# Demo")
+    func testSummaryFallsBackForPlainMarkdownWithoutBodyText() {
+        let slide = Slide(markdown: "# Demo")
 
-    XCTAssertEqual(slide.summary, "Markdown slide")
-  }
+        XCTAssertEqual(slide.summary, "Markdown slide")
+    }
 }

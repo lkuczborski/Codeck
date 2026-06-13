@@ -2,50 +2,50 @@ import CodeckCore
 import SwiftUI
 
 struct PreviewPaneView: View {
-  let slide: Slide
-  let theme: PresentationTheme
-  @ObservedObject var sessions: CodexSessionStore
-  let baseURL: URL?
-  var displayMode: PreviewPaneDisplayMode = .document
-  let onRunBlock: (CodexBlock) -> Void
-  let onRunAll: ([CodexBlock]) -> Void
+    let slide: Slide
+    let theme: PresentationTheme
+    @ObservedObject var sessions: CodexSessionStore
+    let baseURL: URL?
+    var displayMode: PreviewPaneDisplayMode = .document
+    let onRunBlock: (CodexBlock) -> Void
+    let onRunAll: ([CodexBlock]) -> Void
 
-  private var codexBlocks: [CodexBlock] {
-    slide.codexBlocks
-  }
-
-  private var html: String {
-    switch displayMode {
-    case .document:
-      MarkdownRenderer.htmlDocument(
-        for: slide,
-        theme: theme,
-        codexOutputs: sessions.outputs
-      )
-    case .scaledToFitWidth:
-      MarkdownRenderer.scaledPreviewHTMLDocument(
-        for: slide,
-        theme: theme,
-        codexOutputs: sessions.outputs
-      )
+    private var codexBlocks: [CodexBlock] {
+        slide.codexBlocks
     }
-  }
 
-  var body: some View {
-    MarkdownWebView(html: html, baseURL: baseURL, onAction: handleWebAction)
-      .codeckWorkspaceBackground()
-  }
-
-  private func handleWebAction(_ action: MarkdownWebAction) {
-    switch action {
-    case let .runCodex(id):
-      if let block = codexBlocks.first(where: { $0.id == id }) {
-        onRunBlock(block)
-      }
-    case let .stopCodex(id):
-      sessions.stop(id)
-    case .runAllCodex:
-      onRunAll(codexBlocks)
+    private var html: String {
+        switch displayMode {
+        case .document:
+            MarkdownRenderer.htmlDocument(
+                for: slide,
+                theme: theme,
+                codexOutputs: sessions.outputs
+            )
+        case .scaledToFitWidth:
+            MarkdownRenderer.scaledPreviewHTMLDocument(
+                for: slide,
+                theme: theme,
+                codexOutputs: sessions.outputs
+            )
+        }
     }
-  }
+
+    var body: some View {
+        MarkdownWebView(html: html, baseURL: baseURL, onAction: handleWebAction)
+            .codeckWorkspaceBackground()
+    }
+
+    private func handleWebAction(_ action: MarkdownWebAction) {
+        switch action {
+        case let .runCodex(id):
+            if let block = codexBlocks.first(where: { $0.id == id }) {
+                onRunBlock(block)
+            }
+        case let .stopCodex(id):
+            sessions.stop(id)
+        case .runAllCodex:
+            onRunAll(codexBlocks)
+        }
+    }
 }
