@@ -213,6 +213,17 @@ main {
   line-height: 1.48;
 }
 
+.hero-copy code {
+  padding: 0.08em 0.28em;
+  color: var(--blue-dark);
+  background: rgba(234, 244, 255, 0.86);
+  border: 1px solid #c8def4;
+  border-radius: 6px;
+  font-family: var(--font-mono);
+  font-size: 0.86em;
+  font-weight: 720;
+}
+
 .hero-actions {
   display: flex;
   flex-wrap: wrap;
@@ -332,6 +343,7 @@ main {
 .workflow-section,
 .codex-section,
 .assistant-section,
+.use-cases-section,
 .format-section,
 .themes-section,
 .final-section {
@@ -876,6 +888,61 @@ main {
   font-weight: 650;
 }
 
+.use-cases-section {
+  background:
+    linear-gradient(180deg, rgba(251, 252, 254, 0.9), rgba(240, 245, 249, 0.98)),
+    var(--paper);
+  border-top: 1px solid var(--line);
+}
+
+.use-case-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  max-width: 1240px;
+  margin: 0 auto;
+}
+
+.use-case-grid article {
+  min-height: 250px;
+  padding: 24px;
+  background: rgba(255, 255, 255, 0.82);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: 0 14px 34px rgba(17, 24, 32, 0.06);
+}
+
+.use-case-grid span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  margin-bottom: 38px;
+  padding: 0 10px;
+  color: var(--blue-dark);
+  background: #eaf4ff;
+  border: 1px solid #c8def4;
+  border-radius: 8px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 820;
+}
+
+.use-case-grid h3 {
+  margin: 0 0 12px;
+  color: var(--ink);
+  font-size: 24px;
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.use-case-grid p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 15px;
+  font-weight: 540;
+  line-height: 1.55;
+}
+
 .format-section {
   display: grid;
   grid-template-columns: minmax(320px, 0.92fr) minmax(280px, 0.72fr);
@@ -1218,6 +1285,10 @@ main {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .use-case-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .workflow-rail article::after {
     display: none;
   }
@@ -1279,6 +1350,7 @@ main {
   .workflow-section,
   .codex-section,
   .assistant-section,
+  .use-cases-section,
   .format-section,
   .themes-section,
   .final-section {
@@ -1286,6 +1358,14 @@ main {
   }
 
   .workflow-rail article {
+    min-height: 0;
+  }
+
+  .use-case-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .use-case-grid article {
     min-height: 0;
   }
 
@@ -1329,6 +1409,7 @@ main {
 
   .hero-points div,
   .workflow-rail article,
+  .use-case-grid article,
   .codex-card,
   .assistant-request,
   .assistant-change,
