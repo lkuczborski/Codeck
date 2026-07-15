@@ -14,6 +14,7 @@
   --text: #f6f9fd;
   --text-soft: #b4c0d0;
   --text-muted: #8290a3;
+  --capture-radius: clamp(10px, 1.15vw, 17px);
   --radius-large: 30px;
   --header-offset: 83px;
   --section-pad: clamp(88px, 10vw, 152px);
@@ -503,7 +504,7 @@ section[id] {
   padding: 12px;
   background: linear-gradient(145deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.035));
   border: 1px solid rgba(255, 255, 255, 0.19);
-  border-radius: var(--radius-large);
+  border-radius: var(--capture-radius);
   box-shadow:
     0 46px 120px rgba(0, 0, 0, 0.5),
     0 0 80px rgba(10, 132, 255, 0.11),
@@ -545,7 +546,7 @@ section[id] {
   display: block;
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.14);
-  border-radius: 20px;
+  border-radius: var(--capture-radius);
   background: #151a20;
 }
 
@@ -725,7 +726,7 @@ section[id] {
   overflow: clip;
   background: var(--white);
   border: 1px solid var(--line-light);
-  border-radius: clamp(10px, 1.15vw, 17px);
+  border-radius: var(--capture-radius);
   box-shadow: 0 24px 64px rgba(24, 46, 72, 0.1);
 }
 
@@ -1894,6 +1895,10 @@ section[id] {
 }
 
 @media (max-width: 980px) {
+  :root {
+    --capture-radius: clamp(8px, 2.25vw, 22px);
+  }
+
   .desktop-nav {
     display: none;
   }
@@ -1964,10 +1969,6 @@ section[id] {
 
   .product-tour {
     grid-template-columns: minmax(0, 1fr);
-  }
-
-  .product-moment {
-    border-radius: clamp(8px, 2.25vw, 22px);
   }
 
   .product-moment-featured {
@@ -2113,11 +2114,6 @@ section[id] {
 
   .app-stage {
     padding: 8px;
-    border-radius: 22px;
-  }
-
-  .app-stage picture {
-    border-radius: 16px;
   }
 
   .stage-label {
