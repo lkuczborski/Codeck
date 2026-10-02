@@ -25,6 +25,7 @@ final class CodeckWorkspaceTools: @unchecked Sendable {
         var open = tool(
             "open_workspace",
             "Open Codeck's presentation workspace. Empty arguments open the library; path opens a disk deck; markdown creates a persistent draft.",
+            behavior: .localChange,
             properties: [
                 "path": stringSchema("Existing deck path within allowed roots."),
                 "markdown": stringSchema("Initial full Markdown for a new draft."),
@@ -53,6 +54,7 @@ final class CodeckWorkspaceTools: @unchecked Sendable {
             tool(
                 "read_workspace",
                 "Read the latest draft. Refreshes clean decks changed on disk. Call before iteration; use the returned revision.",
+                behavior: .localChange,
                 properties: [
                     "workspace_id": identity["workspace_id"]!,
                     "known_revision": integerSchema("Optional polling revision; unchanged results are small receipts."),
@@ -60,16 +62,20 @@ final class CodeckWorkspaceTools: @unchecked Sendable {
                 required: ["workspace_id"]
             ),
             tool("update_workspace", "Replace the full Markdown draft at the expected revision. Updates the already-open editor; does not save to disk.",
+                 behavior: .localReplace,
                  properties: identity.merging(["markdown": stringSchema("Full replacement Markdown including front matter.")]) { _, new in new },
                  required: ["workspace_id", "revision", "markdown"]),
             tool("save_workspace", "Save a draft to disk. Refuses external changes and existing Save As destinations unless overwrite is explicit.",
+                 behavior: .localReplace,
                  properties: identity.merging([
                      "path": stringSchema("Save As path; omit to save the current disk file."),
                      "overwrite": booleanSchema("Explicitly permit replacing an existing Save As destination."),
                  ]) { _, new in new }, required: ["workspace_id", "revision"]),
             tool("reload_workspace", "Discard the local draft and reload its disk file. Use only when the user asks to discard changes.",
+                 behavior: .localReplace,
                  properties: identity, required: ["workspace_id", "revision"]),
             tool("render_markdown", "Preview unsaved Markdown using the Mac app's parser, themes, and code highlighter. No files are changed.",
+                 behavior: .readOnly,
                  properties: [
                      "markdown": stringSchema("Full deck Markdown."),
                      "path": stringSchema("Optional deck path for local media resolution."),
@@ -78,36 +84,37 @@ final class CodeckWorkspaceTools: @unchecked Sendable {
                  required: ["markdown"]),
         ]
         for index in result.indices {
-            result[index]["annotations"] = [
-                "readOnlyHint": result[index]["name"] as? String == "render_markdown",
-                "destructiveHint": result[index]["name"] as? String == "reload_workspace",
-                "openWorldHint": false,
-            ]
             if index > 0 { result[index]["_meta"] = ["ui": ["visibility": ["model", "app"]], "openai/widgetAccessible": true] }
         }
         let appTools = [
-            tool("choose_open_workspace", "Show the macOS Open panel. Only the user's selected deck receives file access.", properties: [:]),
+            tool("choose_open_workspace", "Show the macOS Open panel. Only the user's selected deck receives file access.",
+                 behavior: .localChange, properties: [:]),
             tool(
                 "choose_save_workspace",
                 "Show the macOS Save panel and save the user's selected file.",
+                behavior: .localReplace,
                 properties: identity,
                 required: ["workspace_id", "revision"]
             ),
             tool("present_workspace", "Present only the deck in a native computer fullscreen window. Escape exits.",
+                 behavior: .localChange,
                  properties: identity.merging(["slide_index": integerSchema("Starting slide index.")]) { _, new in new }, required: [
                      "workspace_id",
                      "revision",
                      "slide_index",
                  ]),
             tool("begin_codex_run", "Run a user-initiated card with the deck and fence model, reasoning, and sandbox settings.",
+                 behavior: .codexExecution,
                  properties: identity.merging([
                      "slide_index": integerSchema("Card's slide index."),
                      "block_id": stringSchema("Validated Codex card id."),
                  ]) { _, new in new },
                  required: ["workspace_id", "revision", "slide_index", "block_id"]),
             tool("poll_codex_runs", "Poll card results without changing the deck's Markdown or revision.",
+                 behavior: .localChange,
                  properties: ["workspace_id": identity["workspace_id"]!, "known_version": integerSchema("Last run version.")], required: ["workspace_id"]),
             tool("stop_codex_run", "Cancel a running Codex card process and stop accepting its output.",
+                 behavior: .localReplace,
                  properties: ["run_id": stringSchema("Run UUID.")], required: ["run_id"]),
         ]
         for var item in appTools {

@@ -1,6 +1,7 @@
 import { App } from '@modelcontextprotocol/ext-apps';
 
-export const app = new App({ name: 'Codeck', version: '0.3.5' }, { availableDisplayModes: ['inline', 'fullscreen'] }, { autoResize: false });
+declare const CODECK_PLUGIN_VERSION: string;
+export const app = new App({ name: 'Codeck', version: CODECK_PLUGIN_VERSION }, { availableDisplayModes: ['inline', 'fullscreen'] }, { autoResize: false });
 
 export async function call(name: string, args: Record<string, unknown> = {}) {
   const result = await app.callServerTool({ name, arguments: args }, { timeout: name.startsWith('choose_') ? 600000 : 30000 });

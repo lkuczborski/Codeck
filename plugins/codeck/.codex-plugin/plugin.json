@@ -1,9 +1,10 @@
 {
   "name": "codeck",
-  "version": "0.3.5",
+  "version": "0.3.6",
   "description": "Create, edit, and present Markdown decks in a dedicated Codex workspace.",
   "author": {
-    "name": "Codeck"
+    "name": "Lukasz Kuczborski",
+    "url": "https://codeck-app.com"
   },
   "license": "MIT",
   "skills": "./skills/",
@@ -21,9 +22,14 @@
       "Open the Codeck presentation workspace",
       "Create a presentation with Codeck"
     ],
-    "brandColor": "#b3f299",
+    "brandColor": "#4b7e39",
     "composerIcon": "./assets/app-icon.png",
     "logo": "./assets/app-icon.png",
-    "logoDark": "./assets/app-icon.png"
-  }
+    "logoDark": "./assets/app-icon.png",
+    "developerName": "Lukasz Kuczborski",
+    "websiteURL": "https://codeck-app.com",
+    "brandColorDark": "#b3f299"
+  },
+  "homepage": "https://codeck-app.com",
+  "repository": "https://github.com/lkuczborski/Codeck"
 }

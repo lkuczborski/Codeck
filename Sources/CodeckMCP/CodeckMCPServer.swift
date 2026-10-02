@@ -370,6 +370,7 @@ final class CodeckMCPServer: @unchecked Sendable {
             tool(
                 "create_deck",
                 "Create a Codeck .mdeck file.",
+                behavior: .localReplace,
                 properties: [
                     "path": stringSchema("Deck path, absolute or relative to the server working directory."),
                     "title": stringSchema("Optional first-slide title used when slides is omitted."),
@@ -383,17 +384,21 @@ final class CodeckMCPServer: @unchecked Sendable {
                 ],
                 required: ["path"]
             ),
-            tool("read_deck", "Read a Codeck deck as Markdown plus structured outline.", properties: pathProperties, required: ["path"]),
-            tool("list_slides", "Return slide titles, summaries, and Codex block counts.", properties: pathProperties, required: ["path"]),
+            tool("read_deck", "Read a Codeck deck as Markdown plus structured outline.",
+                 behavior: .readOnly, properties: pathProperties, required: ["path"]),
+            tool("list_slides", "Return slide titles, summaries, and Codex block counts.",
+                 behavior: .readOnly, properties: pathProperties, required: ["path"]),
             tool(
                 "get_slide",
                 "Read one slide by zero-based index.",
+                behavior: .readOnly,
                 properties: pathProperties.merging(["index": integerSchema("Zero-based slide index.")]) { _, new in new },
                 required: ["path", "index"]
             ),
             tool(
                 "set_slide_markdown",
                 "Replace one slide's Markdown. If the Markdown contains slide separators, Codeck splits it into slides.",
+                behavior: .localReplace,
                 properties: pathProperties.merging([
                     "index": integerSchema("Zero-based slide index."),
                     "markdown": stringSchema("Replacement slide Markdown."),
@@ -403,6 +408,7 @@ final class CodeckMCPServer: @unchecked Sendable {
             tool(
                 "insert_slide",
                 "Insert a slide at position, or append when omitted.",
+                behavior: .localChange,
                 properties: pathProperties.merging([
                     "position": integerSchema("Zero-based insertion position from 0 through slide count."),
                     "markdown": stringSchema("New slide Markdown."),
@@ -412,12 +418,14 @@ final class CodeckMCPServer: @unchecked Sendable {
             tool(
                 "delete_slide",
                 "Delete a slide by zero-based index.",
+                behavior: .localReplace,
                 properties: pathProperties.merging(["index": integerSchema("Zero-based slide index.")]) { _, new in new },
                 required: ["path", "index"]
             ),
             tool(
                 "move_slide",
                 "Move a slide. to_index is the insertion index after removing the slide.",
+                behavior: .localChange,
                 properties: pathProperties.merging([
                     "from_index": integerSchema("Current zero-based slide index."),
                     "to_index": integerSchema("Destination insertion index."),
@@ -427,12 +435,14 @@ final class CodeckMCPServer: @unchecked Sendable {
             tool(
                 "duplicate_slide",
                 "Duplicate a slide immediately after itself.",
+                behavior: .localChange,
                 properties: pathProperties.merging(["index": integerSchema("Zero-based slide index.")]) { _, new in new },
                 required: ["path", "index"]
             ),
             tool(
                 "set_deck_settings",
                 "Update deck theme or deck-level Codex defaults.",
+                behavior: .localReplace,
                 properties: pathProperties.merging([
                     "theme": enumSchema(PresentationTheme.allCases.map(\.rawValue)),
                     "model": stringSchema("Deck-level Codex model."),
@@ -444,6 +454,7 @@ final class CodeckMCPServer: @unchecked Sendable {
             tool(
                 "insert_codex_block",
                 "Append a runnable Codex block to a slide.",
+                behavior: .localChange,
                 properties: pathProperties.merging([
                     "index": integerSchema("Zero-based slide index."),
                     "id": stringSchema("Optional block id. Must not contain whitespace."),
@@ -455,7 +466,8 @@ final class CodeckMCPServer: @unchecked Sendable {
                 ]) { _, new in new },
                 required: ["path", "index"]
             ),
-            tool("validate_deck", "Parse a deck and return validation status plus outline.", properties: pathProperties, required: ["path"]),
+            tool("validate_deck", "Parse a deck and return validation status plus outline.",
+                 behavior: .readOnly, properties: pathProperties, required: ["path"]),
         ] + workspace.tools
     }
 

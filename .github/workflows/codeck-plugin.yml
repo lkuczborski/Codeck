@@ -1,0 +1,110 @@
+name: Codeck plugin
+
+on:
+  push:
+    branches-ignore: [codex/plugin-distribution]
+    paths:
+      - '.github/workflows/codeck-plugin.yml'
+      - '.agents/plugins/marketplace.json'
+      - 'Package.swift'
+      - 'Package.resolved'
+      - 'Sources/**'
+      - 'Tests/**'
+      - 'Resources/**'
+      - 'plugins/codeck/**'
+      - 'script/*plugin*'
+      - 'LICENSE'
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/codeck-plugin.yml'
+      - '.agents/plugins/marketplace.json'
+      - 'Package.swift'
+      - 'Package.resolved'
+      - 'Sources/**'
+      - 'Tests/**'
+      - 'Resources/**'
+      - 'plugins/codeck/**'
+      - 'script/*plugin*'
+      - 'LICENSE'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: codeck-plugin-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  package:
+    runs-on: macos-15
+    timeout-minutes: 30
+    env:
+      CODECK_PLUGIN_BUILD_NUMBER: ${{ github.run_number }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: plugins/codeck/package-lock.json
+      - name: Build and test Swift targets
+        run: |
+          swift build
+          swift test
+      - name: Build plugin package
+        run: script/build_plugin.sh
+      - name: Check TypeScript and plugin integration
+        working-directory: plugins/codeck
+        env:
+          CODECK_MCP_EXECUTABLE: ${{ github.workspace }}/dist/codeck-plugin/build/codeck-mcp
+        run: |
+          npm run typecheck
+          npm test
+      - name: Validate native bundle and archive executable permissions
+        run: |
+          test "$(uname -m)" = arm64
+          codesign --verify --strict --verbose 'dist/codeck-plugin/build/Codeck Workspace.app'
+          tar -czf dist/codeck-plugin-macos-arm64.tar.gz -C dist .agents codeck-plugin
+          shasum -a 256 dist/codeck-plugin-macos-arm64.tar.gz > dist/codeck-plugin-macos-arm64.tar.gz.sha256
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: codeck-plugin-macos-arm64
+          path: |
+            dist/codeck-plugin-macos-arm64.tar.gz
+            dist/codeck-plugin-macos-arm64.tar.gz.sha256
+          if-no-files-found: error
+          retention-days: 30
+
+  publish:
+    needs: package
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '24'
+          package-manager-cache: false
+      - uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6
+        with:
+          name: codeck-plugin-macos-arm64
+          path: dist
+      - name: Extract and publish tested package
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_REMOTE: https://github.com/${{ github.repository }}.git
+          SOURCE_COMMIT: ${{ github.sha }}
+        run: |
+          sha256sum -c dist/codeck-plugin-macos-arm64.tar.gz.sha256
+          mkdir -p "$RUNNER_TEMP/codeck-package"
+          tar -xzf dist/codeck-plugin-macos-arm64.tar.gz -C "$RUNNER_TEMP/codeck-package"
+          script/publish_plugin.sh "$RUNNER_TEMP/codeck-package" "$RELEASE_REMOTE" "$SOURCE_COMMIT"

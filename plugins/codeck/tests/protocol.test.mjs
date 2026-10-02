@@ -18,6 +18,20 @@ test('sidebar registration, resource, drafts, saves, and agent edits use one wor
   const tools=(await client.request('tools/list')).tools;
   assert.equal(tools.length,24);
   assert.ok(tools.every(tool => !['annotate_workspace','resolve_annotation'].includes(tool.name)));
+  for (const item of tools) {
+    for (const hint of ['readOnlyHint', 'destructiveHint', 'openWorldHint']) {
+      assert.equal(typeof item.annotations[hint], 'boolean', `${item.name}: ${hint}`);
+    }
+  }
+  for (const name of ['read_deck', 'list_slides', 'get_slide', 'validate_deck', 'render_markdown']) {
+    assert.deepEqual(tools.find(item => item.name === name).annotations,
+      { readOnlyHint: true, destructiveHint: false, openWorldHint: false });
+  }
+  for (const name of ['update_workspace', 'save_workspace', 'reload_workspace', 'choose_save_workspace', 'delete_slide']) {
+    assert.equal(tools.find(item => item.name === name).annotations.destructiveHint, true);
+  }
+  assert.deepEqual(tools.find(item => item.name === 'begin_codex_run').annotations,
+    { readOnlyHint: false, destructiveHint: true, openWorldHint: true });
   const open=tools.find(tool=>tool.name==='open_workspace');
   assert.deepEqual(open._meta['openai/ui'].entrypoints,[{type:'global'},{type:'thread'}]);
   assert.ok(open.icons[0].src.startsWith('data:image/svg+xml;base64,'));
