@@ -96,8 +96,8 @@ version: 1
 theme: studio
 codex:
   sandbox: read-only
-  model: "gpt-5.5"
-  reasoning: medium
+  model: "gpt-6.1-sol"
+  reasoning: low
 ---
 
 # First Slide
@@ -109,8 +109,8 @@ Supported deck metadata:
 - `version`: current document version is `1`.
 - `theme`: presentation theme. Supported values are `studio`, `midnight`, `chalk`, `solar`, and `atelier`.
 - `codex.sandbox`: default sandbox for live Codex sessions. Defaults to `read-only`.
-- `codex.model`: default model for live Codex sessions. Codeck fetches the available model list from `codex app-server` and falls back to `gpt-5.5` if Codex is unavailable.
-- `codex.reasoning` or `codex.reasoning_effort`: default reasoning effort. Codeck fetches the supported values for the selected model from Codex and falls back to `low`, `medium`, `high`, and `xhigh`. Defaults to `medium`.
+- `codex.model`: default model for live Codex sessions. New decks default to `gpt-6.1-sol`. The model picker fetches the current backend catalog from `codex app-server` and caches successful responses. Failed refreshes retain that cache and expose Retry; there is no hardcoded fallback catalog. Saved model overrides stay intact.
+- `codex.reasoning` or `codex.reasoning_effort`: default reasoning effort. New decks default to Light (`low`). The picker uses reasoning levels from the backend catalog. Fence and saved deck overrides are preserved, including future reasoning values.
 
 ## Live Codex Sessions
 
@@ -119,7 +119,7 @@ Add a fenced `codex` block to a slide:
 ````markdown
 ```codex id=refactor-demo
 title: Explain the refactor goal
-model: gpt-5.5
+model: gpt-6.1-sol
 reasoning: xhigh
 sandbox: read-only
 
@@ -267,3 +267,7 @@ script/lint.sh
 ```
 
 The Codex app Run button is wired to `./script/build_and_run.sh` through `.codex/environments/environment.toml`.
+
+## Codex presentation workspace
+
+Codeck also includes a local Codex plugin with a sidebar workspace, a split Markdown editor and live preview, the native Codex composer, disk open/save, and fullscreen presentation. See [plugin setup and development](plugins/codeck/README.md). Build it with `script/build_plugin.sh`.

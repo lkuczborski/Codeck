@@ -312,8 +312,8 @@ final class PresentationDeckTests: XCTestCase {
             """
         )
 
-        XCTAssertEqual(deck.settings.codex.model, "gpt-5.5")
-        XCTAssertEqual(deck.settings.codex.reasoning, .medium)
+        XCTAssertEqual(deck.settings.codex.model, "gpt-6.1-sol")
+        XCTAssertEqual(deck.settings.codex.reasoning, .low)
         XCTAssertEqual(deck.settings.codex.sandbox, "read-only")
     }
 

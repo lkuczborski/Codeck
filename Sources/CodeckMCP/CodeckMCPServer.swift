@@ -1,9 +1,10 @@
 import CodeckCore
 import Foundation
 
-final class CodeckMCPServer {
+final class CodeckMCPServer: @unchecked Sendable {
     private let store = CodeckDeckFileStore()
     private let paths = PathAccessGuard.fromEnvironment()
+    private lazy var workspace = CodeckWorkspaceTools(paths: paths)
     private let requestDecoder = JSONDecoder()
     private let encoder: JSONEncoder = {
         let encoder = JSONEncoder()
@@ -67,7 +68,10 @@ final class CodeckMCPServer {
             case "tools/call":
                 return try response(id: id, result: callToolResult(params: dictionaryParams(message["params"])))
             case "resources/list":
-                return response(id: id, result: ["resources": []])
+                return response(
+                    id: id,
+                    result: ["resources": [["uri": CodeckWorkspaceTools.resourceURI, "name": "Codeck workspace", "mimeType": "text/html;profile=mcp-app"]]]
+                )
             case "resources/templates/list":
                 return response(id: id, result: ["resourceTemplates": resourceTemplates])
             case "resources/read":
@@ -107,6 +111,7 @@ final class CodeckMCPServer {
 
         let arguments = params["arguments"] as? [String: Any] ?? [:]
         do {
+            if workspace.handles(name) { return try workspace.call(name, arguments: arguments) }
             let result = try callTool(name: name, arguments: arguments)
             return ["content": [["type": "text", "text": result]], "isError": false]
         } catch {
@@ -312,6 +317,7 @@ final class CodeckMCPServer {
         guard let uri = params["uri"] as? String else {
             throw CodeckMCPError.invalidParams("Missing resource uri.")
         }
+        if uri == CodeckWorkspaceTools.resourceURI { return try ["contents": [workspace.resource()]] }
         let resource = try resourceContent(for: uri)
         return [
             "contents": [
@@ -450,7 +456,7 @@ final class CodeckMCPServer {
                 required: ["path", "index"]
             ),
             tool("validate_deck", "Parse a deck and return validation status plus outline.", properties: pathProperties, required: ["path"]),
-        ]
+        ] + workspace.tools
     }
 
     private var pathProperties: [String: Any] {

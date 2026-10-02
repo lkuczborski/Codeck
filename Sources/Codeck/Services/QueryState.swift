@@ -1,4 +1,5 @@
 import CodeckCore
+import CodeckRuntime
 import Foundation
 
 final class QueryState: @unchecked Sendable {

@@ -1,4 +1,5 @@
 import CodeckCore
+import CodeckRuntime
 import SwiftUI
 
 struct DeckAssistantPanelView: View {

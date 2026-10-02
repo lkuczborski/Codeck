@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Codeck</title></head>
+<body>
+<div id="app" class="workspace">
+  <p id="connection-status" class="connection-status" role="status">Loading presentations…</p>
+  <header id="toolbar" class="toolbar hidden">
+    <button class="icon-only" data-action="library" title="Presentations" aria-label="Presentations"><i data-lucide="arrow-left"></i></button>
+    <div class="document-info"><strong id="deck-title"></strong><span id="deck-status"></span></div>
+    <div class="toolbar-actions">
+      <button data-action="open" title="Open an existing deck"><i data-lucide="folder-open"></i><span>Open</span></button>
+      <button data-action="save" title="Save to disk (⌘S)"><i data-lucide="save"></i><span>Save</span></button>
+      <button class="icon-only" data-action="save-as" title="Save a copy" aria-label="Save a copy"><i data-lucide="copy-plus"></i></button>
+      <button class="primary" data-action="present"><i data-lucide="play"></i>Present</button>
+    </div>
+  </header>
+  <main id="library" class="library hidden">
+    <div class="library-heading"><h1>Presentations</h1><div class="library-actions"><button class="primary" data-action="new"><i data-lucide="plus"></i>New presentation</button><button data-action="open"><i data-lucide="folder-open"></i>Open</button></div></div>
+    <div class="recent-header"><h2>Recent</h2></div><div id="recent" class="recent-grid"></div>
+    <p id="roots" class="roots"></p>
+  </main>
+  <div id="editor-workspace" class="editor-workspace hidden">
+    <aside class="navigator">
+      <div class="pane-heading"><span>Slides <b id="slide-count">0</b></span><button class="icon-only" data-action="add-slide" title="Add slide" aria-label="Add slide"><i data-lucide="plus"></i></button></div>
+      <div id="slide-list" class="slide-list" role="list" aria-label="Slides"></div>
+      <div class="navigator-footer"><button data-action="duplicate-slide" title="Duplicate selected slide"><i data-lucide="copy"></i>Duplicate</button><button class="icon-only" data-action="delete-slide" title="Delete selected slide" aria-label="Delete slide"><i data-lucide="trash-2"></i></button></div>
+    </aside>
+    <main class="main-workspace">
+      <div id="conflict-banner" class="conflict-banner hidden">Another edit arrived. Your Markdown is preserved.<button data-action="recover-draft">Keep as new draft</button><button data-action="load-latest">Load latest</button></div>
+      <div class="workspace-heading">
+        <div class="breadcrumb"><span id="slide-label">Slide 01</span><span class="slash">/</span><strong id="slide-title">Untitled</strong></div>
+        <div class="view-switch" role="group" aria-label="Editor layout"><button data-mode="markdown" title="Markdown only" aria-label="Markdown only"><i data-lucide="code"></i></button><button class="selected" data-mode="split" title="Split view" aria-label="Split view"><i data-lucide="columns-2"></i></button><button data-mode="preview" title="Preview only" aria-label="Preview only"><i data-lucide="panel-top"></i></button></div>
+      </div>
+      <div id="split" class="split" data-mode="split">
+        <section class="source-pane"><div class="pane-heading source-toolbar"><span class="source-label"><i data-lucide="file-code-2"></i>Markdown</span><div class="format-toolbar" role="toolbar" aria-label="Markdown formatting"><details class="insert-menu"><summary aria-label="Insert Markdown">Insert <i data-lucide="chevron-down"></i></summary><div id="insert-options" class="insert-options"></div></details><button class="icon-only" data-format="bold" aria-label="Bold" title="Bold" aria-pressed="false"><i data-lucide="bold"></i></button><button class="icon-only" data-format="italic" aria-label="Italic" title="Italic" aria-pressed="false"><i data-lucide="italic"></i></button><button class="icon-only" data-format="inlineCode" aria-label="Inline code" title="Inline code" aria-pressed="false"><i data-lucide="code"></i></button><button class="icon-only" data-format="strikethrough" aria-label="Strikethrough" title="Strikethrough" aria-pressed="false"><i data-lucide="strikethrough"></i></button><button class="icon-only" data-format="link" aria-label="Link" title="Link" aria-pressed="false"><i data-lucide="link"></i></button></div></div><div id="markdown-editor" aria-label="Deck Markdown editor"></div><div class="source-footer"><span id="cursor-status">Ln 1, Col 1</span></div></section>
+        <div id="split-handle" class="split-handle" role="separator" aria-orientation="vertical" aria-label="Resize editor and preview" tabindex="0" aria-valuemin="25" aria-valuemax="75" aria-valuenow="46"></div>
+        <section class="preview-pane"><div class="pane-heading"><span><i data-lucide="monitor"></i>Preview</span><label class="theme-control"><span class="sr-only">Deck theme</span><select id="theme" aria-label="Deck theme"><option value="studio">Studio</option><option value="midnight">Midnight</option><option value="chalk">Chalk</option><option value="solar">Solar</option><option value="atelier">Atelier</option></select><i data-lucide="chevron-down"></i></label></div>
+          <div class="preview-canvas"><div id="preview-stage" class="preview-stage"><div id="slide-surface" class="slide-surface"></div></div><div class="preview-controls"><button class="icon-only" data-action="previous" title="Previous slide" aria-label="Previous slide"><i data-lucide="chevron-left"></i></button><span id="preview-position">1 / 1</span><button class="icon-only" data-action="next" title="Next slide" aria-label="Next slide"><i data-lucide="chevron-right"></i></button><span class="spacer"></span><button class="icon-only" data-action="present" title="Present from this slide" aria-label="Present from this slide"><i data-lucide="maximize"></i></button></div></div>
+        </section>
+      </div>
+      <footer class="workspace-footer"><span><span id="sync-dot" class="sync-dot"></span><span id="sync-status">Draft saved</span><button data-action="reload-disk" title="Discard draft and reload from disk">Reload disk</button></span><span>⌘S save <span class="footer-divider">·</span> ⌘↵ present</span></footer>
+    </main>
+  </div>
+</div>
+<dialog id="dialog"><form id="dialog-form"><div class="dialog-heading"><h2 id="dialog-title"></h2><button type="button" class="icon-only" data-action="close-dialog" aria-label="Close dialog"><i data-lucide="x"></i></button></div><p id="dialog-description"></p><label id="dialog-label" for="dialog-input"></label><input id="dialog-input" autocomplete="off"><div id="dialog-extra"></div><div class="dialog-actions"><button type="button" data-action="close-dialog">Cancel</button><button id="dialog-submit" type="submit" class="primary">Continue</button></div></form></dialog>
+<div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
+</body></html>

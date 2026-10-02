@@ -1,7 +1,6 @@
-import CodeckCore
 import Foundation
 
-enum MarkdownRenderer {
+public enum MarkdownRenderer {
     private enum ListKind {
         case ordered
         case unordered
@@ -13,7 +12,7 @@ enum MarkdownRenderer {
         var text: String
     }
 
-    static func htmlDocument(
+    public static func htmlDocument(
         for slide: Slide,
         theme: PresentationTheme,
         codexOutputs: [String: CodexSessionOutput]
@@ -26,7 +25,7 @@ enum MarkdownRenderer {
         )
     }
 
-    static func scaledPreviewHTMLDocument(
+    public static func scaledPreviewHTMLDocument(
         for slide: Slide,
         theme: PresentationTheme,
         codexOutputs: [String: CodexSessionOutput]
@@ -40,7 +39,7 @@ enum MarkdownRenderer {
         )
     }
 
-    static func templatePreviewHTMLDocument(
+    public static func templatePreviewHTMLDocument(
         for slide: Slide,
         theme: PresentationTheme
     ) -> String {
@@ -82,7 +81,8 @@ enum MarkdownRenderer {
                 window.webkit?.messageHandlers?.codeck?.postMessage({ action: "stopCodex", id: id });
               },
               runAllCodex: function() {
-                window.webkit?.messageHandlers?.codeck?.postMessage({ action: "runAllCodex" });
+                const ids = Array.from(document.querySelectorAll(".codex-card[data-codex-id]"), card => card.dataset.codexId);
+                window.webkit?.messageHandlers?.codeck?.postMessage({ action: "runAllCodex", ids: ids });
               }
             };
             \(extraScript)
@@ -404,15 +404,16 @@ enum MarkdownRenderer {
 
         return
             """
-            <section class="codex-card state-\(state.rawValue)">
+            <section class="codex-card state-\(state.rawValue)" data-codex-id="\(escapeAttribute(block.id))">
               <div class="codex-card-heading">
                 <div class="codex-card-title-group">
                   <div class="codex-title">\(renderInline(block.title))</div>
                   <div class="codex-status">\(escapeHTML(state.rawValue))</div>
                 </div>
-                <button type="button" class="\(actionClass)" aria-label="\(actionTitle) Codex session" title="\(actionTitle) Codex session" onclick="Codeck.\(
-                    action
-                )('\(escapeJavaScript(block
+                <button type="button" class="\(actionClass)" data-codex-id="\(escapeAttribute(block
+                        .id))" aria-label="\(actionTitle) Codex session" title="\(actionTitle) Codex session" onclick="Codeck.\(
+                action
+            )('\(escapeJavaScript(block
                     .id))')">
                   <span class="\(iconClass)" aria-hidden="true"></span>
                   <span class="visually-hidden">\(actionTitle)</span>

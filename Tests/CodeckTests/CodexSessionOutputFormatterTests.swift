@@ -1,4 +1,4 @@
-@testable import Codeck
+@testable import CodeckCore
 import XCTest
 
 final class CodexSessionOutputFormatterTests: XCTestCase {

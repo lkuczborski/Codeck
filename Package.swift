@@ -14,8 +14,9 @@ let package = Package(
     ],
     targets: [
         .target(name: "CodeckCore"),
-        .executableTarget(name: "Codeck", dependencies: ["CodeckCore"]),
-        .executableTarget(name: "CodeckMCP", dependencies: ["CodeckCore"]),
-        .testTarget(name: "CodeckTests", dependencies: ["Codeck", "CodeckCore"]),
+        .target(name: "CodeckRuntime", dependencies: ["CodeckCore"]),
+        .executableTarget(name: "Codeck", dependencies: ["CodeckCore", "CodeckRuntime"]),
+        .executableTarget(name: "CodeckMCP", dependencies: ["CodeckCore", "CodeckRuntime"]),
+        .testTarget(name: "CodeckTests", dependencies: ["Codeck", "CodeckCore", "CodeckRuntime", "CodeckMCP"]),
     ]
 )

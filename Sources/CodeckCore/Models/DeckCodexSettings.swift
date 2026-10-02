@@ -7,7 +7,7 @@ public struct DeckCodexSettings: Hashable, Sendable {
 
     public static let `default` = DeckCodexSettings(
         model: CodexModelOption.defaultModelID,
-        reasoning: .medium,
+        reasoning: CodexModelOption.defaultReasoningEffort,
         sandbox: "read-only"
     )
 

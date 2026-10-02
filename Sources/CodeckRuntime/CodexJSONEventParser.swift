@@ -1,11 +1,11 @@
 import Foundation
 
-enum CodexJSONEventParser {
-    static func assistantDelta(from line: String) -> String? {
+public enum CodexJSONEventParser {
+    public static func assistantDelta(from line: String) -> String? {
         object(from: line).flatMap(assistantDelta(from:))
     }
 
-    static func assistantDelta(from root: [String: Any]) -> String? {
+    public static func assistantDelta(from root: [String: Any]) -> String? {
         if let method = root["method"] as? String {
             guard method == "item/agentMessage/delta" else { return nil }
             return firstString(in: root["params"] ?? root, keyedBy: ["delta", "text", "content"])
@@ -31,11 +31,11 @@ enum CodexJSONEventParser {
         return firstString(in: root, keyedBy: ["delta", "text", "content"])
     }
 
-    static func completedAgentMessage(from line: String) -> String? {
+    public static func completedAgentMessage(from line: String) -> String? {
         object(from: line).flatMap(completedAgentMessage(from:))
     }
 
-    static func completedAgentMessage(from root: [String: Any]) -> String? {
+    public static func completedAgentMessage(from root: [String: Any]) -> String? {
         let item: [String: Any]?
 
         if let method = root["method"] as? String {
@@ -59,7 +59,7 @@ enum CodexJSONEventParser {
         return firstString(in: item["content"] ?? item, keyedBy: ["text"])
     }
 
-    static func threadID(fromThreadStartResponse root: [String: Any], requestID: String) -> String? {
+    public static func threadID(fromThreadStartResponse root: [String: Any], requestID: String) -> String? {
         guard requestIDMatches(root["id"], requestID: requestID),
               let result = root["result"] as? [String: Any],
               let thread = result["thread"] as? [String: Any]
@@ -70,7 +70,7 @@ enum CodexJSONEventParser {
         return thread["id"] as? String
     }
 
-    static func turnID(fromTurnStartResponse root: [String: Any], requestID: String) -> String? {
+    public static func turnID(fromTurnStartResponse root: [String: Any], requestID: String) -> String? {
         guard requestIDMatches(root["id"], requestID: requestID),
               let result = root["result"] as? [String: Any],
               let turn = result["turn"] as? [String: Any]
@@ -81,7 +81,7 @@ enum CodexJSONEventParser {
         return turn["id"] as? String
     }
 
-    static func turnCompletion(from root: [String: Any]) -> (completed: Bool, message: String?)? {
+    public static func turnCompletion(from root: [String: Any]) -> (completed: Bool, message: String?)? {
         guard root["method"] as? String == "turn/completed",
               let params = root["params"] as? [String: Any],
               let turn = params["turn"] as? [String: Any],
@@ -94,7 +94,7 @@ enum CodexJSONEventParser {
         return (status == "completed", message)
     }
 
-    static func errorMessage(from root: [String: Any]) -> String? {
+    public static func errorMessage(from root: [String: Any]) -> String? {
         if let error = root["error"] {
             return firstString(in: error, keyedBy: ["message", "error", "description"]) ?? "\(error)"
         }
@@ -108,11 +108,11 @@ enum CodexJSONEventParser {
         return firstString(in: params, keyedBy: ["message", "error", "description"]) ?? "\(params)"
     }
 
-    static func isResponse(_ root: [String: Any], requestID: String) -> Bool {
+    public static func isResponse(_ root: [String: Any], requestID: String) -> Bool {
         requestIDMatches(root["id"], requestID: requestID)
     }
 
-    static func object(from line: String) -> [String: Any]? {
+    public static func object(from line: String) -> [String: Any]? {
         guard let data = line.data(using: .utf8) else {
             return nil
         }

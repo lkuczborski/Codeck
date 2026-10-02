@@ -2,3 +2,7 @@
 dist/
 .DS_Store
 *.xcuserdata/
+.codeck-workspaces/
+plugins/codeck/node_modules/
+plugins/codeck/build/
+plugins/codeck/test-results/
