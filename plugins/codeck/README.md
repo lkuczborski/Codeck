@@ -2,7 +2,25 @@
 
 A local macOS plugin with a dedicated presentation workspace. The UI registers a **global sidebar entry** and a **conversation panel entry** using the [OpenAI MCP Extensions API](https://developers.openai.com/plugins/build/extensions). Hosts that implement these extensions open Codeck as a permanent app tab with a composer. Older MCP Apps hosts can open the same editor from `open_workspace` in a chat.
 
-## Build and install
+## Install the prebuilt plugin
+
+After the first successful publication from `main`, users on Apple silicon Macs can install from this repository without Swift, Node, npm, or the Codeck app:
+
+```sh
+codex plugin marketplace add lkuczborski/Codeck
+codex plugin add codeck@codeck-plugins
+```
+
+Restart Codex and open **Codeck** in the sidebar. To update:
+
+```sh
+codex plugin marketplace upgrade codeck-plugins
+codex plugin add codeck@codeck-plugins
+```
+
+Restart Codex after updating. The published helper currently uses ad hoc signing; Developer ID signing and notarization are not configured. Intel Macs can use the source build until a compatible prebuilt release is available.
+
+## Build and install locally
 
 Requires macOS 14+, Swift 6, Node 20+, and npm. The Codeck app does not need to be running. The plugin bundles a native workspace helper, uses the installed Codex executable and login for live cards, and uses the native Codex composer for deck iteration. No OpenAI API key is needed.
 
@@ -10,7 +28,7 @@ From the repository root:
 
 ```sh
 script/build_plugin.sh
-codex plugin marketplace add .
+codex plugin marketplace add ./dist
 codex plugin add codeck@codeck-local
 ```
 
@@ -18,7 +36,15 @@ Restart Codex after installation or plugin updates, then open **Codeck** in the 
 
 The plugin registers its MCP server as `codeck-workspace` so an existing `mcp_servers.codeck` connection for the native app cannot override it. If the sidebar entry is missing, check MCP startup errors for `codeck-workspace`; the plugin skill loading alone does not confirm that its server started.
 
-The repo marketplace is `.agents/plugins/marketplace.json` and points to the generated `dist/codeck-plugin/` package. The plugin uses the supported `.codex-plugin/plugin.json` compatibility format. Generated executable and UI assets are intentionally not committed. `script/build_plugin.sh` packages only the Swift MCP executable, self-contained HTML, license notices, metadata, and skill; installed users don't need npm or Swift at runtime. Source files and development dependencies stay in `plugins/codeck/`. Rebuild and reinstall after source changes.
+The repo marketplace is `.agents/plugins/marketplace.json` and uses **Codeck Plugins** (`codeck-plugins`). It points at the tested package on the separate `codex/plugin-distribution` branch. Local builds create a separate `codeck-local` marketplace under `dist/`. The plugin uses the supported `.codex-plugin/plugin.json` compatibility format. Generated executable and UI assets are excluded from the source branch. `script/build_plugin.sh` packages only the Swift MCP executable, self-contained HTML, license notices, metadata, and skill; installed users don't need npm or Swift at runtime. Source files and development dependencies stay in `plugins/codeck/`. Rebuild and reinstall after local source changes.
+
+## Automatic packaging
+
+The **Codeck plugin** GitHub Actions workflow runs for relevant source pushes and pull requests, and can also be run manually. Site-only edits do not trigger it. It builds on the Apple silicon `macos-15` runner, runs Swift and plugin tests plus TypeScript checks, verifies the native bundle, and uploads a `codeck-plugin-macos-arm64` artifact. Its inner `.tar.gz` preserves executable permissions and includes a local marketplace catalog. Extract it and add that extracted directory as a local marketplace to test a branch build. The accompanying SHA-256 file verifies the archive.
+
+After a successful `main` build, a separate job publishes only the prebuilt package and marketplace catalog to `codex/plugin-distribution`. Its `SOURCE_COMMIT` records the source revision. It uses the built-in GitHub Actions token with `contents: write` in the publishing job; custom credentials are unnecessary. Repository or organization rules must permit that job to push to the distribution branch. The first successful publication creates the branch. The publisher uses ordinary pushes and skips outdated workflow reruns when `main` has moved.
+
+CI packages receive versions such as `0.3.6-build.42` using the workflow run number, so successive source builds have distinct install versions without rewriting the source manifest. Pull request and feature branch builds create downloadable artifacts; they do not update users' marketplace package. The distribution branch is excluded from workflow triggers, preventing publication loops.
 
 ## Editing
 

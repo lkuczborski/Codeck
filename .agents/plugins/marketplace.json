@@ -1,14 +1,16 @@
 {
-  "name": "codeck-local",
+  "name": "codeck-plugins",
   "interface": {
-    "displayName": "Codeck Local"
+    "displayName": "Codeck Plugins"
   },
   "plugins": [
     {
       "name": "codeck",
       "source": {
-        "source": "local",
-        "path": "./dist/codeck-plugin"
+        "source": "git-subdir",
+        "url": "https://github.com/lkuczborski/Codeck.git",
+        "path": "./codeck-plugin",
+        "ref": "codex/plugin-distribution"
       },
       "policy": {
         "installation": "AVAILABLE",

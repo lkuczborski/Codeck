@@ -1,9 +1,25 @@
 import Foundation
 
-func tool(_ name: String, _ description: String, properties: [String: Any] = [:], required: [String] = []) -> [String: Any] {
+enum MCPToolBehavior {
+    case readOnly
+    case localChange
+    case localReplace
+    case codexExecution
+
+    var annotations: [String: Bool] {
+        [
+            "readOnlyHint": self == .readOnly,
+            "destructiveHint": self == .localReplace || self == .codexExecution,
+            "openWorldHint": self == .codexExecution,
+        ]
+    }
+}
+
+func tool(_ name: String, _ description: String, behavior: MCPToolBehavior, properties: [String: Any] = [:], required: [String] = []) -> [String: Any] {
     [
         "name": name,
         "description": description,
+        "annotations": behavior.annotations,
         "inputSchema": [
             "type": "object",
             "properties": properties,

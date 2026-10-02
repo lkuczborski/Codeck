@@ -1,6 +1,6 @@
 ---
 name: decks
-description: Create, edit, save, and present Codeck Markdown presentations in the Codeck workspace.
+description: Create, edit, save, and present Codeck Markdown presentations in the Codeck workspace
 ---
 
 Use the Codeck MCP tools to work on the presentation in its persistent workspace.
