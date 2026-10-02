@@ -3,7 +3,7 @@ set -euo pipefail
 
 APP_NAME="Codeck"
 MCP_NAME="codeck-mcp"
-BUNDLE_ID="dev.local.Codeck"
+BUNDLE_ID="com.luku.Codeck"
 MIN_SYSTEM_VERSION="14.0"
 
 usage() {
@@ -255,7 +255,7 @@ write_info_plist() {
       <string>Owner</string>
       <key>LSItemContentTypes</key>
       <array>
-        <string>dev.local.codeck.mdeck</string>
+        <string>com.luku.Codeck.mdeck</string>
       </array>
     </dict>
   </array>
@@ -263,7 +263,7 @@ write_info_plist() {
   <array>
     <dict>
       <key>UTTypeIdentifier</key>
-      <string>dev.local.codeck.mdeck</string>
+      <string>com.luku.Codeck.mdeck</string>
       <key>UTTypeDescription</key>
       <string>Codeck Markdown Deck</string>
       <key>UTTypeIconFile</key>

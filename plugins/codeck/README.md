@@ -44,7 +44,7 @@ The **Codeck plugin** GitHub Actions workflow runs for relevant source pushes an
 
 After a successful `main` build, a separate job publishes only the prebuilt package and marketplace catalog to `codex/plugin-distribution`. Its `SOURCE_COMMIT` records the source revision. It uses the built-in GitHub Actions token with `contents: write` in the publishing job; custom credentials are unnecessary. Repository or organization rules must permit that job to push to the distribution branch. The first successful publication creates the branch. The publisher uses ordinary pushes and skips outdated workflow reruns when `main` has moved.
 
-CI packages receive versions such as `0.3.6-build.42` using the workflow run number, so successive source builds have distinct install versions without rewriting the source manifest. Pull request and feature branch builds create downloadable artifacts; they do not update users' marketplace package. The distribution branch is excluded from workflow triggers, preventing publication loops.
+CI packages receive versions such as `0.3.7-build.42` using the workflow run number, so successive source builds have distinct install versions without rewriting the source manifest. Pull request and feature branch builds create downloadable artifacts; they do not update users' marketplace package. The distribution branch is excluded from workflow triggers, preventing publication loops.
 
 ## Editing
 

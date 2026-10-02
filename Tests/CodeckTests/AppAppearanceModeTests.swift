@@ -11,7 +11,7 @@ final class AppAppearanceModeTests: XCTestCase {
     }
 
     func testCodeckDeckTypeIsPlainTextMDeckDocument() {
-        XCTAssertEqual(UTType.codeckDeck.identifier, "dev.local.codeck.mdeck")
+        XCTAssertEqual(UTType.codeckDeck.identifier, "com.luku.Codeck.mdeck")
         XCTAssertTrue(UTType.codeckDeck.conforms(to: .plainText))
         XCTAssertTrue(UTType.legacyMarkdown.conforms(to: .plainText))
     }

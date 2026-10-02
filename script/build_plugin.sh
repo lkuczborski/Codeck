@@ -3,7 +3,7 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"
 PLUGIN_VERSION="$(node -p "require('./plugins/codeck/.codex-plugin/plugin.json').version")"
-PLUGIN_BUILD_NUMBER="${CODECK_PLUGIN_BUILD_NUMBER:-9}"
+PLUGIN_BUILD_NUMBER="${CODECK_PLUGIN_BUILD_NUMBER:-10}"
 swift build -c release --product codeck-mcp
 BIN_DIR="$(swift build -c release --show-bin-path)"
 cd "$ROOT_DIR/plugins/codeck"
@@ -20,7 +20,7 @@ cat > "$HELPER_APP/Contents/Info.plist" <<PLIST
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0"><dict>
 <key>CFBundleExecutable</key><string>codeck-mcp</string>
-<key>CFBundleIdentifier</key><string>com.codeck.workspace</string>
+<key>CFBundleIdentifier</key><string>com.luku.Codeck.workspace</string>
 <key>CFBundleName</key><string>Codeck Workspace</string>
 <key>CFBundlePackageType</key><string>APPL</string>
 <key>CFBundleIconFile</key><string>AppIcon</string>
