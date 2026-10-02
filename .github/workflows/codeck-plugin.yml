@@ -79,7 +79,8 @@ jobs:
         run: |
           test "$(uname -m)" = arm64
           codesign --verify --strict --verbose 'dist/codeck-plugin/build/Codeck Workspace.app'
-          tar -czf dist/codeck-plugin-macos-arm64.tar.gz -C dist .agents codeck-plugin
+          printf '%s\n' "${{ github.sha }}" > dist/SOURCE_COMMIT
+          tar -czf dist/codeck-plugin-macos-arm64.tar.gz -C dist .agents codeck-plugin SOURCE_COMMIT
           shasum -a 256 dist/codeck-plugin-macos-arm64.tar.gz > dist/codeck-plugin-macos-arm64.tar.gz.sha256
       - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:
@@ -89,33 +90,3 @@ jobs:
             dist/codeck-plugin-macos-arm64.tar.gz.sha256
           if-no-files-found: error
           retention-days: 30
-
-  publish:
-    needs: package
-    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    permissions:
-      contents: write
-    steps:
-      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
-        with:
-          persist-credentials: false
-      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
-        with:
-          node-version: '24'
-          package-manager-cache: false
-      - uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6
-        with:
-          name: codeck-plugin-macos-arm64
-          path: dist
-      - name: Extract and publish tested package
-        env:
-          GH_TOKEN: ${{ github.token }}
-          RELEASE_REMOTE: https://github.com/${{ github.repository }}.git
-          SOURCE_COMMIT: ${{ github.sha }}
-        run: |
-          sha256sum -c dist/codeck-plugin-macos-arm64.tar.gz.sha256
-          mkdir -p "$RUNNER_TEMP/codeck-package"
-          tar -xzf dist/codeck-plugin-macos-arm64.tar.gz -C "$RUNNER_TEMP/codeck-package"
-          script/publish_plugin.sh "$RUNNER_TEMP/codeck-package" "$RELEASE_REMOTE" "$SOURCE_COMMIT"

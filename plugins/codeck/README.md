@@ -4,7 +4,7 @@ A local macOS plugin with a dedicated presentation workspace. The UI registers a
 
 ## Install the prebuilt plugin
 
-After the first successful publication from `main`, users on Apple silicon Macs can install from this repository without Swift, Node, npm, or the Codeck app:
+After the first locally notarized release from `main`, users on Apple silicon Macs can install from this repository without Swift, Node, npm, or the Codeck app:
 
 ```sh
 codex plugin marketplace add lkuczborski/Codeck
@@ -18,7 +18,7 @@ codex plugin marketplace upgrade codeck-plugins
 codex plugin add codeck@codeck-plugins
 ```
 
-Restart Codex after updating. The published helper currently uses ad hoc signing; Developer ID signing and notarization are not configured. Intel Macs can use the source build until a compatible prebuilt release is available.
+Restart Codex after updating. Marketplace releases use Developer ID signing and Apple notarization. Intel Macs can use the source build until a compatible prebuilt release is available.
 
 ## Build and install locally
 
@@ -42,9 +42,25 @@ The repo marketplace is `.agents/plugins/marketplace.json` and uses **Codeck Plu
 
 The **Codeck plugin** GitHub Actions workflow runs for relevant source pushes and pull requests, and can also be run manually. Site-only edits do not trigger it. It builds on the Apple silicon `macos-15` runner with Xcode 26.3 selected explicitly, runs Swift and plugin tests plus TypeScript checks, verifies the native bundle, and uploads a `codeck-plugin-macos-arm64` artifact. Its inner `.tar.gz` preserves executable permissions and includes a local marketplace catalog. Extract it and add that extracted directory as a local marketplace to test a branch build. The accompanying SHA-256 file verifies the archive.
 
-After a successful `main` build, a separate job publishes only the prebuilt package and marketplace catalog to `codex/plugin-distribution`. Its `SOURCE_COMMIT` records the source revision. It uses the built-in GitHub Actions token with `contents: write` in the publishing job; custom credentials are unnecessary. Repository or organization rules must permit that job to push to the distribution branch. The first successful publication creates the branch. The publisher uses ordinary pushes and skips outdated workflow reruns when `main` has moved.
+CI produces ad hoc signed development artifacts. Merging to `main` builds and tests a package; it does not publish it to users. Release signing credentials remain in the maintainer's Mac Keychain.
 
-CI packages receive versions such as `0.3.7-build.42` using the workflow run number, so successive source builds have distinct install versions without rewriting the source manifest. Pull request and feature branch builds create downloadable artifacts; they do not update users' marketplace package. The distribution branch is excluded from workflow triggers, preventing publication loops.
+CI packages receive development versions such as `0.3.7-build.42` using the workflow run number. They are available for testing and are not marketplace releases.
+
+## Release from your Mac
+
+Bump `.codex-plugin/plugin.json`, `package.json`, and `package-lock.json` together for a new plugin version, commit the source, and merge to `main`. From a clean checkout of that merged commit, run:
+
+```sh
+export CODECK_SIGNING_IDENTITY="Developer ID Application: Your Name (TEAMID)"
+export CODECK_NOTARY_PROFILE="your-profile"
+script/release_plugin.sh --publish
+```
+
+This builds and tests the plugin locally, signs its MCP executable and workspace helper with Developer ID and hardened runtime, submits them to Apple, staples the helper, and verifies the extracted ZIP with Gatekeeper. Publication requires the tested source to match the current remote `main`. Omit `--publish` to produce a notarized candidate from a feature branch. There is no need to download a CI build. The ZIP and checksum remain in `dist/plugin-release/<version>/` and can also be attached to a GitHub release.
+
+Publication updates `codex/plugin-distribution` with only the prebuilt plugin, marketplace catalog, `SOURCE_COMMIT`, and notarization receipt. It creates the branch on the first release, uses ordinary pushes, and rejects packages without a valid Developer ID signature and accepted notarization. Your existing GitHub authentication must allow pushing this branch. Source stays on `main`; no signing keys or Apple credentials are uploaded.
+
+`script/notarize_plugin.sh <package-root> <tested-source-commit>` can also notarize an already built package. Users add the repository once and update through `codeck-plugins`; unpromoted CI builds never change their installed package.
 
 ## Editing
 

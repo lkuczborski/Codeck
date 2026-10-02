@@ -282,4 +282,4 @@ export CODECK_NOTARY_PROFILE="your-keychain-profile"
 script/release.sh v0.7
 ```
 
-Add `--publish` to tag the current committed revision and publish the verified assets. `--prepare-only` produces a signed candidate while notarization is unavailable and cannot publish a release. `--allow-dirty` is only for local candidate checks. The [Codex plugin](plugins/codeck/README.md) has its own automatic packaging workflow; its CI builds do not use these local signing credentials.
+Add `--publish` to tag the current committed revision and publish the verified assets. `--prepare-only` produces a signed candidate while notarization is unavailable and cannot publish a release. `--allow-dirty` is only for local candidate checks. The [Codex plugin](plugins/codeck/README.md) has its own automatic build and test workflow. Run `script/release_plugin.sh --publish` on your Mac to build, test, sign, notarize, and publish the plugin; merging alone does not publish an ad hoc signed package.
