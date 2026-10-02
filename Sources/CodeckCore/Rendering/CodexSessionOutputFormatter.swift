@@ -1,7 +1,7 @@
 import Foundation
 
-enum CodexSessionOutputFormatter {
-    static func markdown(from output: CodexSessionOutput?) -> String {
+public enum CodexSessionOutputFormatter {
+    public static func markdown(from output: CodexSessionOutput?) -> String {
         guard let output else { return "Ready to run." }
 
         let cleanOutput = normalizedText(output.standardOutput)
@@ -28,7 +28,7 @@ enum CodexSessionOutputFormatter {
         return output.state == .running ? "Thinking..." : rawText
     }
 
-    static func responseText(from text: String) -> String? {
+    public static func responseText(from text: String) -> String? {
         let normalized = normalizedText(text)
         let lines = normalized.components(separatedBy: "\n")
 

@@ -1,11 +1,13 @@
 @testable import Codeck
 @testable import CodeckCore
+@testable import CodeckRuntime
 import XCTest
 
 final class CodexModelListClientTests: XCTestCase {
     func testModelListProcessUsesSandboxedTemporaryDirectory() {
         let process = CodexModelListClient.makeProcess()
-        let arguments = process.arguments ?? []
+        var arguments = process.arguments ?? []
+        if process.executableURL?.path != "/usr/bin/env" { arguments.insert("codex", at: 0) }
 
         XCTAssertEqual(Array(arguments.prefix(5)), ["codex", "--sandbox", "read-only", "--ask-for-approval", "never"])
         XCTAssertEqual(arguments[5], "--cd")
@@ -115,6 +117,26 @@ final class CodexModelListClientTests: XCTestCase {
         XCTAssertNil(CodexModelListClient.models(from: ["id": "codeck-model-list", "models": []]))
         XCTAssertNil(CodexModelListClient.models(from: ["id": "codeck-model-list", "models": "not an array"]))
         XCTAssertNil(CodexModelListClient.models(from: ["id": "codeck-model-list", "models": [["displayName": "No ID"]]]))
+    }
+
+    @MainActor
+    func testCatalogUsesBackendValuesAndRetainsCacheAfterFailure() async throws {
+        let suite = "codeck-models-\(UUID().uuidString)"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let model = CodexModelOption(id: "backend-new", displayName: "Backend New", description: "",
+                                     supportedReasoningEfforts: [.low, .init(rawValue: "future")],
+                                     defaultReasoningEffort: .init(rawValue: "future"), isDefault: true)
+        let live = CodexModelCatalogStore(defaults: defaults, fetch: { [model] in [model] })
+        XCTAssertTrue(live.models.isEmpty)
+        await live.refresh()
+        XCTAssertEqual(live.models, [model])
+        let offline = CodexModelCatalogStore(defaults: defaults, fetch: { throw CodexModelListClient.ClientError.timedOut })
+        XCTAssertEqual(offline.models, [model])
+        await offline.refresh()
+        XCTAssertEqual(offline.models, [model])
+        XCTAssertNotNil(offline.errorMessage)
+        XCTAssertEqual(offline.modelOptions(including: "backend-new"), [model])
     }
 
     @MainActor

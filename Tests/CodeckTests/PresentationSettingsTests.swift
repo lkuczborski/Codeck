@@ -4,7 +4,7 @@ import XCTest
 
 final class PresentationSettingsTests: XCTestCase {
     func testReasoningEffortDisplayNamesCoverKnownAndFutureValues() {
-        XCTAssertEqual(CodexReasoningEffort.low.displayName, "Low")
+        XCTAssertEqual(CodexReasoningEffort.low.displayName, "Light")
         XCTAssertEqual(CodexReasoningEffort.medium.displayName, "Medium")
         XCTAssertEqual(CodexReasoningEffort.high.displayName, "High")
         XCTAssertEqual(CodexReasoningEffort.xhigh.displayName, "Extra High")
@@ -55,9 +55,16 @@ final class PresentationSettingsTests: XCTestCase {
         XCTAssertEqual(normalized, futureReasoning)
     }
 
+    func testPreferredDefaultDoesNotNormalizeExplicitReasoningOrNeedAStaticCatalog() {
+        XCTAssertEqual(CodexModelOption.defaultModelID, "gpt-6.1-sol")
+        XCTAssertEqual(CodexModelOption.normalizedReasoning(nil, for: "gpt-6.1-sol"), .low)
+        XCTAssertEqual(CodexModelOption.normalizedReasoning(.medium, for: "gpt-6.1-sol"), .medium)
+        XCTAssertEqual(CodexModelOption.normalizedReasoning(.init(rawValue: "future"), for: "future-model"), .init(rawValue: "future"))
+    }
+
     @MainActor
-    func testCatalogPrependsSavedModelWhenLiveCatalogDoesNotContainIt() {
-        let catalog = CodexModelCatalogStore()
+    func testCatalogPrependsSavedModelWhenLiveCatalogDoesNotContainIt() throws {
+        let catalog = try CodexModelCatalogStore(defaults: XCTUnwrap(UserDefaults(suiteName: UUID().uuidString)))
         let options = catalog.modelOptions(
             including: "saved-model",
             selectedReasoning: CodexReasoningEffort(rawValue: "ultra")
@@ -67,12 +74,12 @@ final class PresentationSettingsTests: XCTestCase {
         XCTAssertEqual(options.first?.displayName, "saved-model")
         XCTAssertEqual(options.first?.description, "Saved model from this deck.")
         XCTAssertEqual(options.first?.supportedReasoningEfforts.first?.rawValue, "ultra")
-        XCTAssertTrue(options.dropFirst().contains { $0.id == CodexModelOption.defaultModelID })
+        XCTAssertEqual(options.count, 1)
     }
 
     @MainActor
-    func testCatalogDoesNotDuplicateKnownSelectedModel() {
-        let catalog = CodexModelCatalogStore()
+    func testCatalogDoesNotDuplicateKnownSelectedModel() throws {
+        let catalog = try CodexModelCatalogStore(defaults: XCTUnwrap(UserDefaults(suiteName: UUID().uuidString)))
         let options = catalog.modelOptions(including: CodexModelOption.defaultModelID)
 
         XCTAssertEqual(options.first?.id, CodexModelOption.defaultModelID)

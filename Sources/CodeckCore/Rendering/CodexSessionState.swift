@@ -1,8 +1,6 @@
-import CodeckCore
 import Foundation
-import SwiftUI
 
-enum CodexSessionState: String, Hashable {
+public enum CodexSessionState: String, Hashable, Sendable {
     case idle
     case running
     case completed

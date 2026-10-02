@@ -1,6 +1,6 @@
 import Foundation
 
-public struct CodexReasoningEffort: RawRepresentable, CaseIterable, Identifiable, Hashable, Sendable {
+public struct CodexReasoningEffort: RawRepresentable, CaseIterable, Identifiable, Hashable, Codable, Sendable {
     public var rawValue: String
 
     public static let low = CodexReasoningEffort(rawValue: "low")
@@ -20,7 +20,7 @@ public struct CodexReasoningEffort: RawRepresentable, CaseIterable, Identifiable
     public var displayName: String {
         switch rawValue {
         case Self.low.rawValue:
-            "Low"
+            "Light"
         case Self.medium.rawValue:
             "Medium"
         case Self.high.rawValue:

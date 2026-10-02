@@ -3,6 +3,22 @@ import Foundation
 
 struct PathAccessGuard {
     let allowedRoots: [URL]
+    private let pickedFiles: PickedFileGrants
+
+    init(allowedRoots: [URL]) {
+        self.allowedRoots = allowedRoots.map(Self.canonicalURLPreservingMissingPath)
+        pickedFiles = PickedFileGrants(directory: self.allowedRoots[0].appendingPathComponent(".codeck-workspaces"))
+    }
+
+    /// Called only after an NSOpenPanel/NSSavePanel returns the user's selection.
+    func grantPickedFile(_ url: URL) throws -> URL {
+        let canonical = Self.canonicalURLPreservingMissingPath(url)
+        guard ["mdeck", "md", "markdown"].contains(canonical.pathExtension.lowercased()) else {
+            throw CodeckMCPError.invalidParams("Choose a Markdown presentation file.")
+        }
+        try pickedFiles.grant(canonical.path)
+        return canonical
+    }
 
     static func fromEnvironment() -> PathAccessGuard {
         let fileManager = FileManager.default
@@ -30,7 +46,7 @@ struct PathAccessGuard {
         }
 
         let standardized = Self.canonicalURLPreservingMissingPath(url)
-        guard allowedRoots.contains(where: { root in standardized.isInside(root) }) else {
+        guard allowedRoots.contains(where: { root in standardized.isInside(root) }) || pickedFiles.contains(standardized.path) else {
             let rootList = allowedRoots.map(\.path).joined(separator: ", ")
             throw CodeckMCPError.invalidParams("Path \(standardized.path) is outside the allowed roots: \(rootList).")
         }
@@ -41,7 +57,7 @@ struct PathAccessGuard {
         NSString(string: path).expandingTildeInPath
     }
 
-    private static func canonicalURLPreservingMissingPath(_ url: URL) -> URL {
+    static func canonicalURLPreservingMissingPath(_ url: URL) -> URL {
         let fileManager = FileManager.default
         let standardized = url.standardizedFileURL
         if fileManager.fileExists(atPath: standardized.path) {

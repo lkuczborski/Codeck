@@ -1,5 +1,6 @@
 @testable import Codeck
 @testable import CodeckCore
+@testable import CodeckRuntime
 import XCTest
 
 final class CodexSessionRunnerTests: XCTestCase {
@@ -55,6 +56,10 @@ final class CodexSessionRunnerTests: XCTestCase {
         XCTAssertTrue(path.contains("/opt/homebrew/bin"))
         XCTAssertTrue(path.contains("/usr/local/bin"))
         XCTAssertTrue(path.contains("/Applications/Codex.app/Contents/Resources"))
+    }
+
+    func testRunnerUsesDesktopCLIWithoutStandaloneCodeckApp() {
+        XCTAssertEqual(CodexSessionRunner.codexExecutableURL(environment: ["CODEX_CLI_PATH": "/bin/sh", "PATH": ""])?.path, "/bin/sh")
     }
 
     func testRunnerUsesExecutableOverrideWhenAvailable() {

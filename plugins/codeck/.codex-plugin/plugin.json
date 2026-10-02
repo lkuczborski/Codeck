@@ -1,0 +1,29 @@
+{
+  "name": "codeck",
+  "version": "0.3.5",
+  "description": "Create, edit, and present Markdown decks in a dedicated Codex workspace.",
+  "author": {
+    "name": "Codeck"
+  },
+  "license": "MIT",
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json",
+  "interface": {
+    "displayName": "Codeck",
+    "shortDescription": "Create and edit Codeck presentations",
+    "longDescription": "Open a presentation workspace from the sidebar. Edit highlighted Markdown beside a live preview, iterate using the Codex composer, save .mdeck files, and present fullscreen.",
+    "category": "Productivity",
+    "capabilities": [
+      "Interactive",
+      "Write"
+    ],
+    "defaultPrompt": [
+      "Open the Codeck presentation workspace",
+      "Create a presentation with Codeck"
+    ],
+    "brandColor": "#b3f299",
+    "composerIcon": "./assets/app-icon.png",
+    "logo": "./assets/app-icon.png",
+    "logoDark": "./assets/app-icon.png"
+  }
+}

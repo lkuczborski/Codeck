@@ -1,8 +1,8 @@
 import CodeckCore
 import Foundation
 
-enum CodexSessionRunner {
-    static func makeProcess(
+public enum CodexSessionRunner {
+    public static func makeProcess(
         for block: CodexBlock,
         settings: DeckCodexSettings = .default,
         workingDirectory: URL?
@@ -25,7 +25,7 @@ enum CodexSessionRunner {
         return process
     }
 
-    static func appServerArguments(
+    public static func appServerArguments(
         for block: CodexBlock,
         settings: DeckCodexSettings = .default,
         workingDirectory sessionDirectory: URL
@@ -55,11 +55,11 @@ enum CodexSessionRunner {
         return arguments
     }
 
-    static func sessionWorkingDirectory(from workingDirectory: URL?) -> URL {
+    public static func sessionWorkingDirectory(from workingDirectory: URL?) -> URL {
         workingDirectory ?? URL(fileURLWithPath: NSTemporaryDirectory(), isDirectory: true)
     }
 
-    static func environmentWithCodexSearchPath(
+    public static func environmentWithCodexSearchPath(
         _ environment: [String: String] = ProcessInfo.processInfo.environment
     ) -> [String: String] {
         var environment = environment
@@ -67,7 +67,7 @@ enum CodexSessionRunner {
         return environment
     }
 
-    static func augmentedPath(from path: String?) -> String {
+    public static func augmentedPath(from path: String?) -> String {
         let existingPaths = path?
             .split(separator: ":", omittingEmptySubsequences: true)
             .map(String.init) ?? []
@@ -80,13 +80,23 @@ enum CodexSessionRunner {
         return paths.joined(separator: ":")
     }
 
-    static func codexExecutableURL(
+    public static func codexExecutableURL(
         environment: [String: String] = ProcessInfo.processInfo.environment,
         fileManager: FileManager = .default
     ) -> URL? {
         let override = environment["CODECK_CODEX_EXECUTABLE"]?.trimmingCharacters(in: .whitespacesAndNewlines)
         if let override, !override.isEmpty, fileManager.isExecutableFile(atPath: override) {
             return URL(fileURLWithPath: override)
+        }
+
+        if let desktopCLI = environment["CODEX_CLI_PATH"], fileManager.isExecutableFile(atPath: desktopCLI) {
+            return URL(fileURLWithPath: desktopCLI)
+        }
+        for candidate in [
+            "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex",
+            "/Applications/Codex.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex",
+        ] where fileManager.isExecutableFile(atPath: candidate) {
+            return URL(fileURLWithPath: candidate)
         }
 
         for directory in augmentedPath(from: environment["PATH"]).split(separator: ":") {

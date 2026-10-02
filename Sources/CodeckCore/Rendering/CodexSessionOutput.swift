@@ -1,14 +1,12 @@
-import CodeckCore
 import Foundation
-import SwiftUI
 
-struct CodexSessionOutput: Hashable {
-    var state: CodexSessionState
-    var text: String
-    var standardOutput: String
-    var standardError: String
+public struct CodexSessionOutput: Hashable, Sendable {
+    public var state: CodexSessionState
+    public var text: String
+    public var standardOutput: String
+    public var standardError: String
 
-    init(
+    public init(
         state: CodexSessionState,
         text: String,
         standardOutput: String = "",

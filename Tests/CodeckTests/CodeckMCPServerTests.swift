@@ -86,6 +86,14 @@ final class CodeckMCPServerTests: XCTestCase {
                 "set_deck_settings",
                 "insert_codex_block",
                 "validate_deck",
+                "open_workspace",
+                "read_workspace",
+                "update_workspace",
+                "save_workspace",
+                "reload_workspace",
+                "render_markdown",
+                "choose_open_workspace", "choose_save_workspace", "present_workspace",
+                "begin_codex_run", "poll_codex_runs", "stop_codex_run",
             ])
         )
 

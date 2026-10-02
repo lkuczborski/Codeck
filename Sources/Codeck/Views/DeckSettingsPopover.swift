@@ -33,6 +33,11 @@ struct DeckSettingsPopover: View {
                     .controlSize(.small)
             }
 
+            if let error = modelCatalog.errorMessage {
+                Text(error).font(.caption).foregroundStyle(.secondary)
+                Button("Retry model list") { Task { await modelCatalog.refresh() } }
+            }
+
             Picker("Reasoning", selection: $settings.codex.reasoning) {
                 ForEach(selectedModel.supportedReasoningEfforts) { effort in
                     Text(effort.displayName).tag(effort)
@@ -51,10 +56,6 @@ struct DeckSettingsPopover: View {
         .codeckWorkspaceBackground()
         .task {
             await modelCatalog.refresh()
-            applyLiveModelDefaultsIfNeeded()
-        }
-        .onChange(of: modelCatalog.models) { _, _ in
-            applyLiveModelDefaultsIfNeeded()
         }
     }
 
@@ -69,20 +70,11 @@ struct DeckSettingsPopover: View {
         modelOptions.first(where: { $0.id == settings.codex.model }) ?? CodexModelOption.defaultOption(in: modelOptions)
     }
 
-    private func applyLiveModelDefaultsIfNeeded() {
-        let liveDefaultModelID = modelCatalog.defaultModelID()
-        if settings.codex.model == CodexModelOption.defaultModelID, liveDefaultModelID != settings.codex.model {
-            settings.codex.model = liveDefaultModelID
-        }
-
-        normalizeReasoning()
-    }
-
     private func normalizeReasoning() {
         settings.codex.reasoning = CodexModelOption.normalizedReasoning(
-            settings.codex.reasoning,
+            nil,
             for: settings.codex.model,
-            in: modelOptions
+            in: modelCatalog.models
         )
     }
 }

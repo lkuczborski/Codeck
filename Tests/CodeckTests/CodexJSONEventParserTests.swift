@@ -1,4 +1,5 @@
 @testable import Codeck
+@testable import CodeckRuntime
 import XCTest
 
 final class CodexJSONEventParserTests: XCTestCase {

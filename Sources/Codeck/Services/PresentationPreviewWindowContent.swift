@@ -1,5 +1,6 @@
 import AppKit
 import CodeckCore
+import CodeckRuntime
 import SwiftUI
 
 struct PresentationPreviewWindowContent: View {

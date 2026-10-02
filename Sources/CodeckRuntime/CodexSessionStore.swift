@@ -3,9 +3,11 @@ import Foundation
 import SwiftUI
 
 @MainActor
-final class CodexSessionStore: ObservableObject {
-    @Published private(set) var outputs: [String: CodexSessionOutput] = [:]
-    @Published private(set) var runningIDs: Set<String> = []
+public final class CodexSessionStore: ObservableObject {
+    @Published public private(set) var outputs: [String: CodexSessionOutput] = [:]
+    @Published public private(set) var runningIDs: Set<String> = []
+
+    public init() {}
 
     private var processes: [String: Process] = [:]
     private var outputPipes: [String: Pipe] = [:]
@@ -14,11 +16,11 @@ final class CodexSessionStore: ObservableObject {
     private var outputLineBuffers: [String: String] = [:]
     private var appServerContexts: [String: AppServerContext] = [:]
 
-    func output(for blockID: String) -> CodexSessionOutput {
+    public func output(for blockID: String) -> CodexSessionOutput {
         outputs[blockID] ?? CodexSessionOutput(state: .idle, text: "")
     }
 
-    func run(
+    public func run(
         _ block: CodexBlock,
         settings: DeckCodexSettings = .default,
         workingDirectory: URL?,
@@ -79,7 +81,8 @@ final class CodexSessionStore: ObservableObject {
 
         process.terminationHandler = { [weak self] process in
             Task { @MainActor in
-                self?.finish(blockID: block.id, status: process.terminationStatus)
+                guard let self, self.processes[block.id] === process else { return }
+                self.finish(blockID: block.id, status: process.terminationStatus)
             }
         }
 
@@ -96,13 +99,13 @@ final class CodexSessionStore: ObservableObject {
         }
     }
 
-    func runAll(_ blocks: [CodexBlock], settings: DeckCodexSettings = .default, workingDirectory: URL?) {
+    public func runAll(_ blocks: [CodexBlock], settings: DeckCodexSettings = .default, workingDirectory: URL?) {
         for block in blocks {
             run(block, settings: settings, workingDirectory: workingDirectory)
         }
     }
 
-    func stop(_ blockID: String) {
+    public func stop(_ blockID: String) {
         guard let process = processes[blockID] else { return }
         process.terminate()
         var output = output(for: blockID)
@@ -112,7 +115,7 @@ final class CodexSessionStore: ObservableObject {
         cleanup(blockID: blockID)
     }
 
-    func stopAll() {
+    public func stopAll() {
         for blockID in Array(processes.keys) {
             stop(blockID)
         }

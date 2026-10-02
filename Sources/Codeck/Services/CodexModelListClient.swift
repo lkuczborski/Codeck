@@ -1,4 +1,5 @@
 import CodeckCore
+import CodeckRuntime
 import Foundation
 
 enum CodexModelListClient {
@@ -90,9 +91,8 @@ enum CodexModelListClient {
     static func makeProcess() -> Process {
         let process = Process()
         let sessionDirectory = CodexSessionRunner.sessionWorkingDirectory(from: nil)
-        process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
+        process.executableURL = CodexSessionRunner.codexExecutableURL() ?? URL(fileURLWithPath: "/usr/bin/env")
         process.arguments = [
-            "codex",
             "--sandbox",
             "read-only",
             "--ask-for-approval",
@@ -103,6 +103,7 @@ enum CodexModelListClient {
             "--listen",
             "stdio://",
         ]
+        if process.executableURL?.path == "/usr/bin/env" { process.arguments?.insert("codex", at: 0) }
         process.currentDirectoryURL = sessionDirectory
         return process
     }

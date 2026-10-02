@@ -1,5 +1,6 @@
 import AppKit
 import CodeckCore
+import CodeckRuntime
 import SwiftUI
 
 struct DocumentWindowView: View {
@@ -143,10 +144,6 @@ struct DocumentWindowView: View {
         }
         .task {
             await modelCatalog.refresh()
-            applyLiveModelDefaultsIfNeeded()
-        }
-        .onChange(of: modelCatalog.models) { _, _ in
-            applyLiveModelDefaultsIfNeeded()
         }
     }
 
@@ -550,24 +547,6 @@ struct DocumentWindowView: View {
     private func applyAppAppearance(rawValue: String) {
         AppAppearanceController.apply(rawValue: rawValue)
         appearanceRefreshID = UUID()
-    }
-
-    private func applyLiveModelDefaultsIfNeeded() {
-        let liveDefaultModelID = modelCatalog.defaultModelID()
-        if document.deck.settings.codex.model == CodexModelOption.defaultModelID,
-           liveDefaultModelID != document.deck.settings.codex.model
-        {
-            document.deck.settings.codex.model = liveDefaultModelID
-        }
-
-        document.deck.settings.codex.reasoning = CodexModelOption.normalizedReasoning(
-            document.deck.settings.codex.reasoning,
-            for: document.deck.settings.codex.model,
-            in: modelCatalog.modelOptions(
-                including: document.deck.settings.codex.model,
-                selectedReasoning: document.deck.settings.codex.reasoning
-            )
-        )
     }
 
     private func registerLiveMCPDocument() {
