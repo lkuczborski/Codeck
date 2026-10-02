@@ -59,6 +59,10 @@ jobs:
       - name: Build Swift targets
         timeout-minutes: 5
         run: swift build --jobs 3
+      - name: Register packaged document types
+        run: |
+          script/build_and_run.sh --package
+          /System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister -f dist/Codeck.app
       - name: Run Swift tests
         timeout-minutes: 5
         run: swift test --jobs 3

@@ -3,7 +3,7 @@ set -euo pipefail
 
 MODE="${1:-run}"
 APP_NAME="Codeck"
-BUNDLE_ID="dev.local.Codeck"
+BUNDLE_ID="com.luku.Codeck"
 MIN_SYSTEM_VERSION="14.0"
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -17,7 +17,9 @@ INFO_PLIST="$APP_CONTENTS/Info.plist"
 APP_ICON_SOURCE="$ROOT_DIR/Resources/AppIcon.icns"
 DOCUMENT_ICON_SOURCE="$ROOT_DIR/Resources/DocumentIcon.icns"
 
-pkill -x "$APP_NAME" >/dev/null 2>&1 || true
+if [[ "$MODE" != "--package" && "$MODE" != "package" ]]; then
+  pkill -x "$APP_NAME" >/dev/null 2>&1 || true
+fi
 
 cd "$ROOT_DIR"
 swift build
@@ -62,7 +64,7 @@ cat >"$INFO_PLIST" <<PLIST
       <string>Owner</string>
       <key>LSItemContentTypes</key>
       <array>
-        <string>dev.local.codeck.mdeck</string>
+        <string>com.luku.Codeck.mdeck</string>
       </array>
     </dict>
   </array>
@@ -70,7 +72,7 @@ cat >"$INFO_PLIST" <<PLIST
   <array>
     <dict>
       <key>UTTypeIdentifier</key>
-      <string>dev.local.codeck.mdeck</string>
+      <string>com.luku.Codeck.mdeck</string>
       <key>UTTypeDescription</key>
       <string>Codeck Markdown Deck</string>
       <key>UTTypeIconFile</key>
@@ -99,6 +101,10 @@ open_app() {
 }
 
 case "$MODE" in
+  --package|package)
+    plutil -lint "$INFO_PLIST"
+    echo "App bundle ready: $APP_BUNDLE"
+    ;;
   run)
     open_app
     ;;
@@ -119,7 +125,7 @@ case "$MODE" in
     pgrep -x "$APP_NAME" >/dev/null
     ;;
   *)
-    echo "usage: $0 [run|--debug|--logs|--telemetry|--verify]" >&2
+    echo "usage: $0 [run|--debug|--logs|--telemetry|--verify|--package]" >&2
     exit 2
     ;;
 esac
