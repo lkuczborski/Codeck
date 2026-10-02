@@ -12,7 +12,7 @@
   "interface": {
     "displayName": "Codeck",
     "shortDescription": "Create and edit Codeck presentations",
-    "longDescription": "Open a presentation workspace from the sidebar. Edit highlighted Markdown beside a live preview, iterate using the Codex composer, save .mdeck files, and present fullscreen.",
+    "longDescription": "Create, edit, and present Markdown decks in a dedicated Codex workspace. Edit highlighted Markdown beside a live preview, iterate with the Codex composer, open and save .mdeck files, and present fullscreen. Requires macOS 14 or later. Deck files and drafts stay on your Mac. Live Codex cards use your existing local Codex login and require a network connection to the model service. The Codeck Mac app does not need to be installed or running.",
     "category": "Productivity",
     "capabilities": [
       "Interactive",
@@ -28,7 +28,8 @@
     "logoDark": "./assets/app-icon.png",
     "developerName": "Lukasz Kuczborski",
     "websiteURL": "https://codeck-app.com",
-    "brandColorDark": "#b3f299"
+    "brandColorDark": "#b3f299",
+    "supportURL": "https://github.com/lkuczborski/Codeck/issues"
   },
   "homepage": "https://codeck-app.com",
   "repository": "https://github.com/lkuczborski/Codeck"
