@@ -271,3 +271,15 @@ The Codex app Run button is wired to `./script/build_and_run.sh` through `.codex
 ## Codex presentation workspace
 
 Codeck also includes a local Codex plugin with a sidebar workspace, a split Markdown editor and live preview, the native Codex composer, disk open/save, and fullscreen presentation. See [plugin setup and development](plugins/codeck/README.md). Build it with `script/build_plugin.sh`.
+
+## Release packaging
+
+`script/release.sh` builds universal Apple silicon and Intel binaries, signs the app and MCP executable with Developer ID and hardened runtime, submits the archive to Apple, staples the app, then verifies the extracted archive with Gatekeeper. Signing and notarization run locally; the finished ZIP and SHA-256 file can be uploaded as GitHub release assets. Signing credentials stay in your Keychain.
+
+```sh
+export CODECK_SIGNING_IDENTITY="Developer ID Application: Your Name (TEAMID)"
+export CODECK_NOTARY_PROFILE="your-keychain-profile"
+script/release.sh v0.7
+```
+
+Add `--publish` to tag the current committed revision and publish the verified assets. `--prepare-only` produces a signed candidate while notarization is unavailable and cannot publish a release. `--allow-dirty` is only for local candidate checks. The [Codex plugin](plugins/codeck/README.md) has its own automatic packaging workflow; its CI builds do not use these local signing credentials.

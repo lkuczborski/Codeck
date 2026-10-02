@@ -10,10 +10,10 @@ usage() {
   cat <<'EOF'
 usage: script/release.sh <version> [options]
 
-Build a Codeck macOS release archive matching the GitHub release assets.
+Build, Developer ID sign, notarize, staple, and validate a universal Codeck release.
 
 Arguments:
-  <version>                 Release tag, for example v0.5.
+  <version>                 Release tag, for example v0.7.
 
 Options:
   --notes-file <path>       Release notes Markdown. Supports {{VERSION}},
@@ -21,13 +21,20 @@ Options:
   --previous-tag <tag>      Previous tag for generated notes.
   --publish                 Create an annotated tag, push it, and create the
                             GitHub release with the zip and checksum assets.
+  --signing-identity <name> Developer ID Application identity. Defaults to
+                            CODECK_SIGNING_IDENTITY.
+  --notary-profile <name>   notarytool Keychain profile. Defaults to
+                            CODECK_NOTARY_PROFILE.
+  --prepare-only           Build and sign without submitting to Apple. Cannot
+                            be combined with --publish.
   --skip-tests              Skip swift test.
   --allow-dirty             Allow a dirty worktree for local package drafts.
   -h, --help                Show this help.
 
 Examples:
-  script/release.sh v0.5 --notes-file notes.md
-  script/release.sh v0.5 --notes-file notes.md --publish
+  CODECK_SIGNING_IDENTITY="Developer ID Application: Your Name (TEAMID)" \
+    CODECK_NOTARY_PROFILE="your-profile" script/release.sh v0.7
+  script/release.sh v0.7 --notes-file notes.md --publish
 EOF
 }
 
@@ -59,6 +66,9 @@ PREVIOUS_TAG=""
 PUBLISH=0
 SKIP_TESTS=0
 ALLOW_DIRTY=0
+PREPARE_ONLY=0
+SIGNING_IDENTITY="${CODECK_SIGNING_IDENTITY:-}"
+NOTARY_PROFILE="${CODECK_NOTARY_PROFILE:-}"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -74,6 +84,20 @@ while [[ $# -gt 0 ]]; do
       ;;
     --publish)
       PUBLISH=1
+      shift
+      ;;
+    --signing-identity)
+      [[ $# -ge 2 ]] || die "--signing-identity requires a value"
+      SIGNING_IDENTITY="$2"
+      shift 2
+      ;;
+    --notary-profile)
+      [[ $# -ge 2 ]] || die "--notary-profile requires a value"
+      NOTARY_PROFILE="$2"
+      shift 2
+      ;;
+    --prepare-only)
+      PREPARE_ONLY=1
       shift
       ;;
     --skip-tests)
@@ -100,11 +124,19 @@ while [[ $# -gt 0 ]]; do
 done
 
 [[ -n "$VERSION" ]] || die "version is required"
-[[ "$VERSION" =~ ^v[0-9]+([.][0-9]+)*$ ]] || die "version must look like v0.5"
+[[ "$VERSION" =~ ^v[0-9]+([.][0-9]+){0,2}$ ]] || die "version must have one to three numeric components, such as v0.7"
 
 if [[ -n "$NOTES_FILE" ]]; then
   [[ "$NOTES_FILE" = /* ]] || NOTES_FILE="$PWD/$NOTES_FILE"
   [[ -f "$NOTES_FILE" ]] || die "notes file does not exist: $NOTES_FILE"
+fi
+
+[[ "$SIGNING_IDENTITY" == "Developer ID Application:"* ]] || die "set CODECK_SIGNING_IDENTITY or pass --signing-identity with a Developer ID Application identity"
+if (( ! PREPARE_ONLY )); then
+  [[ -n "$NOTARY_PROFILE" ]] || die "set CODECK_NOTARY_PROFILE or pass --notary-profile"
+fi
+if (( PUBLISH && PREPARE_ONLY )); then
+  die "--publish requires notarization; remove --prepare-only"
 fi
 
 if (( PUBLISH && ALLOW_DIRTY )); then
@@ -121,6 +153,16 @@ require_command ditto
 require_command lipo
 require_command plutil
 require_command shasum
+require_command security
+require_command xcrun
+require_command spctl
+
+security find-identity -v -p codesigning | grep -F -- "\"$SIGNING_IDENTITY\"" >/dev/null \
+  || die "Developer ID signing identity is unavailable: $SIGNING_IDENTITY"
+if (( ! PREPARE_ONLY )); then
+  xcrun notarytool history --keychain-profile "$NOTARY_PROFILE" >/dev/null \
+    || die "Apple notarization preflight failed; check the Keychain profile and developer team agreements"
+fi
 
 if (( PUBLISH )); then
   require_command gh
@@ -137,6 +179,12 @@ if [[ -z "$PREVIOUS_TAG" ]]; then
 fi
 
 COMMIT="$(git rev-parse --short HEAD)"
+APP_VERSION="${VERSION#v}"
+case "$APP_VERSION" in
+  *.*.*) ;;
+  *.*) APP_VERSION="$APP_VERSION.0" ;;
+  *) APP_VERSION="$APP_VERSION.0.0" ;;
+esac
 RELEASE_ROOT="$ROOT_DIR/dist/release"
 STAGE_ROOT="$RELEASE_ROOT/$VERSION"
 PACKAGE_NAME="$APP_NAME-$VERSION-macos-universal"
@@ -180,6 +228,10 @@ write_info_plist() {
   <string>$APP_NAME</string>
   <key>CFBundleIdentifier</key>
   <string>$BUNDLE_ID</string>
+  <key>CFBundleShortVersionString</key>
+  <string>$APP_VERSION</string>
+  <key>CFBundleVersion</key>
+  <string>$APP_VERSION</string>
   <key>CFBundleName</key>
   <string>$APP_NAME</string>
   <key>CFBundleIconFile</key>
@@ -250,7 +302,11 @@ generate_notes() {
 
     echo "Download"
     echo "- \`$ZIP_NAME\` contains \`Codeck.app\` and \`$MCP_NAME\` for Apple Silicon and Intel Macs."
-    echo "- The app and CLI are ad-hoc signed but not notarized."
+    if (( PREPARE_ONLY )); then
+      echo "- Release candidate: Developer ID signed; Apple notarization is pending."
+    else
+      echo "- Developer ID signed and accepted by Apple notarization; the app has a stapled ticket."
+    fi
     echo "- \`$SHA_NAME\` contains the SHA-256 checksum."
     echo
     echo "Requirements"
@@ -265,6 +321,9 @@ generate_notes() {
       echo "- \`swift test\` passed."
     fi
     echo "- \`codesign --verify --deep --strict\` passed for \`Codeck.app\`."
+    if (( ! PREPARE_ONLY )); then
+      echo "- Stapled ticket and Gatekeeper checks passed on the extracted app."
+    fi
     echo "- Extracted archive verification passed."
     echo "- SHA-256: \`$ZIP_SHA\`."
   } >"$NOTES_PATH"
@@ -328,13 +387,19 @@ cp "$BUILD_DIR/$MCP_NAME" "$MCP_BINARY"
 chmod +x "$APP_BINARY" "$MCP_BINARY"
 cp "$ROOT_DIR/Resources/AppIcon.icns" "$APP_RESOURCES/AppIcon.icns"
 cp "$ROOT_DIR/Resources/DocumentIcon.icns" "$APP_RESOURCES/DocumentIcon.icns"
+cp "$ROOT_DIR/LICENSE" "$PACKAGE_DIR/LICENSE"
+cp "$ROOT_DIR/LICENSE" "$APP_RESOURCES/LICENSE"
 write_info_plist
 plutil -lint "$INFO_PLIST" >/dev/null
 
-codesign --force --deep --sign - "$APP_BUNDLE" >/dev/null
-codesign --force --sign - "$MCP_BINARY" >/dev/null
+codesign --force --sign "$SIGNING_IDENTITY" --options runtime --timestamp "$MCP_BINARY"
+codesign --force --sign "$SIGNING_IDENTITY" --options runtime --timestamp "$APP_BUNDLE"
 codesign --verify --deep --strict "$APP_BUNDLE"
 codesign --verify --strict "$MCP_BINARY"
+for binary in "$APP_BUNDLE" "$MCP_BINARY"; do
+  codesign -dvvv "$binary" 2>&1 | grep -E 'flags=.*runtime' >/dev/null \
+    || die "hardened runtime is missing: $binary"
+done
 
 rm -f "$ZIP_PATH" "$SHA_PATH"
 find "$PACKAGE_DIR" -name .DS_Store -delete
@@ -342,6 +407,21 @@ find "$PACKAGE_DIR" -name .DS_Store -delete
   cd "$STAGE_ROOT"
   ditto -c -k --norsrc --noextattr --keepParent "$PACKAGE_NAME" "$ZIP_PATH"
 )
+if (( ! PREPARE_ONLY )); then
+  NOTARY_RESULT="$STAGE_ROOT/notarization.plist"
+  xcrun notarytool submit "$ZIP_PATH" --keychain-profile "$NOTARY_PROFILE" --wait --output-format plist >"$NOTARY_RESULT"
+  NOTARY_STATUS="$(plutil -extract status raw "$NOTARY_RESULT")"
+  [[ "$NOTARY_STATUS" == "Accepted" ]] || die "Apple notarization status: $NOTARY_STATUS; see $NOTARY_RESULT"
+  xcrun stapler staple "$APP_BUNDLE"
+  xcrun stapler validate "$APP_BUNDLE"
+  spctl --assess --type execute --verbose=4 "$APP_BUNDLE"
+  # The release archive must contain the stapled app, not the original submission.
+  rm -f "$ZIP_PATH"
+  (
+    cd "$STAGE_ROOT"
+    ditto -c -k --norsrc --noextattr --keepParent "$PACKAGE_NAME" "$ZIP_PATH"
+  )
+fi
 (
   cd "$RELEASE_ROOT"
   shasum -a 256 "$ZIP_NAME" >"$SHA_PATH"
@@ -354,6 +434,10 @@ TEMP_PATHS+=("$VERIFY_DIR")
 ditto -x -k "$ZIP_PATH" "$VERIFY_DIR"
 codesign --verify --deep --strict "$VERIFY_DIR/$PACKAGE_NAME/$APP_NAME.app"
 codesign --verify --strict "$VERIFY_DIR/$PACKAGE_NAME/$MCP_NAME"
+if (( ! PREPARE_ONLY )); then
+  xcrun stapler validate "$VERIFY_DIR/$PACKAGE_NAME/$APP_NAME.app"
+  spctl --assess --type execute --verbose=4 "$VERIFY_DIR/$PACKAGE_NAME/$APP_NAME.app"
+fi
 
 if (( PUBLISH )); then
   publish_release
