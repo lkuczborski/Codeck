@@ -29,6 +29,19 @@ test('publication bootstraps a separate branch, removes stale package files, and
   const remote = path.join(directory, 'remote.git');
   const source = path.join(directory, 'source');
   const pack = path.join(directory, 'package');
+  // Apple service calls are isolated; this test exercises the real receipt,
+  // source-revision, Git publication, and executable-permission checks.
+  const commands = path.join(directory, 'commands');
+  await mkdir(commands);
+  for (const [name, output] of Object.entries({
+    codesign: 'Authority=Developer ID Application: Release test\nflags=0x10000(runtime)\nTimestamp=Test timestamp\n',
+    plutil: 'com.luku.Codeck.workspace\n', xcrun: '', spctl: '',
+  })) {
+    const file = path.join(commands, name);
+    await writeFile(file, '#!/bin/bash\ncat <<\'OUTPUT\'\n' + output + '\nOUTPUT\n');
+    await chmod(file, 0o755);
+  }
+  const publishEnvironment = { ...process.env, GH_TOKEN: '', PATH: `${commands}:${process.env.PATH}` };
   const git = (args, cwd = source) => run('git', args, { cwd, env: { ...process.env, GH_TOKEN: '' } });
   await run('git', ['init', '--bare', '-q', remote]);
   await run('git', ['init', '-q', '-b', 'main', source]);
@@ -41,6 +54,8 @@ test('publication bootstraps a separate branch, removes stale package files, and
   await git(['push', '-q', 'origin', 'main']);
   const sha = (await git(['rev-parse', 'HEAD'])).stdout.trim();
   await mkdir(path.join(pack, 'codeck-plugin/scripts'), { recursive: true });
+  await mkdir(path.join(pack, 'codeck-plugin/.codex-plugin'), { recursive: true });
+  await writeFile(path.join(pack, 'codeck-plugin/.codex-plugin/plugin.json'), JSON.stringify({ version: '0.1.0' }));
   await mkdir(path.join(pack, '.agents/plugins'), { recursive: true });
   await writeFile(path.join(pack, 'codeck-plugin/scripts/run-server.sh'), '#!/bin/bash\nexit 0\n');
   await chmod(path.join(pack, 'codeck-plugin/scripts/run-server.sh'), 0o755);
@@ -49,7 +64,17 @@ test('publication bootstraps a separate branch, removes stale package files, and
     name: 'codeck-local', interface: { displayName: 'Codeck Local' },
     plugins: [{ name: 'codeck', source: { source: 'local', path: './codeck-plugin' } }],
   }));
-  const publish = commit => run('bash', [publisher, pack, remote, commit], { env: { ...process.env, GH_TOKEN: '' } });
+  const publish = commit => run('bash', [publisher, pack, remote, commit], { env: publishEnvironment });
+  const receipt = async commit => {
+    await writeFile(path.join(pack, 'SOURCE_COMMIT'), commit + '\n');
+    await writeFile(path.join(pack, 'NOTARIZATION.json'), JSON.stringify({ status: 'Accepted', id: 'test-submission', sourceCommit: commit }));
+  };
+  await assert.rejects(publish(sha), /NOTARIZATION.json/);
+  await receipt(sha);
+  await writeFile(path.join(pack, 'NOTARIZATION.json'), JSON.stringify({ status: 'Invalid', id: 'test-submission', sourceCommit: sha }));
+  await assert.rejects(publish(sha), /accepted notarization receipt/);
+  await receipt(sha);
+  await assert.rejects(publish('0'.repeat(40)), /source commit does not match/);
   await publish(sha);
   const tip = async () => (await git(['ls-remote', 'origin', 'refs/heads/codex/plugin-distribution'])).stdout.trim().split(/\s/)[0];
   const first = await tip();
@@ -71,6 +96,9 @@ test('publication bootstraps a separate branch, removes stale package files, and
   const nextSHA = (await git(['rev-parse', 'HEAD'])).stdout.trim();
   assert.match((await publish(sha)).stdout, /Skipping publication/);
   assert.equal(await tip(), first);
+  await receipt(nextSHA);
+  await assert.rejects(publish(nextSHA), /Bump the plugin version/);
+  await writeFile(path.join(pack, 'codeck-plugin/.codex-plugin/plugin.json'), JSON.stringify({ version: '0.1.1' }));
   await publish(nextSHA);
   assert.notEqual(await tip(), first);
   await git(['pull', '-q', '--ff-only'], installed);

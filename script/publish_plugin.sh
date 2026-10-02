@@ -1,12 +1,17 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Run only after tests pass. The package archive contains codeck-plugin/ and a
+# Run locally after tests and notarization pass. The package contains codeck-plugin/ and a
 # local marketplace catalog; no source tree or installed credentials are copied.
 PACKAGE_ROOT="${1:?Provide the extracted package directory}"
 RELEASE_REMOTE="${2:?Provide the destination repository URL}"
 SOURCE_COMMIT="${3:?Provide the tested source commit}"
 DISTRIBUTION_REF="codex/plugin-distribution"
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+PACKAGE_ROOT="$(cd "$PACKAGE_ROOT" && pwd)"
+"$ROOT_DIR/script/verify_plugin.sh" "$PACKAGE_ROOT"
+[[ "$(cat "$PACKAGE_ROOT/SOURCE_COMMIT")" == "$SOURCE_COMMIT" ]] \
+  || { echo 'The package source commit does not match the requested publication' >&2; exit 1; }
 
 RELEASE_DIRECTORY="$(mktemp -d "${TMPDIR:-/tmp}/codeck-publish.XXXXXX")"
 trap 'rm -rf "$RELEASE_DIRECTORY"' EXIT
@@ -26,6 +31,16 @@ fi
 if [[ -n "$(git ls-remote origin "refs/heads/$DISTRIBUTION_REF")" ]]; then
   git fetch -q --depth=1 origin "$DISTRIBUTION_REF"
   git checkout -q -b "$DISTRIBUTION_REF" FETCH_HEAD
+  node --input-type=module - "$PACKAGE_ROOT" "$SOURCE_COMMIT" <<'JS'
+import { readFileSync } from 'node:fs';
+const [packageRoot, commit] = process.argv.slice(2);
+const manifest = 'codeck-plugin/.codex-plugin/plugin.json';
+const oldVersion = JSON.parse(readFileSync(manifest, 'utf8')).version;
+const newVersion = JSON.parse(readFileSync(`${packageRoot}/${manifest}`, 'utf8')).version;
+if (oldVersion === newVersion && readFileSync('SOURCE_COMMIT', 'utf8').trim() !== commit) {
+  throw new Error('Bump the plugin version before publishing changed source');
+}
+JS
   git rm -q -r --ignore-unmatch .
 else
   git checkout -q --orphan "$DISTRIBUTION_REF"
@@ -42,8 +57,9 @@ catalog.interface.displayName = 'Codeck Plugins';
 await writeFile(file, JSON.stringify(catalog, null, 2) + '\n');
 JS
 printf '%s\n' "$SOURCE_COMMIT" > SOURCE_COMMIT
-git config user.name 'github-actions[bot]'
-git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+cp "$PACKAGE_ROOT/NOTARIZATION.json" NOTARIZATION.json
+git config user.name 'Codeck releases'
+git config user.email 'noreply@codeck-app.com'
 git add .
 if git diff --cached --quiet; then
   echo 'The tested package is already published.'
