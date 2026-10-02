@@ -42,6 +42,7 @@ jobs:
     timeout-minutes: 30
     env:
       CODECK_PLUGIN_BUILD_NUMBER: ${{ github.run_number }}
+      DEVELOPER_DIR: /Applications/Xcode_26.3.app/Contents/Developer
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
@@ -51,10 +52,16 @@ jobs:
           node-version: '24'
           cache: npm
           cache-dependency-path: plugins/codeck/package-lock.json
-      - name: Build and test Swift targets
+      - name: Check Swift toolchain
         run: |
-          swift build
-          swift test
+          xcodebuild -version
+          swift --version
+      - name: Build Swift targets
+        timeout-minutes: 5
+        run: swift build --jobs 3
+      - name: Run Swift tests
+        timeout-minutes: 5
+        run: swift test --jobs 3
       - name: Build plugin package
         run: script/build_plugin.sh
       - name: Check TypeScript and plugin integration
