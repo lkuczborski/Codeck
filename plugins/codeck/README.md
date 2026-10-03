@@ -133,7 +133,7 @@ For a custom source build that needs additional roots for direct MCP file operat
 }
 ```
 
-Relative deck paths resolve against the presentation working directory. The library shows the configured roots. Selecting a file in the native Open or Save panel grants that exact canonical file persistently, without granting its parent directory. Canonical path checks include symlink destinations. The standalone `codeck-mcp` executable still defaults to its launch directory. The UI bundle comes from the trusted plugin package; file-reading tools remain scoped to the allowed roots.
+Relative deck paths resolve against the presentation working directory. The library shows the configured roots. Selecting a file in the native Open or Save panel grants that exact canonical file persistently, without granting its parent directory. Picker approvals are stored in macOS Keychain, scoped to the configured presentation root. Workspace JSON cannot grant access to another file. Older development builds stored approvals in `picked-files.json`; those entries are ignored, so select affected files again in the native panel. Canonical path checks include symlink destinations. The standalone `codeck-mcp` executable still defaults to its launch directory. The UI bundle comes from the trusted plugin package; file-reading tools remain scoped to the allowed roots.
 
 Drafts and disk fingerprints live in `.codeck-workspaces/` under the first allowed root, with one JSON file per stable workspace UUID. Set `CODECK_WORKSPACE_STORAGE` to relocate this directory **within an allowed root**. Keep that directory to preserve drafts across reinstallations. Cross-process file locking and expected revisions protect concurrent editing. A clean workspace follows file MCP or disk changes; a dirty one preserves its draft and reports a disk conflict. If Codex changes the draft while editor changes are pending, the UI offers **Keep as new draft** or **Load latest**.
 
@@ -153,6 +153,8 @@ npm run preview
 ```
 
 The loopback-only development host is `http://127.0.0.1:4179`. It runs the real Swift MCP server and records iteration messages without invoking a model. Add `?deck=Examples/SyntaxHighlighting.mdeck&theme=light` to open a specific deck and initial appearance. The development host has an appearance selector for testing live theme changes. Its HTTP bridge requires a per-process nonce and checks Origin/Host. Set `CODECK_PREVIEW_PORT` or `CODECK_MCP_EXECUTABLE` to change its port/executable.
+
+To verify the protected grant store against the native Keychain, run `CODECK_TEST_KEYCHAIN=1 swift test --filter PickedFileGrantsTests/testNativeKeychainGrantRoundTrip` from the repository root. This creates and removes one isolated test item; ordinary regression tests use an injected store.
 
 Tests cover source ranges and fenced separators, prompt context, HTML packaging, MCP extension metadata, render parity, image access, persistence, revisions, legacy draft compatibility, disk conflicts, Save As collisions, and symlink escape checks. Actual sidebar placement and composer behavior should additionally be smoke-tested in the installed host after restart; the development host does not verify Codex's navigation UI.
 
