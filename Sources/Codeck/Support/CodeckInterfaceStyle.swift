@@ -36,11 +36,15 @@ extension View {
 
     @ViewBuilder
     func codeckNativeNavigationPickerStyle() -> some View {
-        if #available(macOS 27.0, *) {
-            pickerStyle(.tabs)
-        } else {
+        #if compiler(>=6.4)
+            if #available(macOS 27.0, *) {
+                pickerStyle(.tabs)
+            } else {
+                pickerStyle(.segmented)
+            }
+        #else
             pickerStyle(.segmented)
-        }
+        #endif
     }
 
     @ViewBuilder
