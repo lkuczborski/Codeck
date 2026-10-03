@@ -48,4 +48,11 @@ final class CodexModelCatalogStore: ObservableObject {
         )
         return [savedModel] + models
     }
+
+    func normalizedSettings(_ settings: DeckCodexSettings) -> DeckCodexSettings {
+        guard !isRefreshing, errorMessage == nil, models.contains(where: { $0.id == settings.model }) else { return settings }
+        var result = settings
+        result.reasoning = CodexModelOption.normalizedReasoning(settings.reasoning, for: settings.model, in: models)
+        return result
+    }
 }

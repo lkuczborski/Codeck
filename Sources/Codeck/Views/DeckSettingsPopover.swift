@@ -56,6 +56,10 @@ struct DeckSettingsPopover: View {
         .codeckWorkspaceBackground()
         .task {
             await modelCatalog.refresh()
+            settings.codex = modelCatalog.normalizedSettings(settings.codex)
+        }
+        .onChange(of: modelCatalog.isRefreshing) { _, isRefreshing in
+            if !isRefreshing { settings.codex = modelCatalog.normalizedSettings(settings.codex) }
         }
     }
 

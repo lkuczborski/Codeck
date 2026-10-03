@@ -144,6 +144,10 @@ struct DocumentWindowView: View {
         }
         .task {
             await modelCatalog.refresh()
+            document.deck.settings.codex = modelCatalog.normalizedSettings(document.deck.settings.codex)
+        }
+        .onChange(of: modelCatalog.isRefreshing) { _, isRefreshing in
+            if !isRefreshing { document.deck.settings.codex = modelCatalog.normalizedSettings(document.deck.settings.codex) }
         }
     }
 
