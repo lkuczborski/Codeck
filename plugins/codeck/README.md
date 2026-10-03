@@ -1,30 +1,67 @@
 # Codeck for Codex
 
-A local macOS plugin with a dedicated presentation workspace. The UI registers a **global sidebar entry** and a **conversation panel entry** using the [OpenAI MCP Extensions API](https://developers.openai.com/plugins/build/extensions). Hosts that implement these extensions open Codeck as a permanent app tab with a composer. Older MCP Apps hosts can open the same editor from `open_workspace` in a chat.
+A local macOS plugin that lets you create, edit, save, and present Markdown decks inside Codex. In Codex desktop, Codeck has its own sidebar workspace with a split editor and live preview, native file panels, fullscreen presentation, and the native Codex composer for iteration. Codex CLI can use its deck skills and MCP tools; the visual workspace requires the desktop app.
 
-## Install the prebuilt plugin
+## Requirements
 
-After the first locally notarized release from `main`, users on Apple silicon Macs can install from this repository without Swift, Node, npm, or the Codeck app:
+- Apple silicon Mac running macOS 14 or later for the prebuilt marketplace package. Intel Macs can build from source; Windows and Linux are not supported.
+- A current Codex desktop app with support for workspace extensions, or a Codex CLI supporting `codex plugin` for tools and skills.
+- An active Codex login and network access for live cards and Codex iteration. The plugin uses the installed Codex executable, including the copy bundled with the desktop app.
+- For terminal installation, `codex` and Git must be available in your terminal, with network access to the public GitHub repository.
+
+The Codeck Mac app does not need to be installed or running. Users do not need Swift, Node, npm, a separate OpenAI API key, or manual MCP server configuration. The package includes its native workspace helper, editor UI, icons, licenses, and skills. Release helpers are Developer ID signed and notarized by Apple; users do not perform signing or notarization.
+
+## Install from the repository marketplace
+
+These commands become usable after the first notarized plugin publication from `main`. Merging the source branch alone does not create the marketplace package.
+
+### Codex CLI
 
 ```sh
 codex plugin marketplace add lkuczborski/Codeck
 codex plugin add codeck@codeck-plugins
 ```
 
-Restart Codex and open **Codeck** in the sidebar. To update:
+Start a new CLI session to load the installed skills and tools. Ask Codex to create or edit a Codeck deck. The CLI plugin browser is available through `/plugins`.
+
+### Codex desktop
+
+Run the two commands above, restart Codex desktop, and open **Codeck** in the sidebar. With the default Codex profile on the same Mac, the CLI and desktop share the installed plugin. A different `CODEX_HOME` or profile can use a separate configuration.
+
+To install through the desktop plugin browser, run only:
+
+```sh
+codex plugin marketplace add lkuczborski/Codeck
+```
+
+Restart Codex, open **Plugins**, choose **Codeck Plugins**, open **Codeck**, and install it. Start a new chat to use `@Codeck`, or open its sidebar workspace. This is a custom repository marketplace; publishing it does not automatically add Codeck to OpenAI's public Plugins Directory.
+
+Codex downloads the prebuilt package from `codex/plugin-distribution` and installs a local copy. Users do not need to clone the source, download CI artifacts, or run a build script. See the [official marketplace guide](https://developers.openai.com/plugins/build/plugins#add-a-marketplace-from-the-cli) for supported sources and configuration.
+
+## Update or uninstall
+
+To install a newly published version:
 
 ```sh
 codex plugin marketplace upgrade codeck-plugins
 codex plugin add codeck@codeck-plugins
 ```
 
-Restart Codex after updating. Marketplace releases use Developer ID signing and Apple notarization. Intel Macs can use the source build until a compatible prebuilt release is available.
+Then restart Codex desktop or start a new CLI session. This sequence explicitly refreshes the marketplace and installs its current package. Codex can also refresh configured plugins during marketplace refresh; the explicit install command ensures the selected package is installed. The app loads an installed copy, so editing source files does not refresh its displayed metadata or runtime.
+
+Personal repository installs have no documented plugin-level setting that guarantees automatic update checks. Keep using the commands above unless your Codex host provides an automatic update option. Workspace-admin marketplace imports have a separate [daily sync mechanism](https://learn.chatgpt.com/docs/enterprise/plugin-management#keep-plugins-up-to-date); that schedule does not establish an automatic update guarantee for a personal CLI marketplace.
+
+To uninstall:
+
+```sh
+codex plugin remove codeck@codeck-plugins
+```
+
+Deck files and persisted drafts remain in their storage folder outside the plugin package.
 
 ## Build and install locally
 
-Requires macOS 14+, Swift 6, Node 20+, and npm. The Codeck app does not need to be running. The plugin bundles a native workspace helper, uses the installed Codex executable and login for live cards, and uses the native Codex composer for deck iteration. No OpenAI API key is needed.
-
-From the repository root:
+Run script commands from the repository root. Source builds require macOS 14+, a compatible Swift 6 toolchain, Node 20+, and npm. They produce an ad hoc signed development package for the build machine's architecture.
 
 ```sh
 script/build_plugin.sh
@@ -32,11 +69,16 @@ codex plugin marketplace add ./dist
 codex plugin add codeck@codeck-local
 ```
 
-Restart Codex after installation or plugin updates, then open **Codeck** in the sidebar. If the host doesn't expose the sidebar extension yet, start a new chat and ask **“Open the Codeck presentation workspace.”** The permanent sidebar tab is host-controlled; this plugin doesn't modify Codex itself or add a fake sidebar link.
+Restart Codex desktop or start a new CLI session. Rebuild and run `codex plugin add codeck@codeck-local` again after local source or metadata changes. Local builds use **Codeck Local** (`codeck-local`); published packages use **Codeck Plugins** (`codeck-plugins`).
 
-The plugin registers its MCP server as `codeck-workspace` so an existing `mcp_servers.codeck` connection for the native app cannot override it. If the sidebar entry is missing, check MCP startup errors for `codeck-workspace`; the plugin skill loading alone does not confirm that its server started.
+The repository's `.agents/plugins/marketplace.json` points at the prebuilt package on `codex/plugin-distribution`. Generated executable and UI assets stay outside the source branch; source files and development dependencies live in `plugins/codeck/`. The plugin uses `.codex-plugin/plugin.json` and registers its MCP server as `codeck-workspace`.
 
-The repo marketplace is `.agents/plugins/marketplace.json` and uses **Codeck Plugins** (`codeck-plugins`). It points at the tested package on the separate `codex/plugin-distribution` branch. Local builds create a separate `codeck-local` marketplace under `dist/`. The plugin uses the supported `.codex-plugin/plugin.json` compatibility format. Generated executable and UI assets are excluded from the source branch. `script/build_plugin.sh` packages only the Swift MCP executable, self-contained HTML, license notices, metadata, and skill; installed users don't need npm or Swift at runtime. Source files and development dependencies stay in `plugins/codeck/`. Rebuild and reinstall after local source changes.
+## Troubleshooting
+
+- **No Codeck marketplace:** run `codex plugin marketplace list`, confirm `codeck-plugins` is registered, and restart the desktop app. A published distribution branch must exist before the remote package can be installed.
+- **No sidebar workspace:** confirm Codeck is installed and enabled, restart Codex, and check MCP startup errors for `codeck-workspace`. A loaded skill alone does not confirm that the native helper started. Hosts without the workspace extension can open the editor from a new chat by asking “Open the Codeck presentation workspace.”
+- **Old name, metadata, or UI:** refresh the marketplace and run `plugin add` again, then restart Codex. For a local source build, rebuild the package first. Published source changes need a new plugin version and a release.
+- **Live cards do not run:** check the installed Codex executable and login, network access, and whether the selected model is available to your account. Fence settings override deck settings; otherwise cards default to GPT-6.1 Sol with Light reasoning.
 
 ## Automatic packaging
 
@@ -48,7 +90,11 @@ CI packages receive development versions such as `0.3.7-build.42` using the work
 
 ## Release from your Mac
 
-Bump `.codex-plugin/plugin.json`, `package.json`, and `package-lock.json` together for a new plugin version, commit the source, and merge to `main`. From a clean checkout of that merged commit, run:
+Publishing requires an Apple silicon Mac with the source-build tools, a Developer ID Application certificate and private key in Keychain, a working `notarytool` Keychain profile, and GitHub Git authentication with permission to push the distribution branch.
+
+Merge before publishing: the release script rejects source that does not match remote `main`.
+
+Bump `plugins/codeck/.codex-plugin/plugin.json`, `plugins/codeck/package.json`, and `plugins/codeck/package-lock.json` together for a new plugin version, commit the source, and merge to `main`. Update your local checkout to that merged commit. From the clean repository root, run:
 
 ```sh
 export CODECK_SIGNING_IDENTITY="Developer ID Application: Your Name (TEAMID)"
@@ -56,7 +102,7 @@ export CODECK_NOTARY_PROFILE="your-profile"
 script/release_plugin.sh --publish
 ```
 
-This builds and tests the plugin locally, signs its MCP executable and workspace helper with Developer ID and hardened runtime, submits them to Apple, staples the helper, and verifies the extracted ZIP with Gatekeeper. Publication requires the tested source to match the current remote `main`. Omit `--publish` to produce a notarized candidate from a feature branch. There is no need to download a CI build. The ZIP and checksum remain in `dist/plugin-release/<version>/` and can also be attached to a GitHub release.
+This builds and tests the plugin locally, signs its MCP executable and workspace helper with Developer ID and hardened runtime, submits them to Apple, staples the helper, and verifies the extracted ZIP with Gatekeeper. Publication requires the tested source to match the current remote `main`. Omit `--publish` to produce a notarized candidate from a feature branch. There is no need to download a CI build. The ZIP and checksum remain in `dist/plugin-release/<version>/`. The script publishes the marketplace branch; it does not create a GitHub release or upload ZIP assets. Those files can be attached to a GitHub release separately.
 
 Publication updates `codex/plugin-distribution` with only the prebuilt plugin, marketplace catalog, `SOURCE_COMMIT`, and notarization receipt. It creates the branch on the first release, uses ordinary pushes, and rejects packages without a valid Developer ID signature and accepted notarization. Your existing GitHub authentication must allow pushing this branch. Source stays on `main`; no signing keys or Apple credentials are uploaded.
 
@@ -77,7 +123,9 @@ The preview shares CodeckCore's parser, themes, Markdown renderer, and syntax hi
 
 ## File access and persistence
 
-The plugin launcher defaults to `~/Documents/Codeck` and creates that presentation folder if needed. Drafts stay outside the installed plugin package. Set `CODECK_MCP_ALLOWED_ROOTS` to a colon-separated list of absolute folders to open/save elsewhere; the first folder becomes the working directory. Set `CODECK_MCP_WORKING_DIRECTORY` to choose a different working directory within those roots. Configure these in `plugins/codeck/.mcp.json` server `env`, rebuild, then install, for example:
+The plugin launcher defaults to `~/Documents/Codeck` and creates that presentation folder if needed. Open and Save use native macOS panels, which grant access to the selected file; ordinary use does not require editing configuration. Drafts stay outside the installed plugin package.
+
+For a custom source build that needs additional roots for direct MCP file operations, set `CODECK_MCP_ALLOWED_ROOTS` to a colon-separated list of absolute folders to open/save elsewhere; the first folder becomes the working directory. Set `CODECK_MCP_WORKING_DIRECTORY` to choose a different working directory within those roots. Configure these in `plugins/codeck/.mcp.json` server `env`, rebuild, then install, for example:
 
 ```json
 "env": {
