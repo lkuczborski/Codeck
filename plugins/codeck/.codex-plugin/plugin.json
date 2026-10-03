@@ -3,7 +3,7 @@
   "version": "0.3.7",
   "description": "Create, edit, and present Markdown decks in a dedicated Codex workspace.",
   "author": {
-    "name": "Lukasz Kuczborski",
+    "name": "Łukasz Kuczborski",
     "url": "https://codeck-app.com"
   },
   "license": "MIT",
@@ -26,7 +26,7 @@
     "composerIcon": "./assets/app-icon.png",
     "logo": "./assets/app-icon.png",
     "logoDark": "./assets/app-icon.png",
-    "developerName": "Lukasz Kuczborski",
+    "developerName": "Łukasz Kuczborski",
     "websiteURL": "https://codeck-app.com",
     "brandColorDark": "#b3f299",
     "supportURL": "https://github.com/lkuczborski/Codeck/issues"
