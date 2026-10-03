@@ -24,13 +24,13 @@ final class CodeckWorkspaceTools: @unchecked Sendable {
         ]
         var open = tool(
             "open_workspace",
-            "Open Codeck's presentation workspace. Empty arguments open the library; path opens a disk deck; markdown creates a persistent draft.",
+            "Create and edit Codeck presentations",
             behavior: .localChange,
             properties: [
-                "path": stringSchema("Existing deck path within allowed roots."),
-                "markdown": stringSchema("Initial full Markdown for a new draft."),
+                "path": stringSchema("Open an existing deck at this path within allowed roots."),
+                "markdown": stringSchema("Create a persistent draft with this initial full Markdown."),
                 "title": stringSchema("New draft title."),
-                "workspace_id": identity["workspace_id"]!,
+                "workspace_id": stringSchema("Reopen an existing workspace UUID. Omit all arguments to open the presentation library."),
             ]
         )
         open["title"] = "Codeck"
