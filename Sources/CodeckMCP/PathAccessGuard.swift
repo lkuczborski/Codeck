@@ -5,9 +5,9 @@ struct PathAccessGuard {
     let allowedRoots: [URL]
     private let pickedFiles: PickedFileGrants
 
-    init(allowedRoots: [URL]) {
+    init(allowedRoots: [URL], grantStorage: any PickedFileGrantStorage = KeychainFileGrantStorage()) {
         self.allowedRoots = allowedRoots.map(Self.canonicalURLPreservingMissingPath)
-        pickedFiles = PickedFileGrants(directory: self.allowedRoots[0].appendingPathComponent(".codeck-workspaces"))
+        pickedFiles = PickedFileGrants(directory: self.allowedRoots[0], storage: grantStorage)
     }
 
     /// Called only after an NSOpenPanel/NSSavePanel returns the user's selection.
@@ -16,7 +16,9 @@ struct PathAccessGuard {
         guard ["mdeck", "md", "markdown"].contains(canonical.pathExtension.lowercased()) else {
             throw CodeckMCPError.invalidParams("Choose a Markdown presentation file.")
         }
-        try pickedFiles.grant(canonical.path)
+        if !allowedRoots.contains(where: { canonical.isInside($0) }) {
+            try pickedFiles.grant(canonical.path)
+        }
         return canonical
     }
 
