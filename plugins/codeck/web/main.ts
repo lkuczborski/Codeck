@@ -13,7 +13,7 @@ import { activeFormatting, formatEdit, insertionEdit, insertions, type Format } 
 import './style.css';
 
 type Slide = { index: number; title: string; markdown: string; html?: string; blocks?: { id: string; title: string }[] };
-type Workspace = { id: string; title: string; markdown: string; path?: string; revision: number; dirty: boolean; diskConflict: boolean; slides: Slide[]; theme: string };
+type Workspace = { id: string; title: string; markdown: string; path?: string; revision: number; dirty: boolean; diskConflict: boolean; diskAccessRequired?: boolean; slides: Slide[]; theme: string };
 type Preview = { theme: string; slides: Slide[] };
 type Recent = { id: string; title: string; path?: string; dirty: boolean };
 type ToolResult = { structuredContent?: Record<string, unknown>; _meta?: Record<string, unknown> };
@@ -82,9 +82,10 @@ function serial<T>(operation: () => Promise<T>): Promise<T> {
 }
 
 function status(message?: string, error = false) {
-  $('sync-status').textContent = message ?? (state?.diskConflict ? 'Disk changed · save a copy or reload' : sourceChanged ? 'Local edits pending' : 'Draft kept automatically');
+  $('sync-status').textContent = message ?? (state?.diskAccessRequired ? 'Draft preserved · reopen the file to restore disk access' : state?.diskConflict ? 'Disk changed · save a copy or reload' : sourceChanged ? 'Local edits pending' : 'Draft kept automatically');
   $('sync-dot').classList.toggle('error', error || !!state?.diskConflict);
-  $('deck-status').textContent = !state ? '' : state.diskConflict ? 'Disk conflict · draft preserved' : state.path ? `${state.dirty || sourceChanged ? 'Unsaved changes · ' : 'Saved · '}${state.path.split('/').pop()}` : 'Unsaved draft';
+  $('deck-status').textContent = !state ? '' : state.diskAccessRequired ? `Draft · ${state.path?.split('/').pop()}` : state.diskConflict ? 'Disk conflict · draft preserved' : state.path ? `${state.dirty || sourceChanged ? 'Unsaved changes · ' : 'Saved · '}${state.path.split('/').pop()}` : 'Unsaved draft';
+  document.querySelector<HTMLButtonElement>('[data-action="reload-disk"]')!.disabled = !state?.path || !!state.diskAccessRequired;
 }
 
 function toast(message: string, error = false) {
@@ -113,7 +114,6 @@ function accept(result: ToolResult, preserveSource = false) {
     if (result._meta?.preview && !preserveSource) preview = result._meta.preview as Preview;
     $('deck-title').textContent = next.title;
     document.querySelectorAll<HTMLButtonElement>('.toolbar [data-action="save"],.toolbar [data-action="save-as"],.toolbar [data-action="present"]').forEach(button => { button.disabled = false; });
-    document.querySelector<HTMLButtonElement>('[data-action="reload-disk"]')!.disabled = !next.path;
     $('library').classList.add('hidden');
     $('editor-workspace').classList.remove('hidden');
     $('toolbar').classList.remove('hidden');
@@ -433,7 +433,7 @@ async function action(name: string) {
     case 'library': await openWorkspace({}); break;
     case 'new': await openWorkspace({ markdown: '---\nformat: codeck.mdeck\nversion: 1\ntheme: studio\n---\n\n# Untitled\n', title: 'Untitled deck' }); break;
     case 'open': await openDialog(); break;
-    case 'save': if (state?.path && !state.diskConflict) { await mutate('save_workspace'); toast('Presentation saved to disk.'); } else await saveDialog(); break;
+    case 'save': if (state?.path && !state.diskConflict && !state.diskAccessRequired) { await mutate('save_workspace'); toast('Presentation saved to disk.'); } else await saveDialog(); break;
     case 'save-as': await saveDialog(); break;
     case 'present': await present(); break;
     case 'previous': selectSlide(selected - 1); break;
@@ -545,5 +545,9 @@ setInterval(() => {
     const result = await call('read_workspace',{workspace_id:state.id,known_revision:state.revision});
     if (sourceChanged) return;
     if (result.structuredContent?.revision !== state.revision) accept(result);
+    else if (state.diskAccessRequired !== result.structuredContent?.diskAccessRequired) {
+      state.diskAccessRequired = Boolean(result.structuredContent?.diskAccessRequired);
+      status();
+    }
   }).catch(showError);
 },3000);

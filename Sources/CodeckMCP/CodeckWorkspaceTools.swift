@@ -212,7 +212,8 @@ final class CodeckWorkspaceTools: @unchecked Sendable {
             }
         }
         if name == "read_workspace", try integer(arguments, "known_revision") == state.revision {
-            return ["structuredContent": ["id": state.id, "revision": state.revision, "unchanged": true], "content": []]
+            return ["structuredContent": ["id": state.id, "revision": state.revision, "unchanged": true,
+                                          "diskAccessRequired": diskAccessRequired(state)], "content": []]
         }
         return try response(state, opened: name == "open_workspace")
     }
@@ -251,6 +252,7 @@ final class CodeckWorkspaceTools: @unchecked Sendable {
             throw CodeckMCPError.operationFailed("Could not encode workspace state.")
         }
         payload["dirty"] = state.dirty
+        payload["diskAccessRequired"] = diskAccessRequired(state)
         let deck = PresentationDeck(markdownDocument: state.markdown)
         payload["slides"] = deck.slides.enumerated().map { index, slide in ["index": index, "title": slide.title, "markdown": slide.markdown] as [String: Any] }
         payload["theme"] = deck.theme.rawValue
@@ -267,6 +269,11 @@ final class CodeckWorkspaceTools: @unchecked Sendable {
 
     private func receipt(_ data: [String: Any]) -> [String: Any] {
         ["structuredContent": data, "content": []]
+    }
+
+    private func diskAccessRequired(_ state: DeckWorkspace) -> Bool {
+        guard let path = state.path else { return false }
+        return (try? paths.resolve(path)) == nil
     }
 
     private func object(_ run: CodeckCardRun) throws -> [String: Any] {
@@ -310,7 +317,9 @@ final class CodeckWorkspaceTools: @unchecked Sendable {
 
     private func preview(_ markdown: String, path: String?, workspaceID: String? = nil) throws -> [String: Any] {
         let deck = PresentationDeck(markdownDocument: markdown)
-        let directory = try path.map { try paths.resolve($0).deletingLastPathComponent() }
+        // Render the stored Markdown even when disk access needs renewed approval.
+        // Local images are only read after their own path authorization below.
+        let directory = path.flatMap { try? paths.resolve($0).deletingLastPathComponent() }
         let slides = try deck.slides.enumerated().map { index, slide -> [String: Any] in
             let outputs = workspaceID.map { runs.outputs($0, blocks: slide.codexBlocks, settings: deck.settings.codex) } ?? [:]
             var html = MarkdownRenderer.htmlDocument(for: slide, theme: deck.theme, codexOutputs: outputs)
