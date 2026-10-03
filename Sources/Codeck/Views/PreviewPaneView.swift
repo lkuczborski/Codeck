@@ -7,7 +7,8 @@ struct PreviewPaneView: View {
     let theme: PresentationTheme
     @ObservedObject var sessions: CodexSessionStore
     let baseURL: URL?
-    var displayMode: PreviewPaneDisplayMode = .document
+    var showsControls = true
+    var isFramed = true
     let onRunBlock: (CodexBlock) -> Void
     let onRunAll: ([CodexBlock]) -> Void
 
@@ -16,25 +17,33 @@ struct PreviewPaneView: View {
     }
 
     private var html: String {
-        switch displayMode {
-        case .document:
-            MarkdownRenderer.htmlDocument(
-                for: slide,
-                theme: theme,
-                codexOutputs: sessions.outputs
-            )
-        case .scaledToFitWidth:
-            MarkdownRenderer.scaledPreviewHTMLDocument(
-                for: slide,
-                theme: theme,
-                codexOutputs: sessions.outputs
-            )
-        }
+        MarkdownRenderer.presentationHTMLDocument(
+            for: slide,
+            theme: theme,
+            codexOutputs: sessions.outputs,
+            showsControls: showsControls
+        )
     }
 
     var body: some View {
-        MarkdownWebView(html: html, baseURL: baseURL, onAction: handleWebAction)
-            .codeckWorkspaceBackground()
+        GeometryReader { proxy in
+            let inset: CGFloat = isFramed ? 20 : 0
+            let width = max(0, min(proxy.size.width - inset * 2, (proxy.size.height - inset * 2) * 16.0 / 9.0))
+            let height = width * 9.0 / 16.0
+            MarkdownWebView(html: html, baseURL: baseURL, onAction: handleWebAction)
+                .frame(width: width, height: height)
+                .clipShape(RoundedRectangle(cornerRadius: isFramed ? 10 : 0))
+                .overlay {
+                    if isFramed {
+                        RoundedRectangle(cornerRadius: 10)
+                            .strokeBorder(Color(nsColor: .separatorColor).opacity(0.5), lineWidth: 0.5)
+                    }
+                }
+                .shadow(color: .black.opacity(isFramed ? 0.16 : 0), radius: 12, y: 4)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: isFramed ? .center : .top)
+                .transaction { $0.animation = nil }
+        }
+        .codeckWorkspaceBackground()
     }
 
     private func handleWebAction(_ action: MarkdownWebAction) {

@@ -9,14 +9,14 @@ struct PresentationModeView: View {
 
     private var html: String {
         guard let slide = playbackState.currentSlide else {
-            return MarkdownRenderer.htmlDocument(
+            return MarkdownRenderer.presentationHTMLDocument(
                 for: Slide(markdown: "# No Slides"),
                 theme: playbackState.deck.theme,
                 codexOutputs: sessions.outputs
             )
         }
 
-        return MarkdownRenderer.htmlDocument(
+        return MarkdownRenderer.presentationHTMLDocument(
             for: slide,
             theme: playbackState.deck.theme,
             codexOutputs: sessions.outputs
@@ -33,10 +33,10 @@ struct PresentationModeView: View {
 
             Text("\(playbackState.currentSlideNumber) / \(playbackState.slideCount)")
                 .font(.caption.monospacedDigit())
-                .foregroundStyle(.white.opacity(0.78))
+                .foregroundStyle(.primary)
                 .padding(.horizontal, 10)
                 .padding(.vertical, 6)
-                .background(.black.opacity(0.42), in: Capsule())
+                .background(.regularMaterial, in: Capsule())
                 .padding(18)
         }
     }

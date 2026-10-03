@@ -31,7 +31,6 @@ struct CodeckSettingsView: View {
         }
         .formStyle(.grouped)
         .frame(width: 460)
-        .padding(20)
         .onAppear {
             liveMCPServer.synchronizeWithPreferences()
         }

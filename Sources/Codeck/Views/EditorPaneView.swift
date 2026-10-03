@@ -39,90 +39,98 @@ struct EditorPaneView: View {
     private var toolbar: some View {
         ViewThatFits(in: .horizontal) {
             HStack(spacing: 10) {
-                themePicker(width: 232)
+                themePicker
 
-                toolbarSeparator
-
-                editorControls(labelStyle: .titleAndIcon)
+                editorControls
 
                 Spacer(minLength: 10)
 
                 deckSettingsButton
-                    .labelStyle(.titleAndIcon)
             }
+            .frame(height: CodeckInterfaceMetrics.paneHeaderHeight)
 
             HStack(spacing: 8) {
-                themePicker(width: 216)
+                compactThemePicker
 
-                toolbarSeparator
+                editorControls
 
-                editorControls(labelStyle: .iconOnly)
-
-                Spacer(minLength: 8)
+                Spacer(minLength: 0)
 
                 deckSettingsButton
-                    .labelStyle(.iconOnly)
             }
+            .frame(height: CodeckInterfaceMetrics.paneHeaderHeight)
+
+            VStack(alignment: .leading, spacing: 6) {
+                HStack {
+                    themePicker
+                    Spacer(minLength: 0)
+                    deckSettingsButton
+                }
+
+                editorControls
+            }
+            .padding(.vertical, 6)
         }
-        .padding(10)
-        .codeckGlassSurface(cornerRadius: 16, interactive: true)
-        .padding(.horizontal, 10)
-        .padding(.vertical, 8)
+        .controlSize(.small)
+        .codeckNativeGlassGrouping()
+        .padding(.horizontal, CodeckInterfaceMetrics.editorContentInset)
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private var editorBackground: Color {
         CodeckPalette.editor
     }
 
-    private func themePicker(width: CGFloat) -> some View {
-        Picker("Theme", selection: $settings.theme) {
-            ForEach(PresentationTheme.allCases) { theme in
-                Text(theme.displayName).tag(theme)
+    private var themePicker: some View {
+        Menu {
+            Picker("Theme", selection: $settings.theme) {
+                ForEach(PresentationTheme.allCases) { theme in
+                    Text(theme.displayName).tag(theme)
+                }
             }
+            .pickerStyle(.inline)
+        } label: {
+            Text(settings.theme.displayName)
         }
-        .pickerStyle(.menu)
-        .fixedSize(horizontal: true, vertical: false)
-        .frame(width: width, alignment: .leading)
-        .layoutPriority(1)
+        .menuStyle(.button)
+        .buttonStyle(.borderless)
+        .help("Presentation theme")
+        .padding(.horizontal, 8)
+        .frame(height: CodeckInterfaceMetrics.toolbarControlHeight)
+        .codeckNativeControlBar()
+        .fixedSize()
     }
 
-    private func editorControls(labelStyle: EditorToolbarLabelStyle) -> some View {
+    private var compactThemePicker: some View {
+        themePicker
+    }
+
+    private var editorControls: some View {
         HStack(spacing: 8) {
-            switch labelStyle {
-            case .titleAndIcon:
-                insertMenu
-                    .labelStyle(.titleAndIcon)
-            case .iconOnly:
-                insertMenu
-                    .labelStyle(.iconOnly)
-            }
-
+            insertMenu.labelStyle(.iconOnly)
             toolbarSeparator
-
             formatButtons
         }
+        .buttonStyle(.borderless)
+        .padding(.horizontal, 8)
+        .frame(height: CodeckInterfaceMetrics.toolbarControlHeight)
+        .codeckNativeControlBar()
         .fixedSize(horizontal: true, vertical: false)
     }
 
     private var formatButtons: some View {
-        HStack(spacing: 4) {
-            ForEach(MarkdownTextStyle.allCases) { style in
-                MarkdownStyleButton(
-                    style: style,
-                    isActive: editorController.activeStyles.contains(style),
-                    action: { editorController.toggle(style) }
-                )
-            }
+        ForEach(MarkdownTextStyle.allCases) { style in
+            MarkdownStyleButton(
+                style: style,
+                isActive: editorController.activeStyles.contains(style),
+                action: { editorController.toggle(style) }
+            )
         }
-        .fixedSize(horizontal: true, vertical: false)
-        .accessibilityElement(children: .contain)
     }
 
     private var toolbarSeparator: some View {
-        Rectangle()
-            .fill(CodeckPalette.separator)
-            .frame(width: 1, height: 24)
-            .padding(.horizontal, 2)
+        Divider()
+            .frame(height: 14)
             .accessibilityHidden(true)
     }
 
@@ -132,40 +140,39 @@ struct EditorPaneView: View {
         } label: {
             Label("Deck Settings", systemImage: "slider.horizontal.3")
         }
-        .codeckGlassButtonStyle()
+        .labelStyle(.iconOnly)
+        .buttonStyle(.borderless)
         .help("Edit deck-level Codex settings")
+        .padding(.horizontal, 8)
+        .frame(height: CodeckInterfaceMetrics.toolbarControlHeight)
+        .codeckNativeControlBar()
         .popover(isPresented: $showsDeckSettings, arrowEdge: .bottom) {
             DeckSettingsPopover(settings: $settings, modelCatalog: modelCatalog)
         }
+        .fixedSize()
     }
 
     private var insertMenu: some View {
         Menu {
             Section("Text") {
-                insertButton(.heading1)
-                insertButton(.heading2)
-                insertButton(.heading3)
-                insertButton(.paragraph)
-                insertButton(.link)
+                ForEach([MarkdownInsertion.heading1, .heading2, .heading3, .paragraph, .link]) { insertion in
+                    insertButton(insertion)
+                }
             }
-
             Section("Blocks") {
-                insertButton(.bulletedList)
-                insertButton(.numberedList)
-                insertButton(.blockquote)
-                insertButton(.table)
-                insertButton(.horizontalRule)
+                ForEach([MarkdownInsertion.bulletedList, .numberedList, .blockquote, .table, .horizontalRule]) { insertion in
+                    insertButton(insertion)
+                }
             }
-
             Section("Media and Code") {
-                insertButton(.image)
-                insertButton(.codeBlock)
-                insertButton(.codexSession)
+                ForEach([MarkdownInsertion.image, .codeBlock, .codexSession]) { insertion in
+                    insertButton(insertion)
+                }
             }
         } label: {
             Label("Insert", systemImage: "plus")
         }
-        .codeckGlassButtonStyle(prominent: true)
+        .menuStyle(.button)
         .help("Insert Markdown element")
     }
 

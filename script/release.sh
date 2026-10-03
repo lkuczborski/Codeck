@@ -371,7 +371,10 @@ if (( ! SKIP_TESTS )); then
   swift test
 fi
 
-swift build -c release --arch arm64 --arch x86_64
+MACOS_SDK_VERSION="$(xcrun --sdk macosx --show-sdk-version)"
+# Record the build SDK independently of the deployment target so macOS enables its current UI.
+swift build -c release --arch arm64 --arch x86_64 \
+  -Xlinker -platform_version -Xlinker macos -Xlinker "$MIN_SYSTEM_VERSION" -Xlinker "$MACOS_SDK_VERSION"
 BUILD_DIR="$(swift build -c release --show-bin-path --arch arm64 --arch x86_64)"
 
 [[ -x "$BUILD_DIR/$APP_NAME" ]] || die "missing built app executable: $BUILD_DIR/$APP_NAME"
@@ -383,6 +386,7 @@ rm -rf "$STAGE_ROOT"
 mkdir -p "$APP_MACOS" "$APP_RESOURCES"
 
 cp "$BUILD_DIR/$APP_NAME" "$APP_BINARY"
+xcrun vtool -show-build "$APP_BINARY" | awk -v sdk="$MACOS_SDK_VERSION" '$1 == "sdk" { if ($2 != sdk) exit 1; found = 1 } END { if (!found) exit 1 }'
 cp "$BUILD_DIR/$MCP_NAME" "$MCP_BINARY"
 chmod +x "$APP_BINARY" "$MCP_BINARY"
 cp "$ROOT_DIR/Resources/AppIcon.icns" "$APP_RESOURCES/AppIcon.icns"

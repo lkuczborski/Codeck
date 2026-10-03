@@ -30,13 +30,33 @@ public enum MarkdownRenderer {
         theme: PresentationTheme,
         codexOutputs: [String: CodexSessionOutput]
     ) -> String {
-        htmlDocument(
+        presentationHTMLDocument(
             for: slide,
             theme: theme,
             codexOutputs: codexOutputs,
-            extraCSS: scaledPreviewCSS,
-            extraScript: scaledPreviewScript
+            showsControls: false
         )
+    }
+
+    public static func presentationHTMLDocument(
+        for slide: Slide,
+        theme: PresentationTheme,
+        codexOutputs: [String: CodexSessionOutput],
+        showsControls: Bool = true
+    ) -> String {
+        fittedPresentationHTML(
+            htmlDocument(for: slide, theme: theme, codexOutputs: codexOutputs),
+            showsControls: showsControls
+        )
+    }
+
+    public static func fittedPresentationHTML(_ renderedHTML: String, showsControls: Bool = true) -> String {
+        let controlCSS = showsControls ? "" : ".slide-actions, .codex-action { visibility: hidden; }"
+        let style = "<style>\(presentationCanvasCSS)\n\(controlCSS)</style>"
+        let script = "<script>\(presentationCanvasScript)</script>"
+        return renderedHTML
+            .replacingOccurrences(of: "</head>", with: style + "</head>")
+            .replacingOccurrences(of: "</body>", with: script + "</body>")
     }
 
     public static func templatePreviewHTMLDocument(
@@ -921,7 +941,7 @@ public enum MarkdownRenderer {
         }
         """
 
-    private static let scaledPreviewCSS =
+    private static let presentationCanvasCSS =
         """
         html, body {
           width: 100%;
@@ -929,53 +949,55 @@ public enum MarkdownRenderer {
           min-height: 100%;
           overflow: hidden;
           background: var(--bg);
+          font-size: 24px;
         }
         body {
           display: block;
           justify-content: flex-start;
         }
         .slide {
+          position: absolute;
+          left: 50%;
+          top: 50%;
           width: 1600px;
           height: 900px;
           min-height: 900px;
           max-height: 900px;
           padding: 88px;
           overflow: hidden;
-          transform: scale(var(--codeck-preview-scale, 1));
-          transform-origin: top left;
+          transform: translate(-50%, -50%) scale(var(--codeck-slide-scale, 1));
+          transform-origin: center;
         }
-        .slide-actions,
-        .codex-action {
-          display: none;
+        h1 { font-size: 82px; }
+        h2 { font-size: 60px; }
+        h3 { font-size: 44px; }
+        img { max-height: 558px; }
+        pre { font-size: 0.72em; }
+        .codex-card-heading { gap: 0.7em; }
+        .slide-actions {
+          top: 22px;
+          right: 26px;
         }
-        @media (max-width: 820px), (max-height: 620px) {
-          html, body {
-            font-size: 24px;
-          }
+        @supports (transform: scale(calc(1px / 1px))) {
           .slide {
-            padding: 88px;
-          }
-          h1 { font-size: 82px; }
-          h2 { font-size: 60px; }
-          h3 { font-size: 44px; }
-          pre {
-            font-size: 0.74em;
+            transform: translate(-50%, -50%) scale(min(calc(100vw / 1600px), calc(100vh / 900px)));
           }
         }
         """
 
-    private static let scaledPreviewScript =
+    private static let presentationCanvasScript =
         """
           (function() {
-            function fitPreviewToWidth() {
+            if (CSS.supports('transform', 'scale(calc(1px / 1px))')) return;
+            function fitSlide() {
+              const viewport = document.documentElement.getBoundingClientRect();
               document.documentElement.style.setProperty(
-                '--codeck-preview-scale',
-                String(window.innerWidth / 1600)
+                '--codeck-slide-scale',
+                String(Math.min(viewport.width / 1600, viewport.height / 900))
               );
             }
-            window.addEventListener('resize', fitPreviewToWidth);
-            document.addEventListener('DOMContentLoaded', fitPreviewToWidth);
-            fitPreviewToWidth();
+            window.addEventListener('resize', fitSlide);
+            fitSlide();
           })();
         """
 }

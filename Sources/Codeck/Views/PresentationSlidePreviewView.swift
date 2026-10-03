@@ -45,11 +45,10 @@ struct PresentationSlidePreviewView: View {
                     Button(action: onClose) {
                         Image(systemName: "xmark")
                             .font(.system(size: 11, weight: .bold))
-                            .foregroundStyle(.white)
-                            .frame(width: 24, height: 24)
-                            .background(.black.opacity(0.62), in: Circle())
                     }
-                    .buttonStyle(.plain)
+                    .controlSize(.small)
+                    .buttonBorderShape(.circle)
+                    .codeckNativeButtonStyle()
                     .opacity(isChromeVisible ? 1 : 0)
                     .padding(8)
                     .animation(.easeOut(duration: 0.12), value: isChromeVisible)
@@ -79,18 +78,19 @@ struct PresentationSlidePreviewView: View {
                 theme: deck.theme,
                 sessions: sessions,
                 baseURL: baseURL,
-                displayMode: .scaledToFitWidth,
+                showsControls: false,
+                isFramed: false,
                 onRunBlock: { _ in },
                 onRunAll: { _ in }
             )
             .allowsHitTesting(false)
         } else {
             ZStack {
-                Color.black.opacity(0.86)
+                Color(nsColor: .textBackgroundColor)
 
                 Label("No Slides", systemImage: "rectangle.stack")
                     .font(.headline)
-                    .foregroundStyle(.white.opacity(0.84))
+                    .foregroundStyle(.primary)
             }
         }
     }
@@ -111,10 +111,10 @@ struct PresentationSlidePreviewView: View {
     private func slideCounter(_ displayedSlideIndex: Int) -> some View {
         Text("\(displayedSlideIndex + 1) / \(deck.slides.count)")
             .font(.caption.monospacedDigit())
-            .foregroundStyle(.white.opacity(0.84))
+            .foregroundStyle(.primary)
             .padding(.horizontal, 8)
             .padding(.vertical, 5)
-            .background(.black.opacity(0.5), in: Capsule())
+            .background(.regularMaterial, in: Capsule())
             .padding(8)
     }
 

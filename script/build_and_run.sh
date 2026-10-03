@@ -22,12 +22,15 @@ if [[ "$MODE" != "--package" && "$MODE" != "package" ]]; then
 fi
 
 cd "$ROOT_DIR"
-swift build
+MACOS_SDK_VERSION="$(xcrun --sdk macosx --show-sdk-version)"
+# SwiftPM can record the deployment target as the SDK, which selects legacy macOS UI.
+swift build -Xlinker -platform_version -Xlinker macos -Xlinker "$MIN_SYSTEM_VERSION" -Xlinker "$MACOS_SDK_VERSION"
 BUILD_BINARY="$(swift build --show-bin-path)/$APP_NAME"
 
 rm -rf "$APP_BUNDLE"
 mkdir -p "$APP_MACOS" "$APP_RESOURCES"
 cp "$BUILD_BINARY" "$APP_BINARY"
+xcrun vtool -show-build "$APP_BINARY" | awk -v sdk="$MACOS_SDK_VERSION" '$1 == "sdk" { if ($2 != sdk) exit 1; found = 1 } END { if (!found) exit 1 }'
 chmod +x "$APP_BINARY"
 cp "$APP_ICON_SOURCE" "$APP_RESOURCES/AppIcon.icns"
 cp "$DOCUMENT_ICON_SOURCE" "$APP_RESOURCES/DocumentIcon.icns"

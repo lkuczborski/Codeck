@@ -19,7 +19,7 @@ struct SlideTemplateCard: View {
                 MarkdownWebView(html: previewHTML, baseURL: nil)
                     .allowsHitTesting(false)
                     .frame(height: 150)
-                    .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+                    .clipShape(.rect(cornerRadius: 6))
 
                 if isSelected {
                     Image(systemName: "checkmark.circle.fill")
@@ -28,10 +28,6 @@ struct SlideTemplateCard: View {
                         .foregroundStyle(.tint)
                         .padding(8)
                 }
-            }
-            .overlay {
-                RoundedRectangle(cornerRadius: 6, style: .continuous)
-                    .strokeBorder(isSelected ? Color.accentColor : Color.secondary.opacity(0.22), lineWidth: isSelected ? 2 : 1)
             }
 
             VStack(alignment: .leading, spacing: 2) {
@@ -47,11 +43,8 @@ struct SlideTemplateCard: View {
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
-        .padding(8)
-        .codeckElevatedSurface(cornerRadius: 8)
-        .overlay {
-            RoundedRectangle(cornerRadius: 8, style: .continuous)
-                .strokeBorder(isSelected ? Color.accentColor.opacity(0.45) : CodeckPalette.border, lineWidth: 1)
-        }
+        .padding(4)
+        .multilineTextAlignment(.leading)
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 }

@@ -155,23 +155,7 @@ final class WorkspaceDesktop: NSObject, WKScriptMessageHandler, WKNavigationDele
     }
 
     nonisolated static func fullscreenHTML(_ renderedHTML: String) -> String {
-        let fit = """
-        <style>html,body{width:100%;height:100%;margin:0;overflow:hidden;background:var(--bg)}
-        #deck-stage{width:1600px;height:900px;position:absolute;left:50%;top:50%;transform-origin:center;overflow:hidden}
-        .slide{width:1600px;min-height:900px;padding:88px}h1{font-size:82px}h2{font-size:60px}h3{font-size:44px}
-        img{max-height:558px}</style>
-        """
-        return renderedHTML.replacingOccurrences(of: "</head>", with: fit + "</head>")
-            .replacingOccurrences(of: "<body>", with: "<body><div id=\"deck-stage\">")
-            .replacingOccurrences(of: "</body>", with: """
-            </div><script>
-            function fit(){
-              const scale=Math.min(innerWidth/1600,innerHeight/900);
-              document.getElementById('deck-stage').style.transform='translate(-50%,-50%) scale('+scale+')';
-            }
-            window.addEventListener('resize',fit);fit();
-            </script></body>
-            """)
+        MarkdownRenderer.fittedPresentationHTML(renderedHTML)
     }
 
     func userContentController(_: WKUserContentController, didReceive message: WKScriptMessage) {
