@@ -38,11 +38,11 @@ concurrency:
 
 jobs:
   package:
-    runs-on: macos-15
+    runs-on: xcode-27
     timeout-minutes: 30
     env:
       CODECK_PLUGIN_BUILD_NUMBER: ${{ github.run_number }}
-      DEVELOPER_DIR: /Applications/Xcode_26.3.app/Contents/Developer
+      DEVELOPER_DIR: /Applications/Xcode.app/Contents/Developer
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
@@ -56,6 +56,7 @@ jobs:
         run: |
           xcodebuild -version
           swift --version
+          xcrun --sdk macosx --show-sdk-version
       - name: Build Swift targets
         timeout-minutes: 5
         run: swift build --jobs 3
