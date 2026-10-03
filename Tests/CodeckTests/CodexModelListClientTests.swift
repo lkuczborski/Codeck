@@ -150,4 +150,29 @@ final class CodexModelListClientTests: XCTestCase {
         XCTAssertEqual(options.first?.id, "gpt-future")
         XCTAssertEqual(options.first?.supportedReasoningEfforts.first?.rawValue, "ultra")
     }
+
+    @MainActor
+    func testSuccessfulCatalogRefreshRepairsUnsupportedReasoningWithoutChangingValidOverrides() async throws {
+        let suite = "codeck-models-\(UUID().uuidString)"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let model = CodexModelOption(id: "saved-model", displayName: "Saved Model", description: "",
+                                     supportedReasoningEfforts: [.low, .high], defaultReasoningEffort: .low, isDefault: false)
+        let catalog = CodexModelCatalogStore(defaults: defaults, fetch: { [model] in [model] })
+        let stale = DeckCodexSettings(model: model.id, reasoning: .medium, sandbox: "workspace-write")
+        XCTAssertEqual(catalog.normalizedSettings(stale), stale)
+        await catalog.refresh()
+        let repaired = catalog.normalizedSettings(stale)
+        XCTAssertEqual(repaired.model, stale.model)
+        XCTAssertEqual(repaired.sandbox, stale.sandbox)
+        XCTAssertEqual(repaired.reasoning, .low)
+        let valid = DeckCodexSettings(model: model.id, reasoning: .high, sandbox: "read-only")
+        XCTAssertEqual(catalog.normalizedSettings(valid), valid)
+        let unknown = DeckCodexSettings(model: "retired-model", reasoning: .init(rawValue: "future"), sandbox: "read-only")
+        XCTAssertEqual(catalog.normalizedSettings(unknown), unknown)
+
+        let offline = CodexModelCatalogStore(defaults: defaults, fetch: { throw CodexModelListClient.ClientError.timedOut })
+        await offline.refresh()
+        XCTAssertEqual(offline.normalizedSettings(stale), stale)
+    }
 }

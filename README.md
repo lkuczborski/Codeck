@@ -140,7 +140,7 @@ Supported deck metadata:
 - `version`: current document version is `1`.
 - `theme`: presentation theme. Supported values are `studio`, `midnight`, `chalk`, `solar`, and `atelier`.
 - `codex.sandbox`: default sandbox for live Codex sessions. Defaults to `read-only`.
-- `codex.model`: default model for live Codex sessions. New decks default to `gpt-6.1-sol`. The model picker fetches the current backend catalog from `codex app-server` and caches successful responses. Failed refreshes retain that cache and expose Retry; there is no hardcoded fallback catalog. Saved model overrides stay intact.
+- `codex.model`: default model for live Codex sessions. New decks default to `gpt-6.1-sol`. The model picker fetches the current backend catalog from `codex app-server` and caches successful responses. Failed refreshes retain that cache and expose Retry; there is no hardcoded fallback catalog. Saved model overrides and supported reasoning choices stay intact. After a successful refresh, reasoning values no longer supported by the selected model are normalized to a supported value.
 - `codex.reasoning` or `codex.reasoning_effort`: default reasoning effort. New decks default to Light (`low`). The picker uses reasoning levels from the backend catalog. Fence and saved deck overrides are preserved, including future reasoning values.
 
 ## Live Codex Sessions
