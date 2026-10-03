@@ -28,9 +28,11 @@ struct NativeAppearancePicker: NSViewRepresentable {
         if #available(macOS 26.0, *) {
             control.borderShape = .capsule
         }
-        if #available(macOS 27.0, *) {
-            control.role = .tabs
-        }
+        #if compiler(>=6.4)
+            if #available(macOS 27.0, *) {
+                control.role = .tabs
+            }
+        #endif
         for (index, mode) in AppAppearanceMode.allCases.enumerated() {
             control.setToolTip(mode.title, forSegment: index)
             control.setWidth(20, forSegment: index)
