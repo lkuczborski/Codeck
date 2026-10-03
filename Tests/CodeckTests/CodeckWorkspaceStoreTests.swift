@@ -77,6 +77,54 @@ final class CodeckWorkspaceStoreTests: XCTestCase {
         XCTAssertEqual(try store.read(updated.id).markdown, "# Updated deck")
     }
 
+    func testLostFileApprovalPreservesDraftWithoutReadingDiskAndCanBeRenewed() throws {
+        let file = directory.appendingPathComponent("selected.mdeck")
+        try "# Original".write(to: file, atomically: true, encoding: .utf8)
+        let initial = try store.open(path: file.path)
+        var approved = false
+        let root = try XCTUnwrap(directory)
+        let restored = CodeckWorkspaceStore(directory: root.appendingPathComponent("state")) { path in
+            if path == file.path, !approved { throw CocoaError(.fileReadNoPermission) }
+            guard path.hasPrefix(root.path + "/") else { throw CocoaError(.fileReadNoPermission) }
+            return URL(fileURLWithPath: path)
+        }
+        try "# Changed on disk".write(to: file, atomically: true, encoding: .utf8)
+        for _ in 0 ..< 3 {
+            XCTAssertEqual(try restored.read(initial.id), initial)
+        }
+        XCTAssertThrowsError(try restored.open(path: file.path))
+        XCTAssertThrowsError(try restored.save(initial.id, revision: initial.revision))
+        XCTAssertThrowsError(try restored.reload(initial.id, revision: initial.revision))
+        let edited = try restored.update(initial.id, revision: initial.revision, markdown: "# Preserved draft")
+        XCTAssertEqual(edited.markdown, "# Preserved draft")
+        approved = true
+        let reopened = try restored.open(path: file.path)
+        XCTAssertEqual(reopened.id, initial.id)
+        XCTAssertEqual(reopened.markdown, edited.markdown)
+        XCTAssertTrue(reopened.diskConflict)
+        XCTAssertThrowsError(try restored.save(initial.id, revision: reopened.revision))
+        let reloaded = try restored.reload(initial.id, revision: reopened.revision)
+        XCTAssertEqual(reloaded.markdown, "# Changed on disk")
+    }
+
+    func testLostFileApprovalStillAllowsSavingDraftToAuthorizedCopy() throws {
+        let file = directory.appendingPathComponent("selected.mdeck")
+        try "# Original".write(to: file, atomically: true, encoding: .utf8)
+        let initial = try store.open(path: file.path)
+        let root = try XCTUnwrap(directory)
+        let restored = CodeckWorkspaceStore(directory: root.appendingPathComponent("state")) { path in
+            guard path != file.path, path.hasPrefix(root.path + "/") else { throw CocoaError(.fileReadNoPermission) }
+            return URL(fileURLWithPath: path)
+        }
+        let edited = try restored.update(initial.id, revision: initial.revision, markdown: "# Saved copy")
+        let copy = directory.appendingPathComponent("copy.mdeck")
+        let saved = try restored.save(initial.id, revision: edited.revision, path: copy.path)
+        XCTAssertEqual(saved.path, copy.path)
+        XCTAssertFalse(saved.dirty)
+        XCTAssertEqual(try String(contentsOf: file, encoding: .utf8), "# Original")
+        XCTAssertEqual(try String(contentsOf: copy, encoding: .utf8), edited.markdown)
+    }
+
     func testRejectsUnsafeStateIDsSaveExtensionsAndExistingDestinations() throws {
         XCTAssertThrowsError(try store.read("../../deck"))
         let draft = try store.open(markdown: "# Deck")

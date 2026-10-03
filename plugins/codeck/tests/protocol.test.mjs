@@ -82,3 +82,48 @@ test('sidebar registration, resource, drafts, saves, and agent edits use one wor
   assert.notEqual(denied.isError,true);
   assert.doesNotMatch(denied._meta.preview.slides[0].html,/data:image/);
 });
+
+test('restored drafts with expired file approval remain editable and polling never reads the unapproved file', async t => {
+  const directory=await mkdtemp(path.join(tmpdir(),'codeck-restored-'));
+  const outside=await mkdtemp(path.join(tmpdir(),'codeck-unapproved-'));
+  t.after(()=>rm(directory,{recursive:true,force:true}));
+  t.after(()=>rm(outside,{recursive:true,force:true}));
+  const client=new MCPClient(executable,{cwd:directory,env:{CODECK_MCP_ALLOWED_ROOTS:directory,CODECK_WORKSPACE_UI_PATH:path.join(root,'plugins/codeck/build/workspace.html')}});
+  t.after(()=>client.close());
+  await client.initialize();
+  const tool=(name,args={})=>client.request('tools/call',{name,arguments:args});
+  let response=await tool('open_workspace',{markdown:'# Saved draft\n\n![Private](secret.png)'});
+  let state=response.structuredContent;
+  const file=path.join(outside,'expired.mdeck');
+  await writeFile(file,'# Unapproved disk content');
+  await writeFile(path.join(outside,'secret.png'),Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aX1cAAAAASUVORK5CYII=','base64'));
+  const draftFile=path.join(directory,'.codeck-workspaces',`${state.id}.json`);
+  const saved=JSON.parse(await readFile(draftFile,'utf8'));
+  saved.path=file;
+  await writeFile(draftFile,JSON.stringify(saved));
+  response=await tool('open_workspace',{workspace_id:state.id});
+  assert.notEqual(response.isError,true);
+  assert.equal(response.structuredContent.diskAccessRequired,true);
+  assert.equal(response.structuredContent.markdown,state.markdown);
+  assert.doesNotMatch(response._meta.preview.slides[0].html,/data:image/);
+  for(let i=0;i<3;i++) {
+    const read=await tool('read_workspace',{workspace_id:state.id,known_revision:state.revision});
+    assert.notEqual(read.isError,true);
+    assert.equal(read.structuredContent.unchanged,true);
+    assert.equal(read.structuredContent.diskAccessRequired,true);
+    const runs=await tool('poll_codex_runs',{workspace_id:state.id});
+    assert.notEqual(runs.isError,true);
+    assert.doesNotMatch(runs._meta.preview.slides[0].html,/data:image/);
+  }
+  response=await tool('update_workspace',{workspace_id:state.id,revision:state.revision,markdown:'# Edited draft'});
+  assert.notEqual(response.isError,true);
+  state=response.structuredContent;
+  assert.equal(state.diskAccessRequired,true);
+  assert.equal((await tool('save_workspace',{workspace_id:state.id,revision:state.revision})).isError,true);
+  assert.equal((await tool('reload_workspace',{workspace_id:state.id,revision:state.revision})).isError,true);
+  assert.equal(await readFile(file,'utf8'),'# Unapproved disk content');
+  response=await tool('save_workspace',{workspace_id:state.id,revision:state.revision,path:path.join(directory,'copy.mdeck')});
+  assert.notEqual(response.isError,true);
+  assert.equal(response.structuredContent.diskAccessRequired,false);
+  assert.equal(await readFile(response.structuredContent.path,'utf8'),'# Edited draft');
+});

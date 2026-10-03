@@ -128,7 +128,9 @@ public final class CodeckWorkspaceStore {
 
     private func refresh(_ state: DeckWorkspace) throws -> DeckWorkspace {
         guard let path = state.path else { return state }
-        let url = try deckURL(path)
+        // A restored draft is still usable if its former picker approval is gone.
+        // Explicit file operations continue to require authorization in deckURL.
+        guard let url = try? deckURL(path) else { return state }
         var state = state
         guard FileManager.default.fileExists(atPath: url.path) else {
             if !state.diskConflict {
