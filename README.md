@@ -29,6 +29,7 @@ Most presentation tools separate the script, the source material, the live demo,
 ## Core Features
 
 - Native macOS document app for `.mdeck` files.
+- Codex plugin with its own sidebar workspace, split Markdown editor and preview, native Codex composer, and fullscreen presentation.
 - Markdown slides with headings, lists, blockquotes, tables, links, images, GIFs, and fenced code blocks.
 - Syntax highlighting for common code fence languages.
 - Theme picker with Studio, Midnight, Chalk, Solar, and Atelier presentation themes.
@@ -42,7 +43,37 @@ Most presentation tools separate the script, the source material, the live demo,
 - File-based MCP server for deck automation outside the app.
 - Live localhost MCP bridge for agents that need to work with currently open Codeck windows.
 
-## Quick Start
+## Install the Mac app
+
+Download the universal Mac ZIP from [GitHub Releases](https://github.com/lkuczborski/Codeck/releases/latest), unzip it, and move `Codeck.app` into Applications. The app supports Apple silicon and Intel Macs running macOS 14 or later. The current release is Developer ID signed and notarized by Apple.
+
+Live Codex cards and the Deck Assistant use your existing Codex login. Codeck can use the executable bundled with Codex desktop, or a separately installed Codex CLI.
+
+## Use Codeck inside Codex
+
+The plugin provides a dedicated Codeck workspace in Codex desktop: edit highlighted Markdown beside a live preview, iterate through the native Codex composer, open and save decks, and present fullscreen. Codex CLI can use the same plugin's deck skills and MCP tools.
+
+The prebuilt plugin supports Apple silicon Macs running macOS 14 or later. It includes its native helper and UI; the Codeck Mac app, Swift, Node, npm, and an OpenAI API key are not required. Live cards use the installed Codex executable and your existing login.
+
+After the first notarized plugin publication from `main`, install from the repository marketplace:
+
+```sh
+codex plugin marketplace add lkuczborski/Codeck
+codex plugin add codeck@codeck-plugins
+```
+
+Start a new CLI session, or restart Codex desktop and open **Codeck** in the sidebar. With the default Codex profile on the same Mac, the CLI and desktop share this installation. Desktop users can also run only the marketplace command, restart Codex, and install **Codeck** from **Plugins → Codeck Plugins**.
+
+To update an installed plugin:
+
+```sh
+codex plugin marketplace upgrade codeck-plugins
+codex plugin add codeck@codeck-plugins
+```
+
+Restart Codex desktop or start a new CLI session after updating. These commands explicitly refresh the source and install its current package; this guide does not assume automatic updates for personal repository marketplaces. This repository marketplace is separate from OpenAI's public Plugins Directory. See the [plugin guide](plugins/codeck/README.md) for prerequisites, editing, file access, local development, troubleshooting, and publishing.
+
+## Build the Mac app from source
 
 Codeck is a Swift Package Manager project for macOS 14+.
 
@@ -70,7 +101,7 @@ Run the tests:
 swift test
 ```
 
-Live Codex features need the Codex CLI available on `PATH` and an active Codex login. Codeck runs live sessions through `codex app-server --listen stdio://`.
+Live Codex features need an active Codex login and either Codex desktop’s bundled executable or a Codex CLI available on `PATH`. Codeck runs live sessions through `codex app-server --listen stdio://`.
 
 ## Examples
 
@@ -268,18 +299,16 @@ script/lint.sh
 
 The Codex app Run button is wired to `./script/build_and_run.sh` through `.codex/environments/environment.toml`.
 
-## Codex presentation workspace
-
-Codeck also includes a local Codex plugin with a sidebar workspace, a split Markdown editor and live preview, the native Codex composer, disk open/save, and fullscreen presentation. See [plugin setup and development](plugins/codeck/README.md). Build it with `script/build_plugin.sh`.
-
 ## Release packaging
+
+Write app-facing changes and fixes since the previous release in `release-notes.md`.
 
 `script/release.sh` builds universal Apple silicon and Intel binaries, signs the app and MCP executable with Developer ID and hardened runtime, submits the archive to Apple, staples the app, then verifies the extracted archive with Gatekeeper. Signing and notarization run locally; the finished ZIP and SHA-256 file can be uploaded as GitHub release assets. Signing credentials stay in your Keychain.
 
 ```sh
 export CODECK_SIGNING_IDENTITY="Developer ID Application: Your Name (TEAMID)"
 export CODECK_NOTARY_PROFILE="your-keychain-profile"
-script/release.sh v0.7
+script/release.sh v0.8 --notes-file release-notes.md
 ```
 
 Add `--publish` to tag the current committed revision and publish the verified assets. `--prepare-only` produces a signed candidate while notarization is unavailable and cannot publish a release. `--allow-dirty` is only for local candidate checks. The [Codex plugin](plugins/codeck/README.md) has its own automatic build and test workflow. Run `script/release_plugin.sh --publish` on your Mac to build, test, sign, notarize, and publish the plugin; merging alone does not publish an ad hoc signed package.
