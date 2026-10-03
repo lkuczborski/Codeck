@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "codeck-workspace": {
+      "command": "/bin/bash",
+      "args": ["./scripts/run-server.sh"],
+      "cwd": "."
+    }
+  }
+}

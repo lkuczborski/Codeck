@@ -1,0 +1,43 @@
+Bundled license information:
+
+lucide/dist/esm/createElement.js:
+lucide/dist/esm/replaceElement.js:
+lucide/dist/esm/defaultAttributes.js:
+lucide/dist/esm/icons/arrow-left.js:
+lucide/dist/esm/icons/bold.js:
+lucide/dist/esm/icons/chevron-down.js:
+lucide/dist/esm/icons/chevron-left.js:
+lucide/dist/esm/icons/chevron-right.js:
+lucide/dist/esm/icons/code.js:
+lucide/dist/esm/icons/columns-2.js:
+lucide/dist/esm/icons/copy-plus.js:
+lucide/dist/esm/icons/copy.js:
+lucide/dist/esm/icons/file-code-2.js:
+lucide/dist/esm/icons/folder-open.js:
+lucide/dist/esm/icons/italic.js:
+lucide/dist/esm/icons/link.js:
+lucide/dist/esm/icons/maximize.js:
+lucide/dist/esm/icons/minimize.js:
+lucide/dist/esm/icons/monitor.js:
+lucide/dist/esm/icons/panel-top.js:
+lucide/dist/esm/icons/play.js:
+lucide/dist/esm/icons/plus.js:
+lucide/dist/esm/icons/presentation.js:
+lucide/dist/esm/icons/save.js:
+lucide/dist/esm/icons/strikethrough.js:
+lucide/dist/esm/icons/trash-2.js:
+lucide/dist/esm/icons/x.js:
+lucide/dist/esm/lucide.js:
+  /**
+   * @license lucide v0.468.0 - ISC
+   *
+   * This source code is licensed under the ISC license.
+   * See the LICENSE file in the root directory of this source tree.
+   */
+
+@modelcontextprotocol/client/dist/src-xKF0PJN-.mjs:
+  /*!
+  * content-type
+  * Copyright(c) 2015 Douglas Christopher Wilson
+  * MIT Licensed
+  */

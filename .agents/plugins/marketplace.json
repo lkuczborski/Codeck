@@ -1,0 +1,20 @@
+{
+  "name": "codeck-plugins",
+  "interface": {
+    "displayName": "Codeck Plugins"
+  },
+  "plugins": [
+    {
+      "name": "codeck",
+      "source": {
+        "source": "local",
+        "path": "./codeck-plugin"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    }
+  ]
+}
