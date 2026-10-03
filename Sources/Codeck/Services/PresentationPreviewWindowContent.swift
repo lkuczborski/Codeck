@@ -61,11 +61,10 @@ struct PresentationPreviewWindowContent: View {
         Button(action: onClose) {
             Image(systemName: "xmark")
                 .font(.system(size: 11, weight: .bold))
-                .foregroundStyle(.white)
-                .frame(width: 24, height: 24)
-                .background(.black.opacity(0.62), in: Circle())
         }
-        .buttonStyle(.plain)
+        .controlSize(.small)
+        .buttonBorderShape(.circle)
+        .codeckNativeButtonStyle()
     }
 
     private func slideRect(in size: CGSize) -> CGRect {

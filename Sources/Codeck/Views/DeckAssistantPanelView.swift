@@ -27,13 +27,15 @@ struct DeckAssistantPanelView: View {
         VStack(spacing: 0) {
             header
 
+            requestSection
+                .padding(.horizontal, 12)
+                .padding(.bottom, 12)
+
             Divider()
-                .codeckDivider()
 
             GeometryReader { proxy in
                 ScrollView {
-                    VStack(alignment: .leading, spacing: 14) {
-                        requestSection
+                    VStack(alignment: .leading, spacing: 12) {
                         statusSection
                         proposalSection
                             .frame(
@@ -41,15 +43,15 @@ struct DeckAssistantPanelView: View {
                                 alignment: proposal.changes.isEmpty ? .center : .top
                             )
                     }
-                    .padding(14)
+                    .padding(12)
                     .frame(minHeight: proxy.size.height, alignment: .top)
                 }
             }
 
-            Divider()
-                .codeckDivider()
-
-            footer
+            if !proposal.changes.isEmpty {
+                Divider()
+                footer
+            }
         }
         .frame(minWidth: 340, idealWidth: 420, maxWidth: .infinity)
         .codeckWorkspaceBackground()
@@ -65,82 +67,83 @@ struct DeckAssistantPanelView: View {
     }
 
     private var header: some View {
-        HStack(spacing: 10) {
-            Image(systemName: "sparkles")
-                .font(.title3)
-                .foregroundStyle(.tint)
-                .frame(width: 24)
-
-            VStack(alignment: .leading, spacing: 2) {
-                Text("Deck Assistant")
+        VStack(alignment: .leading, spacing: 4) {
+            HStack(spacing: 8) {
+                Label("Deck Assistant", systemImage: "sparkles")
                     .font(.headline)
 
-                Text(selectedSlideLabel)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
+                Spacer(minLength: 8)
+
+                Picker("Scope", selection: $scope) {
+                    ForEach(DeckAssistantScope.allCases) { scope in
+                        Text(scope.title).tag(scope)
+                    }
+                }
+                .codeckNativeNavigationPickerStyle()
+                .labelsHidden()
+                .controlSize(.regular)
+                .buttonBorderShape(.capsule)
+                .fixedSize()
+                .disabled(isRunning)
             }
 
-            Spacer()
+            Text(selectedSlideLabel)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
         }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 12)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 10)
     }
 
     private var requestSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Picker("Scope", selection: $scope) {
-                ForEach(DeckAssistantScope.allCases) { scope in
-                    Label(scope.title, systemImage: scope.systemImage)
-                        .tag(scope)
-                }
-            }
-            .pickerStyle(.segmented)
-            .labelsHidden()
+        VStack(alignment: .leading, spacing: 10) {
+            DeckAssistantComposer(
+                goal: $goal,
+                allowsWebResearch: $allowsWebResearch,
+                isRunning: isRunning,
+                canSend: canAskCodex,
+                onSend: { runAssistant() },
+                onStop: { sessions.stop(Self.assistantBlockID) }
+            )
 
-            TextField(DeckAssistantQuickAction.diagnose.prompt, text: $goal, axis: .vertical)
-                .textFieldStyle(.plain)
-                .lineLimit(3 ... 7)
-                .padding(10)
-                .codeckElevatedSurface(cornerRadius: 8)
-                .disabled(isRunning)
-
-            LazyVGrid(columns: [GridItem(.adaptive(minimum: 108), spacing: 8)], alignment: .leading, spacing: 8) {
-                ForEach(DeckAssistantQuickAction.allCases) { action in
-                    Button {
-                        run(action)
-                    } label: {
-                        Label(action.title, systemImage: action.systemImage)
-                            .frame(maxWidth: .infinity)
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: 6) {
+                    ForEach(DeckAssistantQuickAction.allCases) { action in
+                        quickActionButton(action)
                     }
-                    .disabled(!canRun(action))
-                    .help(helpText(for: action))
-                    .codeckGlassButtonStyle()
                 }
-            }
+                .fixedSize(horizontal: true, vertical: false)
 
-            HStack(spacing: 10) {
-                Toggle(isOn: $allowsWebResearch) {
-                    Label("Use web", systemImage: "globe")
+                VStack(alignment: .leading, spacing: 6) {
+                    HStack(spacing: 6) {
+                        ForEach(DeckAssistantQuickAction.allCases.prefix(3)) { action in
+                            quickActionButton(action)
+                        }
+                    }
+
+                    HStack(spacing: 6) {
+                        ForEach(DeckAssistantQuickAction.allCases.suffix(2)) { action in
+                            quickActionButton(action)
+                        }
+                    }
                 }
-                .toggleStyle(.checkbox)
-                .disabled(isRunning)
-                .help("Allow Codex to use network access for current facts and source citations.")
-
-                Spacer()
-
-                Button {
-                    runAssistant()
-                } label: {
-                    Label(isRunning ? "Running" : "Ask Codex", systemImage: isRunning ? "hourglass" : "paperplane")
-                }
-                .keyboardShortcut(.defaultAction)
-                .disabled(!canAskCodex)
-                .codeckGlassButtonStyle(prominent: true)
+                .fixedSize(horizontal: true, vertical: false)
             }
         }
-        .padding(12)
-        .codeckGlassSurface(cornerRadius: 8, interactive: true)
+    }
+
+    private func quickActionButton(_ action: DeckAssistantQuickAction) -> some View {
+        Button {
+            run(action)
+        } label: {
+            Label(action.title, systemImage: action.systemImage)
+        }
+        .controlSize(.small)
+        .buttonBorderShape(.capsule)
+        .codeckNativeButtonStyle()
+        .disabled(!canRun(action))
+        .help(helpText(for: action))
     }
 
     @ViewBuilder
@@ -158,19 +161,9 @@ struct DeckAssistantPanelView: View {
                         .foregroundStyle(.secondary)
                 }
 
-                Spacer()
-
-                Button {
-                    sessions.stop(Self.assistantBlockID)
-                } label: {
-                    Label("Stop", systemImage: "stop.fill")
-                        .labelStyle(.iconOnly)
-                }
-                .help("Stop Assistant run")
-                .codeckGlassButtonStyle()
+                Spacer(minLength: 0)
             }
-            .padding(12)
-            .codeckGlassSurface(cornerRadius: 8, interactive: true)
+            .padding(.vertical, 4)
         } else if let parseError {
             VStack(alignment: .leading, spacing: 8) {
                 Label("Could not read Codex proposal", systemImage: "exclamationmark.triangle")
@@ -188,8 +181,7 @@ struct DeckAssistantPanelView: View {
                         .font(.caption)
                 }
             }
-            .padding(12)
-            .codeckGlassSurface(cornerRadius: 8, interactive: true)
+            .padding(.vertical, 4)
         }
     }
 
@@ -231,23 +223,12 @@ struct DeckAssistantPanelView: View {
     }
 
     private var emptyProposalState: some View {
-        VStack(spacing: 14) {
-            Image(systemName: "sparkle.magnifyingglass")
-                .font(.system(size: 42, weight: .regular))
-                .foregroundStyle(.secondary)
-
-            VStack(spacing: 8) {
-                Text(proposal.title)
-                    .font(.title.weight(.bold))
-
-                Text(isRunning ? proposal.summary : "Ask Codex to inspect the slide or deck.")
-                    .font(.callout.weight(.semibold))
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
-            }
+        ContentUnavailableView {
+            Label(proposal.title, systemImage: "sparkle.magnifyingglass")
+        } description: {
+            Text(isRunning ? proposal.summary : "Ask Codex to inspect the slide or deck.")
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 18)
     }
 
     private var footer: some View {
@@ -266,10 +247,11 @@ struct DeckAssistantPanelView: View {
                 Label("Apply", systemImage: "checkmark")
             }
             .disabled(isRunning || selectedChanges.isEmpty)
-            .codeckGlassButtonStyle(prominent: true)
+            .controlSize(.small)
+            .codeckNativeButtonStyle(prominent: true)
         }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 12)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
     }
 
     private var assistantOutput: CodexSessionOutput {

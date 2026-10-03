@@ -44,7 +44,8 @@ struct MarkdownTextEditorView: NSViewRepresentable {
         textView.isVerticallyResizable = true
         textView.isHorizontallyResizable = false
         textView.autoresizingMask = [.width]
-        textView.textContainerInset = NSSize(width: 10, height: 10)
+        textView.textContainerInset = NSSize(width: CodeckInterfaceMetrics.editorContentInset, height: 8)
+        textView.textContainer?.lineFragmentPadding = 0
         textView.textContainer?.widthTracksTextView = true
         textView.textContainer?.containerSize = NSSize(
             width: scrollView.contentSize.width,
@@ -82,12 +83,7 @@ struct MarkdownTextEditorView: NSViewRepresentable {
 
         context.coordinator.applyInitialSelectionIfNeeded(to: textView)
 
-        if context.coordinator.handledCommandVersion != controller.commandVersion,
-           let command = controller.pendingCommand
-        {
-            context.coordinator.handledCommandVersion = controller.commandVersion
-            context.coordinator.perform(command, in: textView)
-        }
+        context.coordinator.performPendingCommand(in: textView)
     }
 
     func makeCoordinator() -> Coordinator {
@@ -132,7 +128,7 @@ struct MarkdownTextEditorView: NSViewRepresentable {
         var focusesInitially: Bool
         private let controller: MarkdownEditorController
         weak var textView: NSTextView?
-        var handledCommandVersion = 0
+        private var handledCommandVersion: Int
         var isApplyingCommand = false
         private var didApplyInitialSelection = false
 
@@ -144,6 +140,7 @@ struct MarkdownTextEditorView: NSViewRepresentable {
         ) {
             self.text = text
             self.controller = controller
+            handledCommandVersion = controller.commandVersion
             self.initialSelection = initialSelection
             self.focusesInitially = focusesInitially
         }
@@ -163,6 +160,14 @@ struct MarkdownTextEditorView: NSViewRepresentable {
         func textViewDidChangeSelection(_ notification: Notification) {
             guard let textView = notification.object as? NSTextView else { return }
             publishState(for: textView)
+        }
+
+        func performPendingCommand(in textView: NSTextView) {
+            guard handledCommandVersion != controller.commandVersion,
+                  let command = controller.pendingCommand else { return }
+
+            handledCommandVersion = controller.commandVersion
+            perform(command, in: textView)
         }
 
         fileprivate func perform(_ command: MarkdownEditorCommand, in textView: NSTextView) {

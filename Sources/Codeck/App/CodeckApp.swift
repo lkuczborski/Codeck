@@ -10,6 +10,8 @@ struct CodeckApp: App {
         DocumentGroup(newDocument: PresentationDocument()) { file in
             DocumentWindowView(document: file.$document, fileURL: file.fileURL)
         }
+        .windowToolbarStyle(.unifiedCompact)
+        .defaultSize(width: 1200, height: 800)
         .commands {
             PresentationCommands()
         }

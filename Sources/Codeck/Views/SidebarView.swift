@@ -23,7 +23,7 @@ struct SidebarView: View {
             }
             .listStyle(.sidebar)
             .scrollContentBackground(.hidden)
-            .safeAreaInset(edge: .bottom, spacing: 0) {
+            .codeckNativeBottomBar {
                 sidebarFooter
             }
             .navigationTitle("Slides")
@@ -52,12 +52,14 @@ struct SidebarView: View {
 
     private var sidebarFooter: some View {
         slideActionButtons
-            .buttonStyle(.borderless)
-            .codeckGlassSurface(cornerRadius: 22)
+            .padding(8)
+            .codeckNativeControlBar()
+            .padding(.horizontal, 10)
+            .padding(.vertical, 8)
     }
 
     private var slideActionButtons: some View {
-        HStack(spacing: 8) {
+        HStack(spacing: 12) {
             Button(action: addSlide) {
                 Label("Add Slide", systemImage: "plus")
             }
@@ -74,7 +76,7 @@ struct SidebarView: View {
             .help("Duplicate slide")
             .disabled(selection == nil)
 
-            Spacer(minLength: 10)
+            Spacer(minLength: 8)
 
             Button(role: .destructive, action: confirmDeleteSlide) {
                 Label("Delete Slide", systemImage: "trash")
@@ -82,11 +84,10 @@ struct SidebarView: View {
             .help("Delete slide")
             .disabled(!canDeleteSelectedSlide)
         }
+        .buttonStyle(.borderless)
         .labelStyle(.iconOnly)
-        .buttonBorderShape(.circle)
-        .controlSize(.small)
-        .padding(.horizontal, 12)
-        .padding(.vertical, 10)
+        .controlSize(.regular)
+        .frame(maxWidth: .infinity)
     }
 
     private func addSlide() {

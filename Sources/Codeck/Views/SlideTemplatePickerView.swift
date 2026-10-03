@@ -21,7 +21,6 @@ struct SlideTemplatePickerView: View {
             header
 
             Divider()
-                .codeckDivider()
 
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 22) {
@@ -33,12 +32,10 @@ struct SlideTemplatePickerView: View {
             }
 
             Divider()
-                .codeckDivider()
 
             footer
         }
         .frame(minWidth: 720, idealWidth: 820, minHeight: 540, idealHeight: 640)
-        .codeckWorkspaceBackground()
     }
 
     private var header: some View {
@@ -75,7 +72,8 @@ struct SlideTemplatePickerView: View {
                             isSelected: selectedTemplateID == template.id
                         )
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(.bordered)
+                    .buttonBorderShape(.roundedRectangle(radius: 10))
                 }
             }
         }

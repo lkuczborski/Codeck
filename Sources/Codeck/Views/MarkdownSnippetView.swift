@@ -11,15 +11,15 @@ struct MarkdownSnippetView: View {
                 .font(.caption2.weight(.semibold))
                 .foregroundStyle(.secondary)
 
-            Text(markdown)
-                .font(.system(size: 11, design: .monospaced))
-                .textSelection(.enabled)
-                .multilineTextAlignment(.leading)
-                .lineLimit(nil)
-                .fixedSize(horizontal: false, vertical: true)
-                .frame(maxWidth: .infinity, alignment: .topLeading)
-                .padding(8)
-                .background(CodeckPalette.surface, in: RoundedRectangle(cornerRadius: 6, style: .continuous))
+            GroupBox {
+                Text(markdown)
+                    .font(.system(size: 11, design: .monospaced))
+                    .textSelection(.enabled)
+                    .multilineTextAlignment(.leading)
+                    .lineLimit(nil)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .frame(maxWidth: .infinity, alignment: .topLeading)
+            }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }

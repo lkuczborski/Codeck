@@ -3,6 +3,9 @@ import CodeckRuntime
 import SwiftUI
 
 struct PresentationSlidePreviewPopover: View {
+    static let slideSize = CGSize(width: 380, height: 213.75)
+    static let contentSize = CGSize(width: 400, height: 233.75)
+
     let deck: PresentationDeck
     let selectedSlideID: Slide.ID?
     @ObservedObject var sessions: CodexSessionStore
@@ -39,15 +42,14 @@ struct PresentationSlidePreviewPopover: View {
             } label: {
                 Image(systemName: "pin.fill")
                     .font(.system(size: 12, weight: .bold))
-                    .foregroundStyle(.white)
-                    .frame(width: 26, height: 26)
-                    .background(.black.opacity(0.62), in: Circle())
             }
-            .buttonStyle(.plain)
+            .controlSize(.small)
+            .buttonBorderShape(.circle)
+            .codeckNativeButtonStyle()
             .help("Pin preview")
             .padding(8)
         }
-        .frame(width: 380)
+        .frame(width: Self.slideSize.width, height: Self.slideSize.height)
         .padding(10)
         .onHover(perform: onHoverChanged)
         .onDisappear {

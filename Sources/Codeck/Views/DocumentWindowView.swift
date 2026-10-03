@@ -63,26 +63,25 @@ struct DocumentWindowView: View {
             detail
         }
         .frame(minWidth: 680, minHeight: 500)
+        .toolbarBackground(.hidden, for: .windowToolbar)
         .toolbar {
             if #available(macOS 26.0, *) {
-                ToolbarItem(placement: .automatic) {
+                ToolbarItem(placement: .primaryAction) {
                     appearanceToolbarControl
                 }
-                .sharedBackgroundVisibility(.hidden)
 
-                ToolbarSpacer(.fixed)
+                ToolbarSpacer(.fixed, placement: .primaryAction)
 
-                ToolbarItem(placement: .automatic) {
+                ToolbarItem(placement: .primaryAction) {
                     playToolbarButton
                 }
                 .sharedBackgroundVisibility(.hidden)
 
-                ToolbarSpacer(.fixed)
+                ToolbarSpacer(.fixed, placement: .primaryAction)
 
-                ToolbarItem(placement: .automatic) {
+                ToolbarItem(placement: .primaryAction) {
                     rightUtilityToolbarButton
                 }
-                .sharedBackgroundVisibility(.hidden)
             } else {
                 ToolbarItem(placement: .automatic) {
                     appearanceToolbarControl
@@ -158,6 +157,7 @@ struct DocumentWindowView: View {
                 set: { mode in setAppAppearanceMode(mode) }
             )
         )
+        .controlSize(.small)
         .help("Choose app appearance")
     }
 
@@ -171,13 +171,23 @@ struct DocumentWindowView: View {
                 sessions: sessionStore
             )
         } label: {
-            Label("Play", systemImage: "play.fill")
+            Label("Present", systemImage: "play.fill")
+                .font(.system(size: 13))
+                .frame(width: 16, height: 16)
         }
         .help("Start presentation")
-        .codeckToolbarIconButtonStyle(prominent: true)
+        .labelStyle(.iconOnly)
+        .controlSize(.regular)
+        .buttonBorderShape(.circle)
+        .codeckNativeButtonStyle(prominent: true)
         .onHover(perform: setPlayButtonPreviewHover)
-        .popover(isPresented: $isPlayPreviewPopoverPresented, arrowEdge: .bottom) {
-            playPreviewPopover
+        .background {
+            NativeHoverPopover(
+                isPresented: $isPlayPreviewPopoverPresented,
+                contentSize: PresentationSlidePreviewPopover.contentSize,
+                content: playPreviewPopover
+            )
+            .allowsHitTesting(false)
         }
     }
 
@@ -191,6 +201,7 @@ struct DocumentWindowView: View {
             onHoverChanged: setPlayPreviewPopoverHover,
             onDetach: showDetachedPresentationPreview
         )
+        .onExitCommand(perform: hidePlayPreviewPopover)
     }
 
     private var rightUtilityToolbarButton: some View {
@@ -200,7 +211,7 @@ struct DocumentWindowView: View {
             Label(isRightUtilityVisible ? "Hide Right Pane" : "Show Right Pane", systemImage: "sidebar.right")
         }
         .help(isRightUtilityVisible ? "Hide right pane" : "Show right pane")
-        .codeckToolbarIconButtonStyle()
+        .labelStyle(.iconOnly)
     }
 
     @ViewBuilder
@@ -250,14 +261,14 @@ struct DocumentWindowView: View {
                         .tag(pane)
                 }
             }
-            .pickerStyle(.segmented)
+            .codeckNativeNavigationPickerStyle()
             .labelsHidden()
-            .frame(width: 260)
+            .controlSize(.regular)
+            .buttonBorderShape(.capsule)
+            .fixedSize()
         }
         .frame(maxWidth: .infinity)
-        .padding(10)
-        .padding(.horizontal, 10)
-        .padding(.vertical, 8)
+        .frame(height: CodeckInterfaceMetrics.paneHeaderHeight)
         .codeckWorkspaceBackground()
     }
 
@@ -290,12 +301,13 @@ struct DocumentWindowView: View {
                         .tag(pane)
                 }
             }
-            .pickerStyle(.segmented)
+            .codeckNativeNavigationPickerStyle()
             .labelsHidden()
-            .padding(8)
-            .codeckGlassSurface(cornerRadius: 14, interactive: true)
-            .padding(.horizontal, 10)
-            .padding(.vertical, 8)
+            .controlSize(.regular)
+            .buttonBorderShape(.capsule)
+            .fixedSize()
+            .frame(maxWidth: .infinity)
+            .frame(height: CodeckInterfaceMetrics.paneHeaderHeight)
 
             switch compactPane {
             case .editor:

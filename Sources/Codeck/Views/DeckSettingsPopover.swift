@@ -51,9 +51,8 @@ struct DeckSettingsPopover: View {
             }
         }
         .formStyle(.grouped)
-        .padding(16)
-        .frame(width: 340)
-        .codeckWorkspaceBackground()
+        .controlSize(.small)
+        .frame(width: 360)
         .task {
             await modelCatalog.refresh()
             settings.codex = modelCatalog.normalizedSettings(settings.codex)
