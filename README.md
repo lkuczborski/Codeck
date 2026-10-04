@@ -1,10 +1,10 @@
 # Codeck
 
-**A native macOS Markdown deck editor for presentations that need live AI work, not just static slides.**
+**Markdown presentations for macOS and Codex.**
 
-![Codeck showing a Markdown editor, rendered slide preview, and Deck Assistant proposals](screenshot.png)
+![The Codeck Mac app with a Markdown editor, floating slide preview, and selectable Deck Assistant proposals](docs/assets/codeck-screenshot.png)
 
-Codeck helps you build presentations as readable Markdown, preview them as polished slides, run Codex prompts directly inside a deck, and use the Deck Assistant to turn rough content into proposed Markdown edits. It is designed for people who teach, demo, brief, or workshop AI workflows and want the source of the deck to stay simple, inspectable, and easy to version.
+Write plain-text `.mdeck` presentations, preview slides as you edit, and present fullscreen. Use the native Mac app or the Codeck workspace inside Codex. Run live Codex prompts from slides, and review proposed Markdown edits with the Mac app's Deck Assistant.
 
 ## Why Codeck
 
@@ -52,6 +52,10 @@ Live Codex cards and the Deck Assistant use your existing Codex login. Codeck ca
 ## Use Codeck inside Codex
 
 The plugin provides a dedicated Codeck workspace in Codex desktop: edit highlighted Markdown beside a live preview, iterate through the native Codex composer, open and save decks, and present fullscreen. Codex CLI can use the same plugin's deck skills and MCP tools.
+
+![The Codeck workspace inside Codex with slide thumbnails, a highlighted Markdown editor, live slide preview, and the native Codex composer](docs/assets/codeck-workspace-screenshot.png)
+
+[Watch the Codeck workspace demo](docs/assets/codeck-workspace-demo.mp4).
 
 The prebuilt plugin supports Apple silicon Macs running macOS 14 or later. It includes its native helper and UI; the Codeck Mac app, Swift, Node, npm, and an OpenAI API key are not required. Live cards use the installed Codex executable and your existing login.
 
