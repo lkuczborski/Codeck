@@ -3,511 +3,238 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Codeck — Markdown decks for live AI work</title>
-    <meta
-      name="description"
-      content="Write Markdown, run Codex on the slide, refine with the Deck Assistant, and present from one native Mac app."
-    />
-    <meta name="theme-color" content="#070b12" />
+    <title>Codeck — Markdown presentations for Mac and Codex</title>
+    <meta name="description" content="Write, preview, and present Markdown decks. Run live Codex prompts, review AI edits, or create your presentation in the Codeck workspace inside Codex." />
+    <meta name="theme-color" content="#f8f9fc" />
     <link rel="canonical" href="https://codeck-app.com/" />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Codeck" />
     <meta property="og:url" content="https://codeck-app.com/" />
-    <meta property="og:title" content="Codeck — Markdown decks for live AI work" />
-    <meta
-      property="og:description"
-      content="A native Mac presentation workspace where Markdown, live Codex sessions, AI-assisted edits, and the final presentation stay in one loop."
-    />
+    <meta property="og:title" content="Codeck — Markdown presentations for Mac and Codex" />
+    <meta property="og:description" content="A native Mac app and a Codex workspace for Markdown decks, live AI prompts, and fullscreen presentations." />
     <meta property="og:image" content="https://codeck-app.com/assets/codeck-social-card.png" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
-    <meta
-      property="og:image:alt"
-      content="Codeck branding beside the Markdown deck editor and Deck Assistant."
-    />
+    <meta property="og:image:alt" content="Codeck branding beside the Markdown deck editor and Deck Assistant." />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Codeck — Markdown decks for live AI work" />
-    <meta
-      name="twitter:description"
-      content="Write the story, run the demo, refine the deck, and present — all from one native Mac app."
-    />
+    <meta name="twitter:title" content="Codeck — Markdown presentations for Mac and Codex" />
+    <meta name="twitter:description" content="Write, preview, and present Markdown decks in the native Mac app or the Codeck workspace inside Codex." />
     <meta name="twitter:image" content="https://codeck-app.com/assets/codeck-social-card.png" />
-    <meta
-      name="twitter:image:alt"
-      content="Codeck branding beside the Markdown deck editor and Deck Assistant."
-    />
+    <meta name="twitter:image:alt" content="Codeck branding beside the Markdown deck editor and Deck Assistant." />
     <link rel="icon" href="assets/codeck-icon.png" type="image/png" />
     <link rel="apple-touch-icon" href="assets/codeck-icon.png" />
-    <link rel="stylesheet" href="styles.css?v=20260715-7" />
+    <script>
+      (() => {
+        let mode = "system";
+        try { mode = localStorage.getItem("codeck-color-mode") || mode; } catch {}
+        if (!["light", "dark", "system"].includes(mode)) mode = "system";
+        document.documentElement.dataset.colorMode = mode;
+        document.documentElement.dataset.colorScheme = mode === "system"
+          ? (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light") : mode;
+      })();
+    </script>
+    <link rel="stylesheet" href="styles.css?v=20261004" />
+    <script src="script.js?v=20261004" defer></script>
   </head>
   <body>
     <a class="skip-link" href="#main-content">Skip to content</a>
+    <svg class="icon-library" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <symbol id="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"/></symbol>
+      <symbol id="icon-moon" viewBox="0 0 24 24"><path d="M20.5 14A9 9 0 0 1 10 3.5 9 9 0 1 0 20.5 14Z"/></symbol>
+      <symbol id="icon-monitor" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8m-4-4v4"/></symbol>
+      <symbol id="icon-code" viewBox="0 0 24 24"><path d="m8 6-6 6 6 6m8-12 6 6-6 6m-3-15-2 18"/></symbol>
+      <symbol id="icon-panels" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16m0-11h12"/></symbol>
+      <symbol id="icon-play" viewBox="0 0 24 24"><path d="m8 4 12 8-12 8Z"/></symbol>
+      <symbol id="icon-spark" viewBox="0 0 24 24"><path d="m12 3 2.5 6.5L21 12l-6.5 2.5L12 21l-2.5-6.5L3 12l6.5-2.5Zm7-2v4m-2-2h4"/></symbol>
+      <symbol id="icon-slides" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="13" rx="2"/><path d="M12 16v5m-4 0 4-3 4 3M7 8h10m-10 4h6"/></symbol>
+      <symbol id="icon-plug" viewBox="0 0 24 24"><path d="M8 3v5m8-5v5M6 8h12v4a6 6 0 0 1-12 0Zm6 10v4"/></symbol>
+      <symbol id="icon-download" viewBox="0 0 24 24"><path d="M12 3v12m-5-5 5 5 5-5M4 16v5h16v-5"/></symbol>
+      <symbol id="icon-copy" viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="13" rx="2"/><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3"/></symbol>
+    </svg>
 
-    <header class="site-header" data-header>
-      <div class="nav-shell">
+    <header class="site-header">
+      <div class="container nav-shell">
         <a class="brand" href="#top" aria-label="Codeck home">
-          <img src="assets/codeck-icon.png" alt="" width="44" height="44" />
+          <img src="assets/codeck-icon.png" alt="" width="36" height="36" />
           <span>Codeck</span>
         </a>
-
         <nav class="desktop-nav" aria-label="Primary navigation">
-          <a href="#workflow">Product tour</a>
-          <a href="#codex">Live Codex</a>
-          <a href="#assistant">Assistant</a>
-          <a href="#themes">Themes</a>
-          <a href="#format">Format</a>
+          <a href="#features">Features</a>
+          <a href="#plugin">Codex plugin</a>
+          <a href="#format">Deck format</a>
+          <a href="https://github.com/lkuczborski/Codeck">GitHub</a>
         </nav>
-
         <div class="nav-actions">
-          <a class="nav-download" href="https://github.com/lkuczborski/Codeck/releases/latest">Latest release</a>
-          <button
-            class="menu-toggle"
-            type="button"
-            aria-expanded="false"
-            aria-controls="mobile-menu"
-            data-menu-toggle
-          >
-            Menu
-          </button>
+          <div class="appearance" role="group" aria-label="Website appearance" data-appearance hidden>
+            <button type="button" data-color-mode="light" aria-label="Light mode" aria-pressed="false" title="Light mode"><svg class="icon"><use href="#icon-sun"/></svg></button>
+            <button type="button" data-color-mode="system" aria-label="System appearance" aria-pressed="true" title="System appearance"><svg class="icon"><use href="#icon-monitor"/></svg></button>
+            <button type="button" data-color-mode="dark" aria-label="Dark mode" aria-pressed="false" title="Dark mode"><svg class="icon"><use href="#icon-moon"/></svg></button>
+          </div>
+          <a class="button button-small nav-download" href="#download">Get Codeck</a>
+          <button class="menu-toggle" type="button" aria-controls="mobile-menu" aria-expanded="false" data-menu-toggle hidden>Menu</button>
         </div>
       </div>
-
-      <nav class="mobile-menu" id="mobile-menu" aria-label="Mobile navigation" data-mobile-menu hidden>
-        <a href="#workflow">Product tour</a>
-        <a href="#codex">Live Codex</a>
-        <a href="#assistant">Assistant</a>
-        <a href="#themes">Themes</a>
-        <a href="#format">Format</a>
-        <a href="https://github.com/lkuczborski/Codeck/releases/latest">View latest release</a>
-        <a href="https://github.com/lkuczborski/Codeck">View on GitHub</a>
+      <nav class="mobile-menu container" id="mobile-menu" aria-label="Mobile navigation" hidden>
+        <a href="#features">Features</a><a href="#plugin">Codex plugin</a><a href="#format">Deck format</a><a href="#download">Get Codeck</a><a href="https://github.com/lkuczborski/Codeck">GitHub</a>
       </nav>
     </header>
 
     <main id="main-content">
-      <section class="hero" id="top" aria-labelledby="hero-title">
-        <div class="hero-grid">
-          <div class="hero-intro" data-reveal>
-            <p class="eyebrow"><span aria-hidden="true"></span> Open source · Native macOS</p>
-            <h1 id="hero-title"><span class="hero-line">Markdown decks that</span><em>run Codex live.</em></h1>
-          </div>
+      <section class="hero container" id="top" aria-labelledby="hero-title">
+        <p class="eyebrow">NATIVE MAC APP <span>/</span> CODEX WORKSPACE</p>
+        <h1 id="hero-title">Markdown decks.<br /><span>Live Codex.</span></h1>
+        <p class="hero-description">Write, preview, and present Markdown. Run Codex on your slides, or build your deck right inside Codex.</p>
+        <div class="actions">
+          <a class="button" href="https://github.com/lkuczborski/Codeck/releases/latest"><svg class="icon"><use href="#icon-download"/></svg>Download for Mac</a>
+          <a class="button button-secondary" href="#plugin"><svg class="icon"><use href="#icon-plug"/></svg>Explore the Codex plugin</a>
+        </div>
+        <p class="hero-meta">macOS 14+ <span>·</span> Free &amp; open source <span>·</span> Plain-text .mdeck files</p>
+        <figure class="product-shot hero-shot">
+          <a href="assets/codeck-screenshot.png" target="_blank" rel="noreferrer" aria-label="View the full-size Codeck Mac app screenshot (opens in a new tab)">
+            <picture>
+              <source type="image/webp" srcset="assets/codeck-screenshot-1200.webp 1200w, assets/codeck-screenshot-2000.webp 2000w" sizes="(max-width: 1248px) calc(100vw - 48px), 1200px" />
+              <img src="assets/codeck-screenshot.png" alt="The native Codeck app with a slide list, Markdown editor, Deck Assistant changes, and a floating slide preview" width="3512" height="2240" fetchpriority="high" />
+            </picture>
+          </a>
+          <figcaption><span>Codeck for macOS</span><span>Markdown editor · Live preview · Deck Assistant</span></figcaption>
+        </figure>
+      </section>
 
-          <div class="hero-visual" data-reveal>
-            <div class="hero-halo" aria-hidden="true"></div>
-            <div class="app-stage" data-tilt>
-              <div class="stage-label">
-                <span>Codeck workspace</span>
-                <span>Editor · Preview · Assistant</span>
-              </div>
+      <section class="section container" id="features" aria-labelledby="features-title">
+        <div class="section-heading">
+          <div><p class="eyebrow">01 <span>/</span> THE MAC APP</p><h2 id="features-title">From source to slides.<br />In one workspace.</h2></div>
+          <p>A native document app for writing decks, reviewing AI edits, and presenting live.</p>
+        </div>
+        <div class="feature-grid">
+          <article class="feature"><svg class="icon feature-icon"><use href="#icon-code"/></svg><h3>Write in Markdown</h3><p>Headings, tables, images, GIFs, and highlighted code. Separate slides with <code>---</code> and keep your source readable.</p></article>
+          <article class="feature"><svg class="icon feature-icon"><use href="#icon-panels"/></svg><h3>Preview as you edit</h3><p>See the rendered slide beside your source. Add, duplicate, and organize slides from the sidebar.</p></article>
+          <article class="feature" id="codex"><svg class="icon feature-icon"><use href="#icon-play"/></svg><h3>Run Codex on a slide</h3><p>Turn fenced <code>codex</code> blocks into runnable prompt cards. Stream responses live, or run every card on a slide.</p></article>
+          <article class="feature" id="assistant"><svg class="icon feature-icon"><use href="#icon-spark"/></svg><h3>Review AI edits</h3><p>Ask the Deck Assistant to find gaps, shorten, polish, or research. Review proposed changes and choose what to apply.</p></article>
+          <article class="feature"><svg class="icon feature-icon"><use href="#icon-slides"/></svg><h3>Present from any slide</h3><p>Go fullscreen from the selected slide. Navigate with the arrow keys and press Escape to return to your deck.</p></article>
+          <article class="feature"><svg class="icon feature-icon"><use href="#icon-plug"/></svg><h3>Connect your agents</h3><p>Create and edit decks through the file-based MCP server, or enable the live bridge to work with open Mac app windows.</p></article>
+        </div>
+        <p class="section-note">Live cards and the Deck Assistant use your existing Codex login through Codex desktop or the Codex CLI.</p>
+      </section>
+
+      <section class="plugin-section" id="plugin" aria-labelledby="plugin-title">
+        <div class="container">
+          <div class="section-heading">
+            <div><p class="eyebrow">02 <span>/</span> THE CODEX PLUGIN</p><h2 id="plugin-title">Your deck.<br />Inside Codex.</h2></div>
+            <div class="heading-description"><p>Open Codeck from the Codex sidebar. Write Markdown, see your slides, and use the native Codex composer to create and refine the presentation.</p><a class="text-link" href="#install-plugin">Install the plugin <span aria-hidden="true">↗</span></a></div>
+          </div>
+          <figure class="product-shot workspace-shot">
+            <a href="assets/codeck-workspace-screenshot.png" target="_blank" rel="noreferrer" aria-label="View the full-size Codeck workspace screenshot (opens in a new tab)">
               <picture>
-                <source
-                  srcset="assets/codeck-screenshot-1512.png 1512w, assets/codeck-screenshot.png 3024w"
-                  sizes="(max-width: 980px) 500px, 48vw"
-                />
-                <img
-                  src="assets/codeck-screenshot.png"
-                  alt="Codeck showing a Markdown editor, rendered slide preview, and reviewable Deck Assistant proposals"
-                  width="3024"
-                  height="1964"
-                  fetchpriority="high"
-                />
+                <source type="image/webp" srcset="assets/codeck-workspace-screenshot-1200.webp 1200w, assets/codeck-workspace-screenshot-2000.webp 2000w" sizes="(max-width: 1248px) calc(100vw - 48px), 1200px" />
+                <img src="assets/codeck-workspace-screenshot.png" alt="Codeck inside Codex desktop, with slide thumbnails, a split Markdown editor and slide preview, and the native Codex composer" width="3512" height="2232" loading="lazy" />
               </picture>
-            </div>
-            <div class="floating-note floating-note-source" aria-hidden="true">
-              <span>Source</span>
-              <strong>Plain Markdown</strong>
-            </div>
-          </div>
-
-          <div class="hero-details" data-reveal>
-            <p class="hero-lede">
-              Write a&nbsp;readable Markdown deck, run Codex directly on the slide, shape the story
-              with reviewable AI edits, and go full screen without breaking your flow.
-            </p>
-
-            <div class="hero-actions" role="group" aria-label="Get Codeck">
-              <a class="button button-primary" href="https://github.com/lkuczborski/Codeck/releases/latest">
-                View latest release
-              </a>
-              <a class="button button-quiet" href="#workflow">See Codeck in action</a>
-            </div>
-
-            <p class="hero-requirement">macOS 14+ · Live AI requires Codex CLI and an active login.</p>
-
-            <dl class="hero-facts" aria-label="Codeck requirements and highlights">
-              <div>
-                <dt>macOS 14+</dt>
-                <dd>Native document app</dd>
-              </div>
-              <div>
-                <dt>.mdeck</dt>
-                <dd>Readable plain text</dd>
-              </div>
-              <div>
-                <dt>MIT</dt>
-                <dd>Open-source project</dd>
-              </div>
-            </dl>
-          </div>
-        </div>
-
-        <div class="signal-strip" data-reveal>
-          <p>One native loop for</p>
-          <ul>
-            <li>AI training</li>
-            <li>Live demos</li>
-            <li>Executive briefings</li>
-            <li>Hands-on workshops</li>
-          </ul>
-        </div>
-      </section>
-
-      <section class="workflow-section light-section" id="workflow" aria-labelledby="workflow-title">
-        <div class="section-intro" data-reveal>
-          <p class="section-kicker">Inside Codeck</p>
-          <h2 id="workflow-title">One deck. Three real moments.</h2>
-          <p>
-            Write the source, inspect a&nbsp;runnable Codex card, then present the same file. These
-            are authentic captures from one working <code>.mdeck</code> deck.
-          </p>
-        </div>
-
-        <div class="product-tour" role="group" aria-label="Three real Codeck product moments">
-          <figure class="product-moment product-moment-featured" data-reveal>
-            <figcaption>
-              <p class="product-moment-number">01 · Write</p>
-              <h3>Markdown on one side. The slide on the other.</h3>
-              <p>
-                Edit readable source and watch the themed preview update beside it—no export
-                and no hidden format.
-              </p>
-            </figcaption>
-            <a
-              class="product-capture"
-              href="assets/codeck-tour-write.jpg"
-              target="_blank"
-              rel="noreferrer"
-              aria-label="Open the full-size Codeck editor and preview capture"
-            >
-              <img
-                src="assets/codeck-tour-write.jpg"
-                alt="Codeck editing the File Format slide in Markdown while rendering its Atelier preview beside the source"
-                width="1325"
-                height="768"
-                loading="lazy"
-              />
             </a>
+            <figcaption><span>The Codeck workspace extension</span><span>Same .mdeck format. Inside Codex.</span></figcaption>
           </figure>
-
-          <figure class="product-moment" data-reveal>
-            <a
-              class="product-capture"
-              href="assets/codeck-tour-codex.jpg"
-              target="_blank"
-              rel="noreferrer"
-              aria-label="Open the full-size live Codex card capture"
-            >
-              <img
-                src="assets/codeck-tour-codex.jpg"
-                alt="Codeck showing a fenced Codex prompt in the editor and its runnable prompt card in the live preview"
-                width="1325"
-                height="768"
-                loading="lazy"
-              />
-            </a>
-            <figcaption>
-              <p class="product-moment-number">02 · Run</p>
-              <h3>Codex is part of the slide.</h3>
-              <p>
-                A&nbsp;fenced <code>codex</code> block becomes a&nbsp;runnable card with its prompt, model
-                settings, and response area kept beside the source.
-              </p>
-            </figcaption>
-          </figure>
-
-          <figure class="product-moment" data-reveal>
-            <a
-              class="product-capture"
-              href="assets/codeck-tour-present.jpg"
-              target="_blank"
-              rel="noreferrer"
-              aria-label="Open the full-size Codeck presentation capture"
-            >
-              <img
-                src="assets/codeck-tour-present.jpg"
-                alt="The Preview And Present slide running in Codeck presentation mode"
-                width="1183"
-                height="768"
-                loading="lazy"
-              />
-            </a>
-            <figcaption>
-              <p class="product-moment-number">03 · Present</p>
-              <h3>The working deck is the final deck.</h3>
-              <p>
-                Launch presentation mode from the selected slide and take the same file straight
-                to the room.
-              </p>
-            </figcaption>
-          </figure>
-        </div>
-      </section>
-
-      <section class="codex-section dark-section" id="codex" aria-labelledby="codex-title">
-        <div class="codex-layout">
-          <div class="section-intro section-intro-dark" data-reveal>
-            <p class="section-kicker">Live Codex</p>
-            <h2 id="codex-title">The prompt belongs on the slide.</h2>
-            <p>
-              A&nbsp;fenced <code>codex</code> block becomes a&nbsp;runnable card with its own model,
-              reasoning, and sandbox settings. The answer streams back into the presentation as Markdown.
-            </p>
-            <ul class="proof-list">
-              <li>Run one session or every card on the slide</li>
-              <li>Use stable IDs for reliable output tracking</li>
-              <li>Render lists, tables, links, and code in the result</li>
-            </ul>
+          <div class="plugin-features">
+            <article><span class="feature-number">01</span><h3>Edit beside the preview</h3><p>Highlighted Markdown, slide thumbnails, and editor, split, or preview layouts.</p></article>
+            <article><span class="feature-number">02</span><h3>Keep your work</h3><p>Resume saved drafts. Open and save decks with native macOS file panels.</p></article>
+            <article><span class="feature-number">03</span><h3>Present in place</h3><p>Start fullscreen from the current slide, with live Codex cards in your deck.</p></article>
           </div>
-
-          <div class="codex-lab" data-reveal>
-            <div class="lab-toolbar">
-              <div>
-                <span>Simulated product preview</span>
-                <strong>demo.mdeck</strong>
-              </div>
-              <button type="button" data-run-demo>Play sample response</button>
+          <div class="plugin-details">
+            <div class="demo-panel" id="demo">
+              <div class="panel-heading"><h3>See the workspace in action</h3><span>52 sec · Silent demo</span></div>
+              <video controls playsinline preload="none" poster="assets/codeck-workspace-screenshot-1200.webp" width="3500" height="2220" aria-label="Codeck workspace demonstration" aria-describedby="demo-description demo-walkthrough">
+                <source src="assets/codeck-workspace-demo.mp4" type="video/mp4" />
+                <a href="assets/codeck-workspace-demo.mp4">Download the Codeck workspace demo</a>.
+              </video>
+              <p id="demo-description">A recorded walkthrough of the Codeck workspace in Codex desktop. <a href="assets/codeck-workspace-demo.mp4">Open video</a></p>
+              <details class="demo-transcript">
+                <summary>Read the demo walkthrough</summary>
+                <ol id="demo-walkthrough">
+                  <li>Mention Codeck in a Codex prompt and request a presentation about DevDay 2026.</li>
+                  <li>Codex reads the deck workflow and searches the web for source material.</li>
+                  <li>A 15-slide draft opens in the Codeck workspace beside the conversation.</li>
+                  <li>Review slide thumbnails, Markdown source, source links, and the rendered preview.</li>
+                  <li>Move through the slides using the preview navigation.</li>
+                  <li>Open presentation mode and advance to the next slide.</li>
+                </ol>
+              </details>
             </div>
-
-            <div class="lab-grid">
-              <pre class="lab-source" aria-label="Codex block source"><code>```codex id=first-demo
-title: Make it testable
-reasoning: high
-sandbox: read-only
-
-Give me three observable checks
-for this live demo.
-```</code></pre>
-
-              <div class="lab-output">
-                <div class="lab-output-head">
-                  <strong>Make it testable</strong>
-                  <span class="status-badge" data-demo-status role="status">ready</span>
-                </div>
-                <div class="prompt-preview">
-                  Give me three observable checks for this live demo.
-                </div>
-                <div class="stream-output" data-demo-output aria-live="polite">
-                  <p class="output-placeholder">Play the sample to watch a&nbsp;response arrive.</p>
-                </div>
+            <div class="install-panel" id="install-plugin">
+              <p class="eyebrow">GET THE EXTENSION</p><h3>Add Codeck to Codex.</h3>
+              <p>Run these commands in your terminal to install from the Codeck repository marketplace.</p>
+              <div class="code-block install-code">
+                <div class="code-heading"><span>Terminal</span><button class="copy-button" type="button" data-copy="plugin-commands" aria-label="Copy plugin installation commands" hidden><svg class="icon"><use href="#icon-copy"/></svg><span>Copy</span></button></div>
+                <pre><code id="plugin-commands">codex plugin marketplace add lkuczborski/Codeck
+codex plugin add codeck@codeck-plugins</code></pre>
               </div>
+              <p class="install-next">Restart Codex desktop, then open <strong>Codeck</strong> in the sidebar.</p>
+              <p class="fine-print">Prebuilt plugin: Apple silicon, macOS 14+, and Codex desktop with workspace extensions. Terminal installation requires Codex CLI and Git. The Codeck Mac app and a separate API key aren’t required.</p>
+              <a class="text-link" href="https://github.com/lkuczborski/Codeck/blob/main/plugins/codeck/README.md">Plugin guide &amp; updates <span aria-hidden="true">↗</span></a>
             </div>
           </div>
         </div>
       </section>
 
-      <section class="assistant-section light-section" id="assistant" aria-labelledby="assistant-title">
-        <div class="assistant-layout">
-          <div class="section-intro assistant-copy" data-reveal>
-            <p class="section-kicker">Deck Assistant</p>
-            <h2 id="assistant-title">Review every AI edit before it lands.</h2>
-            <div class="assistant-copy-body">
-              <p>
-                Ask for a&nbsp;tighter slide or a&nbsp;stronger whole-deck narrative. Codeck returns
-                concrete insertions and replacements, so you choose what earns a&nbsp;place in the source.
-              </p>
-              <div class="assistant-facts">
-                <span>Slide or deck scope</span>
-                <span>Optional web research</span>
-                <span>Selective apply</span>
-              </div>
-            </div>
-          </div>
-
-          <div class="assistant-demo" data-assistant-demo data-reveal>
-            <div class="assistant-console">
-              <div class="assistant-console-head">
-                <div>
-                  <span>Simulated Deck Assistant</span>
-                  <strong>Slide 2 · Live demo</strong>
-                </div>
-                <span data-selection-count>3 selected</span>
-              </div>
-
-              <fieldset class="proposal-list">
-                <legend>Choose changes for this illustration</legend>
-                <label>
-                  <input type="checkbox" value="title" checked data-proposal />
-                  <span>
-                    <strong>Sharpen the opening</strong>
-                    <small>Lead with the behavior the audience can observe.</small>
-                  </span>
-                </label>
-                <label>
-                  <input type="checkbox" value="structure" checked data-proposal />
-                  <span>
-                    <strong>Clarify the sequence</strong>
-                    <small>Turn the paragraph into a&nbsp;three-step walkthrough.</small>
-                  </span>
-                </label>
-                <label>
-                  <input type="checkbox" value="proof" checked data-proposal />
-                  <span>
-                    <strong>Add a&nbsp;verification step</strong>
-                    <small>Close with one concrete check the room can follow.</small>
-                  </span>
-                </label>
-              </fieldset>
-
-              <div class="assistant-console-foot">
-                <span>Review before applying.</span>
-                <button type="button" data-apply-proposals>Preview changes</button>
-              </div>
-            </div>
-
-            <div class="assistant-preview-stage">
-              <div class="assistant-slide" aria-live="polite" aria-atomic="true">
-                <div class="slide-meta">
-                  <span data-slide-state>Current slide</span>
-                  <span>2 / 6</span>
-                </div>
-                <h3 data-slide-title>AI demos</h3>
-                <p data-slide-kicker>Run the prompt and talk through the answer.</p>
-                <ul data-slide-points>
-                  <li>Show the prompt</li>
-                  <li>Read the result</li>
-                </ul>
-              </div>
-            </div>
-          </div>
+      <section class="section container" id="format" aria-labelledby="format-title">
+        <div class="section-heading">
+          <div><p class="eyebrow">03 <span>/</span> THE DECK FORMAT</p><h2 id="format-title">Plain text.<br />Presentation ready.</h2></div>
+          <p>Every deck is a readable <code>.mdeck</code> file. Set a theme in the front matter, write Markdown, and use <code>---</code> between slides. Easy to edit, diff, and version.</p>
         </div>
-      </section>
-
-      <section class="themes-section dark-section" id="themes" aria-labelledby="themes-title">
-        <div class="section-intro section-intro-dark centered-intro" data-reveal>
-          <p class="section-kicker">Presentation themes</p>
-          <h2 id="themes-title">Same source. A&nbsp;different room.</h2>
-          <p>
-            Change the deck's look without rewriting slide content. Try the five themes below.
-          </p>
-        </div>
-
-        <div class="theme-studio" data-theme-preview="studio" data-reveal>
-          <div class="theme-tabs" role="group" aria-label="Choose a presentation theme">
-            <button type="button" data-theme="studio" aria-pressed="true"><span></span>Studio</button>
-            <button type="button" data-theme="midnight" aria-pressed="false"><span></span>Midnight</button>
-            <button type="button" data-theme="chalk" aria-pressed="false"><span></span>Chalk</button>
-            <button type="button" data-theme="solar" aria-pressed="false"><span></span>Solar</button>
-            <button type="button" data-theme="atelier" aria-pressed="false"><span></span>Atelier</button>
-          </div>
-
-          <div class="theme-slide" aria-live="polite">
-            <div class="theme-slide-top">
-              <span data-theme-label>Studio</span>
-              <span>04</span>
-            </div>
-            <div>
-              <p class="theme-overline">Live workflow</p>
-              <h3>Make the work visible.</h3>
-              <p>Show the source, run the prompt, and let the audience watch the result arrive.</p>
-            </div>
-            <pre><code>```codex id=live-demo
-title: Verify the result
-
-Name the checks the room can follow.
-```</code></pre>
-          </div>
-        </div>
-      </section>
-
-      <section class="format-section light-section" id="format" aria-labelledby="format-title">
-        <div class="format-layout">
-          <div class="format-copy section-intro" data-reveal>
-            <p class="section-kicker">The .mdeck format</p>
-            <h2 id="format-title">Simple enough to own.</h2>
-            <p>
-              Your deck is Markdown with small, explicit YAML settings. Open it in Codeck,
-              inspect it in any editor, review it in Git, or hand it to an MCP-capable agent.
-            </p>
-
-            <div class="requirements-card">
-              <img
-                src="assets/codeck-document.png"
-                alt="Codeck deck document icon"
-                width="256"
-                height="256"
-                loading="lazy"
-              />
-              <div>
-                <strong>Ready for your Mac</strong>
-                <span>macOS 14 or later</span>
-                <span>Codex CLI + login for live AI features</span>
-                <span>Distributed through GitHub Releases</span>
-              </div>
-            </div>
-
-            <p class="release-note">
-              Current builds are ad-hoc signed but not notarized, so macOS may show an unidentified-developer warning on first launch.
-            </p>
-          </div>
-
-          <div class="format-code" data-reveal>
-            <div class="code-toolbar">
-              <span>first-demo.mdeck</span>
-              <button type="button" data-copy-format>Copy example</button>
-            </div>
-            <pre><code data-format-source>---
+        <div class="format-studio">
+          <div class="code-block format-code">
+            <div class="code-heading"><span>hello.mdeck</span><button class="copy-button" type="button" data-copy="deck-source" aria-label="Copy example deck" hidden><svg class="icon"><use href="#icon-copy"/></svg><span>Copy</span></button></div>
+            <pre><code id="deck-source">---
 format: codeck.mdeck
 version: 1
-theme: studio
-codex:
-  sandbox: read-only
-  reasoning: medium
+theme: <span data-source-theme>studio</span>
 ---
 
-# First slide
+# From Markdown to presentation.
 
-Teach the workflow, then run it live.</code></pre>
-            <div class="code-footer">
-              <span>Markdown body</span>
-              <span>YAML settings</span>
-              <span>Codex defaults</span>
+Keep the source. Present the idea.
+
+- Write with familiar Markdown
+- Preview your slides as you edit
+- Go fullscreen when you’re ready
+
+---
+
+# Next slide
+
+Add a new idea.</code></pre>
+            <a class="code-bottom-link" href="https://github.com/lkuczborski/Codeck#document-format">Read the format reference <span aria-hidden="true">↗</span></a>
+          </div>
+          <div class="theme-studio" id="themes" data-deck-theme="studio">
+            <div class="theme-picker" role="group" aria-label="Presentation theme preview">
+              <button type="button" data-deck-theme="studio" aria-pressed="true"><span class="swatch swatch-studio"></span>Studio</button>
+              <button type="button" data-deck-theme="midnight" aria-pressed="false"><span class="swatch swatch-midnight"></span>Midnight</button>
+              <button type="button" data-deck-theme="chalk" aria-pressed="false"><span class="swatch swatch-chalk"></span>Chalk</button>
+              <button type="button" data-deck-theme="solar" aria-pressed="false"><span class="swatch swatch-solar"></span>Solar</button>
+              <button type="button" data-deck-theme="atelier" aria-pressed="false"><span class="swatch swatch-atelier"></span>Atelier</button>
             </div>
+            <div class="theme-slide">
+              <span class="slide-label">CODECK <span data-theme-name>STUDIO</span></span>
+              <h3>From Markdown<br />to presentation.</h3>
+              <p>Keep the source. Present the idea.</p>
+              <ul><li>Write with familiar Markdown</li><li>Preview your slides as you edit</li><li>Go fullscreen when you’re ready</li></ul>
+              <span class="slide-page">1 / 2</span>
+            </div>
+            <p class="theme-caption">Five built-in presentation themes. Try a palette above.</p>
           </div>
         </div>
       </section>
 
-      <section class="final-section" aria-labelledby="final-title">
-        <img src="assets/codeck-icon.png" alt="" width="160" height="160" loading="lazy" />
-        <p class="section-kicker">Your next deck</p>
-        <h2 id="final-title">Make the presentation a&nbsp;working session.</h2>
-        <p>
-          Bring the source, the live demo, and the final story into one native Mac workspace.
-        </p>
-        <div class="final-actions">
-          <a class="button button-primary" href="https://github.com/lkuczborski/Codeck/releases/latest">
-            View latest release
-          </a>
-          <a class="button button-quiet" href="https://github.com/lkuczborski/Codeck">
-            Explore the source
-          </a>
+      <section class="download-section container" id="download" aria-labelledby="download-title">
+        <div class="download-heading"><img src="assets/codeck-icon.png" alt="" width="64" height="64" loading="lazy" /><div><p class="eyebrow">CODECK</p><h2 id="download-title">Start with a deck.</h2></div></div>
+        <div class="download-options">
+          <div><h3>The native Mac app</h3><p>macOS 14+ · Apple silicon &amp; Intel<br />Developer ID signed and Apple notarized.</p><a class="button" href="https://github.com/lkuczborski/Codeck/releases/latest"><svg class="icon"><use href="#icon-download"/></svg>Download for Mac</a></div>
+          <div><h3>The Codex workspace</h3><p>Prebuilt for Apple silicon · macOS 14+<br />Deck skills and MCP tools also work in Codex CLI.</p><a class="button button-secondary" href="#install-plugin"><svg class="icon"><use href="#icon-plug"/></svg>Install the plugin</a></div>
         </div>
-        <span class="final-note">Open source · MIT licensed · macOS 14+</span>
       </section>
     </main>
 
-    <footer class="site-footer">
-      <a class="brand footer-brand" href="#top">
-        <img src="assets/codeck-icon.png" alt="" width="36" height="36" loading="lazy" />
-        <span>Codeck</span>
-      </a>
-      <p>Markdown decks for live AI work.</p>
-      <nav aria-label="Footer navigation">
-        <a href="https://github.com/lkuczborski/Codeck">GitHub</a>
-        <a href="https://github.com/lkuczborski/Codeck#document-format">Documentation</a>
-        <a href="https://github.com/lkuczborski/Codeck/blob/main/LICENSE">MIT License</a>
-      </nav>
-      <span>© 2026 Łukasz Kuczborski</span>
+    <footer class="site-footer container">
+      <a class="brand" href="#top"><img src="assets/codeck-icon.png" alt="" width="28" height="28" /><span>Codeck</span></a>
+      <p>Open source under the MIT license.</p>
+      <nav aria-label="Footer navigation"><a href="https://github.com/lkuczborski/Codeck">Source</a><a href="https://github.com/lkuczborski/Codeck/tree/main/Examples">Example decks</a><a href="https://github.com/lkuczborski/Codeck/issues">Issues</a></nav>
     </footer>
-
-    <script src="script.js?v=20260715-6"></script>
+    <p class="sr-only" role="status" data-copy-status></p>
   </body>
 </html>
