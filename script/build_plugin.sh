@@ -4,7 +4,11 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"
 PLUGIN_VERSION="$(node -p "require('./plugins/codeck/.codex-plugin/plugin.json').version")"
 PLUGIN_BUILD_NUMBER="${CODECK_PLUGIN_BUILD_NUMBER:-10}"
-swift build -c release --product codeck-mcp
+MIN_SYSTEM_VERSION="14.0"
+MACOS_SDK_VERSION="$(xcrun --sdk macosx --show-sdk-version)"
+# Record the current SDK without raising the oldest supported macOS version.
+swift build -c release --product codeck-mcp \
+  -Xlinker -platform_version -Xlinker macos -Xlinker "$MIN_SYSTEM_VERSION" -Xlinker "$MACOS_SDK_VERSION"
 BIN_DIR="$(swift build -c release --show-bin-path)"
 cd "$ROOT_DIR/plugins/codeck"
 sips -s format png "$ROOT_DIR/Resources/AppIcon.icns" --out assets/app-icon.png >/dev/null
@@ -26,7 +30,7 @@ cat > "$HELPER_APP/Contents/Info.plist" <<PLIST
 <key>CFBundleIconFile</key><string>AppIcon</string>
 <key>CFBundleVersion</key><string>$PLUGIN_BUILD_NUMBER</string>
 <key>CFBundleShortVersionString</key><string>$PLUGIN_VERSION</string>
-<key>LSMinimumSystemVersion</key><string>14.0</string>
+<key>LSMinimumSystemVersion</key><string>$MIN_SYSTEM_VERSION</string>
 <key>LSUIElement</key><true/>
 <key>NSPrincipalClass</key><string>NSApplication</string>
 </dict></plist>
