@@ -1,6 +1,6 @@
 {
   "name": "codeck",
-  "version": "0.3.8",
+  "version": "0.3.9",
   "description": "Create, edit, and present Markdown decks in a dedicated Codex workspace.",
   "author": {
     "name": "Łukasz Kuczborski",

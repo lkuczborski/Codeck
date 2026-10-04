@@ -40,6 +40,8 @@ Codex downloads the prebuilt package from `codex/plugin-distribution` and instal
 
 ## Update or uninstall
 
+Version 0.3.9 includes the shared presentation canvas and fullscreen scaling improvements from the Mac app refresh. Its native workspace helper records the current build SDK so macOS can use its current native UI behavior, while the minimum supported version remains macOS 14.
+
 To install a newly published version:
 
 ```sh
@@ -82,7 +84,7 @@ The repository's `.agents/plugins/marketplace.json` points at the prebuilt packa
 
 ## Automatic packaging
 
-The **Codeck plugin** GitHub Actions workflow runs for relevant source pushes and pull requests, and can also be run manually. Site-only edits do not trigger it. It builds on the Apple silicon `macos-15` runner with Xcode 26.3 selected explicitly, runs Swift and plugin tests plus TypeScript checks, verifies the native bundle, and uploads a `codeck-plugin-macos-arm64` artifact. Its inner `.tar.gz` preserves executable permissions and includes a local marketplace catalog. Extract it and add that extracted directory as a local marketplace to test a branch build. The accompanying SHA-256 file verifies the archive.
+The **Codeck plugin** GitHub Actions workflow runs for relevant source pushes and pull requests, and can also be run manually. Site-only edits do not trigger it. It builds on the Apple silicon `xcode-27` runner using its default Xcode, runs Swift and plugin tests plus TypeScript checks, verifies the native bundle, and uploads a `codeck-plugin-macos-arm64` artifact. Its inner `.tar.gz` preserves executable permissions and includes a local marketplace catalog. Extract it and add that extracted directory as a local marketplace to test a branch build. The accompanying SHA-256 file verifies the archive.
 
 CI produces ad hoc signed development artifacts. Merging to `main` builds and tests a package; it does not publish it to users. Release signing credentials remain in the maintainer's Mac Keychain.
 
