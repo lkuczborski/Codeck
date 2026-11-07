@@ -10,6 +10,8 @@ enum MarkdownInsertion: String, CaseIterable, Identifiable {
     case blockquote
     case link
     case image
+    case video
+    case backgroundImage
     case codeBlock
     case table
     case horizontalRule
@@ -39,6 +41,10 @@ enum MarkdownInsertion: String, CaseIterable, Identifiable {
             "Link"
         case .image:
             "Image"
+        case .video:
+            "Video"
+        case .backgroundImage:
+            "Background Image"
         case .codeBlock:
             "Code Block"
         case .table:
@@ -66,6 +72,10 @@ enum MarkdownInsertion: String, CaseIterable, Identifiable {
             "link"
         case .image:
             "photo"
+        case .video:
+            "video"
+        case .backgroundImage:
+            "photo.fill"
         case .codeBlock:
             "chevron.left.forwardslash.chevron.right"
         case .table:
@@ -101,6 +111,10 @@ enum MarkdownInsertion: String, CaseIterable, Identifiable {
             MarkdownInsertionTemplate(text: "[Link text](https://example.com)", selectedText: "Link text")
         case .image:
             MarkdownInsertionTemplate(text: "![Alt text](Images/example.png)", selectedText: "Alt text")
+        case .video:
+            MarkdownInsertionTemplate(text: "![Video description](Movies/example.mp4)", selectedText: "Movies/example.mp4")
+        case .backgroundImage:
+            MarkdownInsertionTemplate(text: "![bg](Images/background.gif)", selectedText: "Images/background.gif")
         case .codeBlock:
             MarkdownInsertionTemplate(text: "```swift\nlet value = \"Hello\"\n```", selectedText: "let value = \"Hello\"")
         case .table:

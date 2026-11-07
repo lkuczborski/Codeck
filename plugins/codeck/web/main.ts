@@ -10,6 +10,7 @@ import { app, call } from './bridge';
 import { applyDocumentTheme, applyHostStyleVariables, type McpUiHostContext } from '@modelcontextprotocol/ext-apps';
 import { slideRanges, replaceSlides, workspaceContext, fittedSlideSize } from './document.mjs';
 import { activeFormatting, formatEdit, insertionEdit, insertions, type Format } from './editor-operations';
+import { fitSlideMedia } from './slide-media-layout';
 import './style.css';
 
 type Slide = { index: number; title: string; markdown: string; html?: string; blocks?: { id: string; title: string }[] };
@@ -197,7 +198,9 @@ async function renderDraft() {
 
 // Native renderer HTML stays isolated in a ShadowRoot. Only presentation elements and
 // styles are adopted. Card controls are built here from server-validated IDs; renderer scripts and handlers never run.
+const mediaLayoutCleanup = new WeakMap<HTMLElement, () => void>();
 function mountSlide(target: HTMLElement, html: string, blocks: Slide['blocks'] = [], interactive = false) {
+  mediaLayoutCleanup.get(target)?.();
   const parsed = new DOMParser().parseFromString(html, 'text/html');
   parsed.querySelectorAll('script,iframe,object,embed,link,meta,base,form,input,button,textarea,select').forEach(node => node.remove());
   parsed.querySelectorAll('*').forEach(node => {
@@ -207,9 +210,11 @@ function mountSlide(target: HTMLElement, html: string, blocks: Slide['blocks'] =
     if (node.hasAttribute('href')) node.removeAttribute('href');
     if (node.hasAttribute('src')) {
       const value = node.getAttribute('src') ?? '';
-      if (!/^data:image\/(png|jpeg|gif|webp);base64,/i.test(value)) {
+      const allowedImage = node.tagName === 'IMG' && /^data:image\/(png|jpeg|gif|webp);base64,/i.test(value);
+      const allowedVideo = node.tagName === 'VIDEO' && /^data:video\/(mp4|quicktime|webm);base64,/i.test(value);
+      if (!allowedImage && !allowedVideo) {
         node.removeAttribute('src');
-        node.setAttribute('alt', `${node.getAttribute('alt') ?? 'Image'} · use a local image within allowed folders`);
+        node.setAttribute('alt', `${node.getAttribute('alt') ?? 'Media'} · use local media within allowed folders`);
       }
     }
   });
@@ -217,7 +222,7 @@ function mountSlide(target: HTMLElement, html: string, blocks: Slide['blocks'] =
   const style = document.createElement('style');
   style.textContent = [...parsed.querySelectorAll('style')].map(node => node.textContent?.replace(/:root/g, ':host').replace(/\bhtml\b/g, ':host').replace(/\bbody\b/g, '.document')).join('\n') +
     '\n:host{display:block;width:1600px;height:900px;font:24px/1.45 -apple-system,BlinkMacSystemFont,sans-serif;color:var(--fg);background:var(--bg)}' +
-    '.document{width:1600px;height:900px;display:block;overflow:hidden}.slide{width:1600px;min-height:900px;padding:88px;}h1{font-size:82px}h2{font-size:60px}h3{font-size:44px}img{max-height:558px}.slide-actions{display:none}';
+    '.document{width:1600px;height:900px;display:block;overflow:hidden;font:inherit}.slide{width:1600px;height:900px;min-height:900px;padding:88px;}h1{font-size:82px}h2{font-size:60px}h3{font-size:44px}.slide-actions{display:none}';
   parsed.querySelectorAll('style').forEach(node => node.remove());
   const content = document.createElement('div');
   content.className = 'document';
@@ -236,6 +241,7 @@ function mountSlide(target: HTMLElement, html: string, blocks: Slide['blocks'] =
     button.onclick = () => void runCard(id,running).catch(showError);
     card.querySelector('.codex-card-heading')?.append(button);
   }
+  mediaLayoutCleanup.set(target, fitSlideMedia(shadow));
 }
 
 function renderNavigator() {
@@ -244,6 +250,7 @@ function renderNavigator() {
   $('slide-count').textContent = String(preview.slides.length);
   const list = $('slide-list');
   const scroll = list.scrollTop;
+  list.querySelectorAll<HTMLElement>('.thumbnail-content').forEach(target => mediaLayoutCleanup.get(target)?.());
   list.replaceChildren();
   preview.slides.forEach((slide, index) => {
     const row = document.createElement('button');

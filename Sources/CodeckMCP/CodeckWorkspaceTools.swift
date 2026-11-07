@@ -318,26 +318,13 @@ final class CodeckWorkspaceTools: @unchecked Sendable {
     private func preview(_ markdown: String, path: String?, workspaceID: String? = nil) throws -> [String: Any] {
         let deck = PresentationDeck(markdownDocument: markdown)
         // Render the stored Markdown even when disk access needs renewed approval.
-        // Local images are only read after their own path authorization below.
+        // Local media are only read after their own path authorization below.
         let directory = path.flatMap { try? paths.resolve($0).deletingLastPathComponent() }
-        let slides = try deck.slides.enumerated().map { index, slide -> [String: Any] in
+        let slides = deck.slides.enumerated().map { index, slide -> [String: Any] in
             let outputs = workspaceID.map { runs.outputs($0, blocks: slide.codexBlocks, settings: deck.settings.codex) } ?? [:]
-            var html = MarkdownRenderer.htmlDocument(for: slide, theme: deck.theme, codexOutputs: outputs)
-            // Local images are embedded so the isolated MCP App never needs filesystem or network access.
-            let expression = try NSRegularExpression(pattern: #"<img src="([^"]+)""#)
-            for match in expression.matches(in: html, range: NSRange(html.startIndex..., in: html)).reversed() {
-                guard let range = Range(match.range(at: 1), in: html) else { continue }
-                let source = String(html[range]).replacingOccurrences(of: "&amp;", with: "&")
-                guard let directory, !source.contains("://"), !source.hasPrefix("data:"), !source.hasPrefix("//") else { continue }
-                let rawPath = source.hasPrefix("/") ? source : directory.appendingPathComponent(source.removingPercentEncoding ?? source).path
-                guard let imageURL = try? paths.resolve(rawPath) else { continue }
-                let types = ["png": "image/png", "jpg": "image/jpeg", "jpeg": "image/jpeg", "gif": "image/gif", "webp": "image/webp"]
-                guard let mime = types[imageURL.pathExtension.lowercased()],
-                      let attributes = try? FileManager.default.attributesOfItem(atPath: imageURL.path),
-                      let size = attributes[.size] as? Int, size <= 5_000_000,
-                      let data = try? Data(contentsOf: imageURL) else { continue }
-                html.replaceSubrange(range, with: "data:\(mime);base64,\(data.base64EncodedString())")
-            }
+            let renderedHTML = MarkdownRenderer.htmlDocument(for: slide, theme: deck.theme, codexOutputs: outputs)
+            // Embedding keeps the isolated MCP App independent of filesystem and network access.
+            let html = CodeckMCPMediaAssets.embeddingLocalSources(in: renderedHTML, directory: directory, paths: paths)
             return ["index": index, "title": slide.title, "markdown": slide.markdown, "html": html,
                     "blocks": slide.codexBlocks.map { ["id": $0.id, "title": $0.title] }]
         }

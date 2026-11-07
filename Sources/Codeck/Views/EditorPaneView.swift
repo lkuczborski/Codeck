@@ -165,7 +165,7 @@ struct EditorPaneView: View {
                 }
             }
             Section("Media and Code") {
-                ForEach([MarkdownInsertion.image, .codeBlock, .codexSession]) { insertion in
+                ForEach([MarkdownInsertion.image, .video, .backgroundImage, .codeBlock, .codexSession]) { insertion in
                     insertButton(insertion)
                 }
             }

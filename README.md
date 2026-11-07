@@ -30,12 +30,12 @@ Most presentation tools separate the script, the source material, the live demo,
 
 - Native macOS document app for `.mdeck` files.
 - Codex plugin with its own sidebar workspace, split Markdown editor and preview, native Codex composer, and fullscreen presentation.
-- Markdown slides with headings, lists, blockquotes, tables, links, images, GIFs, and fenced code blocks.
+- Markdown slides with headings, lists, blockquotes, tables, links, images, GIFs, videos, slide backgrounds, and fenced code blocks.
 - Syntax highlighting for common code fence languages.
 - Theme picker with Studio, Midnight, Chalk, Solar, and Atelier presentation themes.
 - Sidebar for scanning, selecting, adding, duplicating, deleting, and organizing slides.
 - Live preview beside the editor, plus compact modes for smaller windows.
-- Insert tools for common Markdown blocks, images, tables, and Codex cards.
+- Insert tools for common Markdown blocks, images, videos, backgrounds, tables, and Codex cards.
 - Deck-level Codex defaults for model, reasoning effort, and sandbox.
 - Per-slide live Codex cards, per-card overrides, streaming Markdown output, and run-all on slides with multiple sessions.
 - Deck Assistant with Slide and Deck scopes, quick actions for Find Gaps, Shorten, Polish, Research, and Add Data, optional web use, selectable changes, and one-click apply.
@@ -146,6 +146,36 @@ Supported deck metadata:
 - `codex.sandbox`: default sandbox for live Codex sessions. Defaults to `read-only`.
 - `codex.model`: default model for live Codex sessions. New decks default to `gpt-6.1-sol`. The model picker fetches the current backend catalog from `codex app-server` and caches successful responses. Failed refreshes retain that cache and expose Retry; there is no hardcoded fallback catalog. Saved model overrides and supported reasoning choices stay intact. After a successful refresh, reasoning values no longer supported by the selected model are normalized to a supported value.
 - `codex.reasoning` or `codex.reasoning_effort`: default reasoning effort. New decks default to Light (`low`). The picker uses reasoning levels from the backend catalog. Fence and saved deck overrides are preserved, including future reasoning values.
+
+## Images, GIFs, and Videos
+
+Use image Markdown for still images, animated GIFs, and movies:
+
+```markdown
+![Product screenshot](Images/product.png)
+
+![Animated demo](Images/demo.gif)
+
+![Product walkthrough](Movies/walkthrough.mp4)
+```
+
+Media scales down automatically to fit the slide's available content area while preserving its aspect ratio and leaving room for surrounding text. Smaller media stays at its natural size. Fitting updates when media finishes loading or the slide resizes, including slide previews.
+
+Paths can be relative to the deck or web URLs in the native app. The Codex plugin embeds local media from allowed folders, up to 5 MB per file. Movie paths ending in `.mp4`, `.m4v`, `.mov`, or `.webm` render with playback controls and preload their first frame as a still preview. Playback starts when you press Play and depends on the codecs supported by the browser.
+
+To fill the slide with a background image or animated GIF, put `![bg](...)` in its own paragraph outside lists, quotes, and code blocks:
+
+```markdown
+![bg](Images/background.gif)
+
+# A title over the background
+
+Foreground content goes here.
+```
+
+Backgrounds fill the slide edge to edge, preserving their aspect ratio and cropping any excess. They sit behind the slide's text and other content. You can include a description, such as `![bg Mountain landscape](Images/mountains.jpg)`. The first background declaration on a slide is used; additional declarations are ignored. Code examples remain literal.
+
+The **Insert** menu includes **Image**, **Video**, and **Background Image** options.
 
 ## Live Codex Sessions
 

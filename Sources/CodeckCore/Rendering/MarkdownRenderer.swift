@@ -12,6 +12,11 @@ public enum MarkdownRenderer {
         var text: String
     }
 
+    private struct RenderedBlocks {
+        var html: String
+        var background: MarkdownMedia?
+    }
+
     public static func htmlDocument(
         for slide: Slide,
         theme: PresentationTheme,
@@ -79,7 +84,7 @@ public enum MarkdownRenderer {
         extraScript: String = ""
     ) -> String {
         let codexBlocks = slide.codexBlocks
-        let body = renderBlocks(from: slide.markdown, codexOutputs: codexOutputs)
+        let body = renderBlocks(from: slide.markdown, codexOutputs: codexOutputs, allowsBackground: true)
         return
             """
             <!doctype html>
@@ -110,9 +115,13 @@ public enum MarkdownRenderer {
             </head>
             <body>
               <main class="slide">
+                \(body.background.map(renderBackground) ?? "")
                 \(renderSlideActions(for: codexBlocks))
-                \(body)
+                <div class="slide-content">
+                  \(body.html)
+                </div>
               </main>
+              <script>\(SlideMediaLayout.script)</script>
             </body>
             </html>
             """
@@ -121,11 +130,13 @@ public enum MarkdownRenderer {
     private static func renderBlocks(
         from markdown: String,
         codexOutputs: [String: CodexSessionOutput],
-        renderCodexFences: Bool = true
-    ) -> String {
+        renderCodexFences: Bool = true,
+        allowsBackground: Bool = false
+    ) -> RenderedBlocks {
         let lines = markdown.components(separatedBy: .newlines)
         var html: [String] = []
         var index = 0
+        var background: MarkdownMedia?
 
         while index < lines.count {
             let line = lines[index]
@@ -163,6 +174,15 @@ public enum MarkdownRenderer {
                 continue
             }
 
+            if allowsBackground,
+               let media = MarkdownMedia.background(in: line),
+               isParagraphEnd(lines, after: index)
+            {
+                if background == nil { background = media }
+                index += 1
+                continue
+            }
+
             if let heading = headingHTML(for: trimmed) {
                 html.append(heading)
                 index += 1
@@ -187,7 +207,8 @@ public enum MarkdownRenderer {
                     lines,
                     startingAt: index,
                     codexOutputs: codexOutputs,
-                    renderCodexFences: renderCodexFences
+                    renderCodexFences: renderCodexFences,
+                    allowsBackground: allowsBackground
                 )
                 html.append(rendered.html)
                 index = rendered.nextIndex
@@ -206,7 +227,19 @@ public enum MarkdownRenderer {
             index = rendered.nextIndex
         }
 
-        return html.joined(separator: "\n")
+        return RenderedBlocks(html: html.joined(separator: "\n"), background: background)
+    }
+
+    private static func isParagraphEnd(_ lines: [String], after index: Int) -> Bool {
+        guard index + 1 < lines.count else { return true }
+        let next = lines[index + 1].trimmingCharacters(in: .whitespaces)
+        return next.isEmpty || headingHTML(for: next) != nil || isHorizontalRule(next)
+            || MarkdownFence.openingMarker(in: next) != nil || listMarker(for: next) != nil
+            || next.hasPrefix(">") || isTableStart(lines, at: index + 1)
+    }
+
+    private static func renderBackground(_ media: MarkdownMedia) -> String {
+        "<img class=\"slide-background\" src=\"\(escapeAttribute(media.destination))\" alt=\"\(escapeAttribute(media.backgroundDescription))\">"
     }
 
     private static func renderSlideActions(for blocks: [CodexBlock]) -> String {
@@ -291,7 +324,8 @@ public enum MarkdownRenderer {
         _ lines: [String],
         startingAt index: Int,
         codexOutputs: [String: CodexSessionOutput],
-        renderCodexFences: Bool
+        renderCodexFences: Bool,
+        allowsBackground: Bool
     ) -> (html: String, nextIndex: Int) {
         guard let firstMarker = listMarker(for: lines[index].trimmingCharacters(in: .whitespaces)) else {
             return ("", index + 1)
@@ -312,6 +346,13 @@ public enum MarkdownRenderer {
 
             while rowIndex < lines.count {
                 let continuation = lines[rowIndex].trimmingCharacters(in: .whitespaces)
+                if allowsBackground, continuation.isEmpty,
+                   let next = lines[(rowIndex + 1)...].first(where: { !$0.trimmingCharacters(in: .whitespaces).isEmpty }),
+                   next.first?.isWhitespace == false,
+                   MarkdownMedia.background(in: next) != nil
+                {
+                    break
+                }
                 if let nextMarker = listMarker(for: continuation), nextMarker.kind == firstMarker.kind {
                     break
                 }
@@ -346,7 +387,7 @@ public enum MarkdownRenderer {
     ) -> String {
         let markdown = lines.joined(separator: "\n").trimmingCharacters(in: .whitespacesAndNewlines)
         guard !markdown.isEmpty else { return "" }
-        return renderBlocks(from: markdown, codexOutputs: codexOutputs, renderCodexFences: renderCodexFences)
+        return renderBlocks(from: markdown, codexOutputs: codexOutputs, renderCodexFences: renderCodexFences).html
     }
 
     private static func isStrongListBoundary(_ trimmedLine: String) -> Bool {
@@ -415,7 +456,7 @@ public enum MarkdownRenderer {
     private static func renderCodexBlock(_ block: CodexBlock, output: CodexSessionOutput?) -> String {
         let state = output?.state ?? .idle
         let body = CodexSessionOutputFormatter.markdown(from: output)
-        let bodyHTML = renderBlocks(from: body, codexOutputs: [:], renderCodexFences: false)
+        let bodyHTML = renderBlocks(from: body, codexOutputs: [:], renderCodexFences: false).html
         let isRunning = state == .running
         let action = isRunning ? "stopCodex" : "runCodex"
         let actionTitle = isRunning ? "Stop" : "Run"
@@ -450,51 +491,7 @@ public enum MarkdownRenderer {
     }
 
     private static func renderInline(_ text: String) -> String {
-        var html = escapeHTML(text)
-        html = replace(pattern: "`([^`]+)`", in: html) { matches in
-            "<code>\(matches[1])</code>"
-        }
-        html = replace(pattern: "!\\[([^\\]]*)\\]\\(([^\\)]+)\\)", in: html) { matches in
-            "<img src=\"\(matches[2])\" alt=\"\(matches[1])\">"
-        }
-        html = replace(pattern: "\\[([^\\]]+)\\]\\(([^\\)]+)\\)", in: html) { matches in
-            "<a href=\"\(matches[2])\">\(matches[1])</a>"
-        }
-        html = replace(pattern: "~~([^~]+)~~", in: html) { matches in
-            "<del>\(matches[1])</del>"
-        }
-        html = replace(pattern: "\\*\\*([^*]+)\\*\\*", in: html) { matches in
-            "<strong>\(matches[1])</strong>"
-        }
-        html = replace(pattern: "\\*([^*]+)\\*", in: html) { matches in
-            "<em>\(matches[1])</em>"
-        }
-        return html
-    }
-
-    private static func replace(
-        pattern: String,
-        in text: String,
-        transform: ([String]) -> String
-    ) -> String {
-        guard let regex = try? NSRegularExpression(pattern: pattern) else {
-            return text
-        }
-
-        let nsText = text as NSString
-        let matches = regex.matches(in: text, range: NSRange(location: 0, length: nsText.length)).reversed()
-        var result = text
-
-        for match in matches {
-            let groups = (0 ..< match.numberOfRanges).map { index in
-                match.range(at: index).location == NSNotFound ? "" : nsText.substring(with: match.range(at: index))
-            }
-            if let range = Range(match.range, in: result) {
-                result.replaceSubrange(range, with: transform(groups))
-            }
-        }
-
-        return result
+        MarkdownInlineRenderer.render(text)
     }
 
     private static func escapeHTML(_ value: String) -> String {
@@ -535,8 +532,28 @@ public enum MarkdownRenderer {
           position: relative;
           width: min(100vw, 1600px);
           min-height: 100vh;
+          height: 100vh;
           padding: 88px;
           overflow-wrap: anywhere;
+          isolation: isolate;
+        }
+        .slide-content {
+          display: flow-root;
+          position: relative;
+          z-index: 1;
+        }
+        .slide-background {
+          position: absolute;
+          inset: 0;
+          width: 100%;
+          height: 100%;
+          max-width: none;
+          max-height: none;
+          object-fit: cover;
+          margin: 0;
+          border-radius: 0;
+          pointer-events: none;
+          z-index: 0;
         }
         h1, h2, h3, h4, h5, h6 {
           line-height: 1.08;
@@ -553,10 +570,10 @@ public enum MarkdownRenderer {
           max-width: 76ch;
         }
         a { color: var(--accent); }
-        img {
+        .slide-content img, .slide-content video {
           display: block;
           max-width: 100%;
-          max-height: 62vh;
+          height: auto;
           object-fit: contain;
           margin: 1em 0;
           border-radius: 8px;
@@ -971,7 +988,6 @@ public enum MarkdownRenderer {
         h1 { font-size: 82px; }
         h2 { font-size: 60px; }
         h3 { font-size: 44px; }
-        img { max-height: 558px; }
         pre { font-size: 0.72em; }
         .codex-card-heading { gap: 0.7em; }
         .slide-actions {
