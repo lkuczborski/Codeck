@@ -1,22 +1,14 @@
-Codeck v0.7 has been refreshed for macOS 27, with native Liquid Glass controls and a more consistent workspace.
+Codeck v0.8 adds automatic media fitting, full-slide backgrounds, and movie playback to Markdown decks.
 
-- Refreshed the title bar, editor toolbar, slide sidebar, settings, and assistant with native controls, compact sizing, and consistent spacing. The appearance picker clearly highlights its selected mode.
-- Integrated the assistant's Use Web checkbox and circular Send button into the composer.
-- Unified the slide canvas across the editor preview, hover preview, and presentation mode so typography, images, and layout match at different sizes.
-- Added padding and a subtle shadow to the editor preview, and fixed preview resizing glitches and crashes.
-- Improved the hover preview's sizing and native animation, and made Present respond to the first click while the hover preview is open.
-- Built against the macOS 27 SDK to enable the current system UI, while retaining macOS 14 and later support.
+- Images, animated GIFs, and movies scale down to fit the slide while preserving their aspect ratio and leaving room for headings, captions, and other media. Smaller assets keep their natural size.
+- Add an image or animated GIF background with `![bg](Images/background.gif)` in its own paragraph. Backgrounds fill the slide edge to edge, stay centered, and crop as needed, with foreground content above them.
+- Insert movies using image Markdown, such as `![Demo](Movies/demo.mp4)`. MP4, M4V, MOV, and WebM paths show playback controls and preload the first frame; playback starts when you press Play.
+- Local movies play in the Mac app with relative or absolute paths. Media paths support spaces, escaped punctuation, and URL fragments.
+- Added **Video** and **Background Image** options to the **Insert** menu in the Mac app and Codex workspace.
+- Media fitting updates after loading and resizing across editor and hover previews, presentation mode, template previews, and the Codex workspace. Markdown media examples inside code stay literal.
 
-Also included in v0.7:
+Download `{{ZIP_NAME}}` for Apple silicon and Intel Macs running macOS 14 or later. The archive includes `Codeck.app` and `codeck-mcp`.
 
-- Changed the default model for new decks and Codex cards without overrides to GPT-6.1 Sol with Light reasoning.
-- The model picker uses the current models and reasoning levels available through Codex, and keeps the last successful list when a refresh fails.
-- Preserved saved deck model and reasoning settings when refreshing the model list.
-- Added support for the Codex executable bundled with the desktop app for live cards and model discovery, without requiring a separate CLI installation.
-- The Mac app is Developer ID signed and notarized by Apple for distribution.
-
-Download `{{ZIP_NAME}}` for Apple silicon and Intel Macs running macOS 14 or later. The archive includes `Codeck.app` and `codeck-mcp`. This refresh keeps the version at v0.7.
-
-Built from commit `{{COMMIT}}`. The app has a stapled Apple notarization ticket; signing, Gatekeeper, and extracted archive checks passed. The test suite completed with 183 tests, one skipped, and no failures.
+Built from commit `{{COMMIT}}`.
 
 SHA-256: `{{SHA256}}`

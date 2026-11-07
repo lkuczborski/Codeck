@@ -65,6 +65,8 @@ export const insertions = [
   ['paragraph','Paragraph','Paragraph text','Paragraph text'], ['bulletedList','Bulleted list','- First item\n- Second item','First item'],
   ['numberedList','Numbered list','1. First item\n2. Second item','First item'], ['blockquote','Quote','> Quote text','Quote text'],
   ['link','Link','[Link text](https://example.com)','Link text'], ['image','Image','![Alt text](Images/example.png)','Alt text'],
+  ['video','Video','![Video description](Movies/example.mp4)','Movies/example.mp4'],
+  ['backgroundImage','Background Image','![bg](Images/background.gif)','Images/background.gif'],
   ['codeBlock','Code block','```swift\nlet value = "Hello"\n```','let value = "Hello"'],
   ['table','Table','| Header | Header |\n| --- | --- |\n| Cell | Cell |','Header'], ['horizontalRule','Divider','***',''],
   ['codexSession','Codex session','', 'Describe the goal for this prompt'],

@@ -33,3 +33,15 @@ test('block insertions preserve surrounding paragraphs and select placeholders',
   const existing=state(source,source.length);
   assert.match(existing.update(insertionEdit(existing,'codexSession')).state.doc.toString(),/id=demo-2/);
 });
+
+test('media insertions create standalone paragraphs and select the file path',()=>{
+  for(const [key,template,path] of [
+    ['video','![Video description](Movies/example.mp4)','Movies/example.mp4'],
+    ['backgroundImage','![bg](Images/background.gif)','Images/background.gif'],
+  ]) {
+    const current=state('beforeafter',6);
+    const next=current.update(insertionEdit(current,key)).state;
+    assert.equal(next.doc.toString(),`before\n\n${template}\n\nafter`);
+    assert.equal(next.sliceDoc(next.selection.main.from,next.selection.main.to),path);
+  }
+});
