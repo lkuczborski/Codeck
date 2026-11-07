@@ -40,7 +40,7 @@ Codex downloads the prebuilt package from `codex/plugin-distribution` and instal
 
 ## Update or uninstall
 
-Version 0.3.9 includes the shared presentation canvas and fullscreen scaling improvements from the Mac app refresh. Its native workspace helper records the current build SDK so macOS can use its current native UI behavior, while the minimum supported version remains macOS 14.
+Version 0.3.10 adds automatic image, GIF, and movie fitting, full-slide image and GIF backgrounds, and paused first-frame movie previews. The Insert menu includes Video and Background Image shortcuts. The minimum supported version remains macOS 14.
 
 To install a newly published version:
 
@@ -84,7 +84,7 @@ The repository's `.agents/plugins/marketplace.json` points at the prebuilt packa
 
 ## Automatic packaging
 
-The **Codeck plugin** GitHub Actions workflow runs for relevant source pushes and pull requests, and can also be run manually. Site-only edits do not trigger it. It builds on the Apple silicon `xcode-27` runner using its default Xcode, runs Swift and plugin tests plus TypeScript checks, verifies the native bundle, and uploads a `codeck-plugin-macos-arm64` artifact. Its inner `.tar.gz` preserves executable permissions and includes a local marketplace catalog. Extract it and add that extracted directory as a local marketplace to test a branch build. The accompanying SHA-256 file verifies the archive.
+The **Codeck plugin** GitHub Actions workflow runs for relevant source pushes and pull requests, and can also be run manually. Site-only edits do not trigger it. It uses GitHub's Apple silicon `xcode-27` runner with Xcode 27.2 selected explicitly from `/Applications/Xcode_27.2.app`, and checks both the Xcode and macOS SDK versions before building. It runs Swift and plugin tests plus TypeScript checks, verifies the native bundle, and uploads a `codeck-plugin-macos-arm64` artifact. Its inner `.tar.gz` preserves executable permissions and includes a local marketplace catalog. Extract it and add that extracted directory as a local marketplace to test a branch build. The accompanying SHA-256 file verifies the archive.
 
 CI produces ad hoc signed development artifacts. Merging to `main` builds and tests a package; it does not publish it to users. Release signing credentials remain in the maintainer's Mac Keychain.
 
@@ -114,14 +114,18 @@ Publication updates `codex/plugin-distribution` with only the prebuilt plugin, m
 
 - **Library:** create a new presentation, open an existing `.mdeck`, `.md`, or `.markdown` file in the macOS Open panel, or resume a persisted draft.
 - **Workspace:** slide thumbnails on the left, a highlighted CodeMirror editor and native-rendered live preview beside it. Drag the divider or use its arrow keys to resize. Toggle Markdown, split, and preview layouts. Drag thumbnails to reorder, or add, duplicate, and delete slides.
-- **Formatting:** Insert headings, lists, quotes, links, images, code blocks, tables, dividers, and Codex cards. Bold, italic, inline code, strikethrough, and link buttons toggle formatting and reflect the caret’s active styles. ⌘B / ⌘I / ⌘K are available.
+- **Formatting:** Insert headings, lists, quotes, links, images, videos, slide backgrounds, code blocks, tables, dividers, and Codex cards. Bold, italic, inline code, strikethrough, and link buttons toggle formatting and reflect the caret’s active styles. ⌘B / ⌘I / ⌘K are available.
 - **Highlighting:** GFM Markdown, YAML front matter, and language-aware fenced code, including Swift, Python, JavaScript/TypeScript, Rust, Go, Java/Kotlin, C/C++, C#, Ruby, PHP, shell, SQL, HTML, CSS, JSON, YAML, TOML, and other CodeMirror languages. Preview code uses the Mac app's exact Swift highlighter.
 - **Iteration:** use the native Codex composer. The app supplies only the active workspace ID, revision, and file path as context. Selecting text, changing slides, and clicking the preview do not attach annotations or send prompts. The plugin has no separate annotation system or prompt panel.
 - **Appearance:** interface colors and editor highlighting follow the host’s light/dark appearance and update when it changes. The presentation itself retains its chosen deck theme.
 - **Save:** drafts persist automatically; **Save** / ⌘S writes a presentation file. **Save a copy** opens the macOS Save panel, which confirms existing destinations before replacement. External disk edits are never overwritten, even with overwrite enabled. Use Save As or explicitly reload/discard.
 - **Present:** toolbar **Present** / ⌘Enter starts at the selected slide. Arrow keys, Space, Page Up/Down, Home, and End navigate; Esc exits. A native deck-only window fills the screen and hides the menu bar and Dock; the Codex sidebar and composer stay outside it. Split and preview-only layouts fit both the width and height of the slide.
 
-The preview shares CodeckCore's parser, themes, Markdown renderer, and syntax highlighter with the native Mac app. PNG/JPEG/GIF/WebP assets within allowed roots are embedded (up to 5 MB per image). External image URLs are not fetched by this local plugin; use local assets. Live `codex` cards have Run and Stop controls in preview and fullscreen. They share the Mac app’s runner and respect fence overrides, then deck settings, then **GPT-6.1 Sol / Light** (`gpt-6.1-sol`, `low`). Results stream onto the slide without changing its Markdown. Results are session-only and reset when the plugin helper restarts.
+The preview shares CodeckCore's parser, themes, Markdown renderer, and syntax highlighter with the native Mac app. PNG/JPEG/GIF/WebP images and MP4/M4V/MOV/WebM movies within allowed roots are embedded (up to 5 MB per media file). External media URLs are not fetched by this local plugin; use local assets. Movies preload their first frame as a still preview and start playback when you press Play. Playback depends on the codecs supported by the browser.
+
+Images, GIFs, and movies use ordinary image Markdown, such as `![Demo](Movies/demo.mp4)`, and scale down to fit the slide with surrounding text while preserving their aspect ratio. Smaller media stays at its natural size. For an image or animated GIF background, put `![bg](Images/background.gif)` in its own paragraph outside lists, quotes, and code blocks. Backgrounds fill the slide edge to edge behind its content, cropping as needed. The first background declaration is used; later declarations are ignored.
+
+Live `codex` cards have Run and Stop controls in preview and fullscreen. They share the Mac app’s runner and respect fence overrides, then deck settings, then **GPT-6.1 Sol / Light** (`gpt-6.1-sol`, `low`). Results stream onto the slide without changing its Markdown. Results are session-only and reset when the plugin helper restarts.
 
 ## File access and persistence
 
