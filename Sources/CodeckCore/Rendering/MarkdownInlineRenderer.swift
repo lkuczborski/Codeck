@@ -8,9 +8,12 @@ enum MarkdownInlineRenderer {
             prefix.append("x")
         }
         var protected: [String] = []
-        func token(_ html: String) -> String {
+        var markupTokens: Set<String> = []
+        func token(_ html: String, isLiteral: Bool = false) -> String {
             protected.append(html)
-            return "\(prefix)\(protected.count - 1)\u{E001}"
+            let placeholder = "\(prefix)\(protected.count - 1)\u{E001}"
+            if !isLiteral { markupTokens.insert(placeholder) }
+            return placeholder
         }
 
         var source = ""
@@ -18,7 +21,7 @@ enum MarkdownInlineRenderer {
         while index < text.endIndex {
             let next = text.index(after: index)
             if text[index] == "\\", next < text.endIndex, MarkdownMedia.isEscapable(text[next]) {
-                source += token(escape(String(text[next])))
+                source += token(escape(String(text[next])), isLiteral: true)
                 index = text.index(after: next)
             } else if text[index] == "`" {
                 let count = text[index...].prefix { $0 == "`" }.count
@@ -47,7 +50,9 @@ enum MarkdownInlineRenderer {
 
         var html = escape(source)
         html = replace(pattern: "\\[([^\\]]+)\\]\\(([^\\)]+)\\)", in: html) { matches in
-            "<a href=\"\(matches[2])\">\(matches[1])</a>"
+            // Restored media/code belongs in text or link labels, never inside an HTML attribute.
+            guard !markupTokens.contains(where: { matches[2].contains($0) }) else { return matches[0] }
+            return "<a href=\"\(matches[2])\">\(matches[1])</a>"
         }
         html = replace(pattern: "~~([^~]+)~~", in: html) { "<del>\($0[1])</del>" }
         html = replace(pattern: "\\*\\*([^*]+)\\*\\*", in: html) { "<strong>\($0[1])</strong>" }

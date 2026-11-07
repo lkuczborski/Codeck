@@ -49,6 +49,30 @@ final class MarkdownMediaRenderingTests: XCTestCase {
         XCTAssertTrue(html.contains("<code>tail</code>"))
     }
 
+    func testNeverRestoresMediaOrCodeMarkupInsideLinkAttributes() {
+        for markdown in [
+            #"[link](![x](<x" onmouseover=alert(1) z="x>))"#,
+            #"[link](![x](<x" onmouseover=alert(1) z="x.mp4>))"#,
+            #"[link](https://example.com/![x](<x" onmouseover=alert(1) z="x>))"#,
+            #"[link](`" onmouseover=alert(1) z="`)"#,
+        ] {
+            let html = MarkdownInlineRenderer.render(markdown)
+            XCTAssertFalse(html.contains("<a "), markdown)
+            XCTAssertFalse(html.contains("href=\"<"), markdown)
+        }
+    }
+
+    func testAllowsMediaInLinkLabelsAndEscapedPunctuationInDestinations() {
+        XCTAssertEqual(
+            MarkdownInlineRenderer.render("[![Image](photo.png)](https://example.com)"),
+            "<a href=\"https://example.com\"><img src=\"photo.png\" alt=\"Image\"></a>"
+        )
+        XCTAssertEqual(
+            MarkdownInlineRenderer.render(#"[link](Images/a\(1\).png)"#),
+            "<a href=\"Images/a(1).png\">link</a>"
+        )
+    }
+
     func testUsesFirstStandaloneBackgroundAndKeepsForegroundContent() throws {
         let html = render("""
         ![bg Sky & clouds](Images/first.gif)
