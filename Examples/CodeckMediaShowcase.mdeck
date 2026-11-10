@@ -1,0 +1,68 @@
+---
+format: codeck.mdeck
+version: 1
+theme: atelier
+codex:
+  sandbox: read-only
+  model: "gpt-6.1-sol"
+  reasoning: low
+---
+![bg A softly animated Codeck workspace](assets/media-showcase/workspace-background.gif)
+
+# Media that fits.
+
+## Images. GIFs. Movies.
+
+Your slides, now with a little more motion.
+
+**Codeck v0.8 · Codex plugin 0.3.10**
+
+---
+
+# The whole picture.
+
+![Codeck workspace](assets/media-showcase/workspace-still.webp)
+
+**Automatic fitting.** The full image stays visible, with room for the heading and caption.
+
+---
+
+# Two images. One slide.
+
+| The Mac app | The Codex workspace |
+| --- | --- |
+| ![Codeck Mac app](assets/media-showcase/native-still.webp) | ![Codeck in Codex](assets/media-showcase/workspace-still.webp) |
+
+Media shares the available space and keeps its original proportions.
+
+---
+
+# GIFs that just play.
+
+![A live tour of the Codeck workspace](assets/media-showcase/workspace-navigation.gif)
+
+**Motion, automatically.** The animation plays as soon as the slide appears.
+
+---
+
+# A preview before Play.
+
+![Codeck workspace walkthrough](assets/media-showcase/workspace-tour.mp4)
+
+**See the first frame immediately.** Press Play when you're ready.
+
+---
+
+# Still just Markdown.
+
+```markdown
+![Screenshot](assets/media-showcase/workspace-still.webp)
+
+![Movie](assets/media-showcase/workspace-tour.mp4)
+
+![bg](assets/media-showcase/workspace-background.gif)
+```
+
+Use **Insert → Image, Video, or Background Image**.
+
+Write. Preview. Present.

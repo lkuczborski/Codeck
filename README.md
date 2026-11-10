@@ -112,6 +112,7 @@ Live Codex features need an active Codex login and either Codex desktop’s bund
 The [`Examples`](Examples) folder contains sample `.mdeck` decks:
 
 - [`CodeckFeatureCarnival.mdeck`](Examples/CodeckFeatureCarnival.mdeck) is a short tour of Codeck's core workflow: Markdown slides, themes, live preview, presentation mode, web images and GIFs, and runnable Codex cards.
+- [`CodeckMediaShowcase.mdeck`](Examples/CodeckMediaShowcase.mdeck) demonstrates automatic media fitting, multiple images, animated GIFs and backgrounds, and local movies with first-frame previews. Its media files are bundled in [`Examples/assets/media-showcase`](Examples/assets/media-showcase) for offline use; keep that folder alongside the deck when copying it.
 - [`SyntaxHighlighting.mdeck`](Examples/SyntaxHighlighting.mdeck) shows fenced code highlighting across supported language labels and aliases.
 
 ## Document Format
